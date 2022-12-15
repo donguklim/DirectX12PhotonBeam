@@ -120,9 +120,12 @@ private:
 
     POINT mLastMousePos;
 };
-
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
-    PSTR cmdLine, int showCmd)
+int WINAPI WinMain(
+    _In_ HINSTANCE hInstance,
+    _In_opt_ HINSTANCE hPrevInstance,
+    _In_ LPSTR lpCmdLine,
+    _In_ int nShowCmd
+)
 {
     // Enable run-time memory check for debug builds.
 #if defined(DEBUG) | defined(_DEBUG)
@@ -147,6 +150,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 ShapesApp::ShapesApp(HINSTANCE hInstance)
     : D3DApp(hInstance)
 {
+    mLastMousePos = POINT{};
 }
 
 ShapesApp::~ShapesApp()
@@ -207,8 +211,12 @@ void ShapesApp::Update(const GameTimer& gt)
     {
         HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
         ThrowIfFailed(mFence->SetEventOnCompletion(mCurrFrameResource->Fence, eventHandle));
-        WaitForSingleObject(eventHandle, INFINITE);
-        CloseHandle(eventHandle);
+
+        if(eventHandle != 0)
+        {
+            WaitForSingleObject(eventHandle, INFINITE);
+            CloseHandle(eventHandle);
+        }
     }
 
 	UpdateObjectCBs(gt);
@@ -498,7 +506,7 @@ void ShapesApp::BuildRootSignature()
     cbvTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
 
 	// Root parameter can be a table, root descriptor or root constants.
-	CD3DX12_ROOT_PARAMETER slotRootParameter[2];
+    CD3DX12_ROOT_PARAMETER slotRootParameter[2] = {};
 
 	// Create root CBVs.
     slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable0);

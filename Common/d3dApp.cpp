@@ -29,6 +29,8 @@ D3DApp::D3DApp(HINSTANCE hInstance)
     // Only one D3DApp can be constructed.
     assert(mApp == nullptr);
     mApp = this;
+	mScissorRect = D3D12_RECT{};
+	mScreenViewport = D3D12_VIEWPORT{};
 }
 
 D3DApp::~D3DApp()
@@ -554,9 +556,13 @@ void D3DApp::FlushCommandQueue()
         // Fire event when GPU hits current fence.  
         ThrowIfFailed(mFence->SetEventOnCompletion(mCurrentFence, eventHandle));
 
-        // Wait until the GPU hits current fence event is fired.
-		WaitForSingleObject(eventHandle, INFINITE);
-        CloseHandle(eventHandle);
+		if (eventHandle != 0)
+		{
+			// Wait until the GPU hits current fence event is fired.
+			WaitForSingleObject(eventHandle, INFINITE);
+			CloseHandle(eventHandle);
+		}
+        
 	}
 }
 
