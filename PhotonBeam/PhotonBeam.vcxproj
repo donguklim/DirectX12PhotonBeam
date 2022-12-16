@@ -142,7 +142,7 @@
     <ClInclude Include="..\imgui\imgui_impl_win32.h" />
     <ClInclude Include="..\imgui\imgui_internal.h" />
     <ClInclude Include="FrameResource.h" />
-    <ClInclude Include="ShapesApp.h" />
+    <ClInclude Include="PhotonBeamApp.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Common\d3dApp.cpp" />
@@ -160,7 +160,7 @@
     <ClCompile Include="..\imgui\imgui_widgets.cpp" />
     <ClCompile Include="FrameResource.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="ShapesApp.cpp" />
+    <ClCompile Include="PhotonBeamApp.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

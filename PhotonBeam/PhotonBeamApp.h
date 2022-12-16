@@ -56,6 +56,7 @@ public:
     ~ShapesApp();
 
     virtual bool Initialize()override;
+    void InitGui();
 
 private:
     virtual void OnResize()override;

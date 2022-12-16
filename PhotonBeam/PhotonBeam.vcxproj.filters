@@ -42,7 +42,7 @@
     <ClInclude Include="FrameResource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ShapesApp.h">
+    <ClInclude Include="PhotonBeamApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -83,7 +83,7 @@
     <ClCompile Include="FrameResource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ShapesApp.cpp">
+    <ClCompile Include="PhotonBeamApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">

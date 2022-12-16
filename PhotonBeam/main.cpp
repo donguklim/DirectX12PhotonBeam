@@ -1,8 +1,8 @@
 
-#include "ShapesApp.h"
+#include "PhotonBeamApp.h"
 #include "imgui.h"
 #include "imgui_impl_win32.h"
-
+#include "imgui_impl_dx12.h"
 
 
 int main(int, char**)
@@ -13,12 +13,14 @@ int main(int, char**)
 #endif
 
     HINSTANCE hInstance = GetModuleHandle(NULL);
+    ShapesApp theApp(hInstance);
 
     try
     {
-        ShapesApp theApp(hInstance);
         if (!theApp.Initialize())
             return 0;
+
+        theApp.InitGui();
 
         return theApp.Run();
     }
@@ -27,4 +29,5 @@ int main(int, char**)
         MessageBox(nullptr, e.ToString().c_str(), L"HR Failed", MB_OK);
         return 0;
     }
+
 }

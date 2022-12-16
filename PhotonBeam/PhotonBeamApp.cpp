@@ -4,7 +4,10 @@
 // Hold down '1' key to view scene in wireframe mode.
 //***************************************************************************************
 
-#include "ShapesApp.h"
+#include "PhotonBeamApp.h"
+#include "imgui.h"
+#include "imgui_impl_win32.h"
+#include "imgui_impl_dx12.h"
 
 const int gNumFrameResources = 3;
 
@@ -18,6 +21,13 @@ ShapesApp::~ShapesApp()
 {
     if(md3dDevice != nullptr)
         FlushCommandQueue();
+
+    if (ImGui::GetCurrentContext() != nullptr)
+    {
+        ImGui_ImplDX12_Shutdown();
+        ImGui_ImplWin32_Shutdown();
+        ImGui::DestroyContext();
+    }
 }
 
 bool ShapesApp::Initialize()
@@ -46,6 +56,33 @@ bool ShapesApp::Initialize()
     FlushCommandQueue();
 
     return true;
+}
+
+void ShapesApp::InitGui()
+{
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+    // ImGui::StyleColorsLight();
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplWin32_Init(mhMainWnd);
+    
+    ImGui_ImplDX12_Init(
+        md3dDevice.Get(), 
+        gNumFrameResources,
+        DXGI_FORMAT_R8G8B8A8_UNORM, 
+        mSrvDescriptorHeap.Get(),
+        mSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
+        mSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
+    );
+        
 }
  
 void ShapesApp::OnResize()
@@ -305,6 +342,14 @@ void ShapesApp::BuildDescriptorHeaps()
     cbvHeapDesc.NodeMask = 0;
     ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&cbvHeapDesc,
         IID_PPV_ARGS(&mCbvHeap)));
+
+    D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
+    srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    srvHeapDesc.NumDescriptors = 1;
+    srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&srvHeapDesc,
+        IID_PPV_ARGS(&mSrvDescriptorHeap)));
+
 }
 
 void ShapesApp::BuildConstantBufferViews()
