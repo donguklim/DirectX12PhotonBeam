@@ -68,6 +68,7 @@ private:
     virtual void OnMouseDown(WPARAM btnState, int x, int y)override;
     virtual void OnMouseUp(WPARAM btnState, int x, int y)override;
     virtual void OnMouseMove(WPARAM btnState, int x, int y)override;
+    virtual void OnMouseWheel(WPARAM btnState, int delta)override;
 
     void OnKeyboardInput(const GameTimer& gt);
     void UpdateObjectCBs(const GameTimer& gt);

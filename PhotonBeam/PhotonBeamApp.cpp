@@ -254,6 +254,9 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
 
 void PhotonBeamApp::OnMouseDown(WPARAM btnState, int x, int y)
 {
+    if (ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureMouse)
+        return;
+
     mLastMousePos.x = x;
     mLastMousePos.y = y;
 
@@ -267,6 +270,8 @@ void PhotonBeamApp::OnMouseUp(WPARAM btnState, int x, int y)
 
 void PhotonBeamApp::OnMouseMove(WPARAM btnState, int x, int y)
 {
+    if (ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureMouse)
+        return;
    
     if ((btnState & MK_LBUTTON) != 0)
     {
@@ -285,13 +290,33 @@ void PhotonBeamApp::OnMouseMove(WPARAM btnState, int x, int y)
 
         mCamera.Walk(dx - dy);
     }
+    else if ((btnState & MK_MBUTTON) != 0)
+    {
+        float dx = -0.01f * static_cast<float>(x - mLastMousePos.x);
+        float dy = 0.01f * static_cast<float>(y - mLastMousePos.y);
+
+        mCamera.Strafe(dx);
+        mCamera.Pedestal(dy);
+    }
 
     mLastMousePos.x = x;
     mLastMousePos.y = y;
 }
+
+void PhotonBeamApp::OnMouseWheel(WPARAM btnState, int delta)
+{
+    if (ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureMouse)
+        return;
+
+    if (delta != 0)
+        mCamera.Walk(0.01f * delta);
+}
  
 void PhotonBeamApp::OnKeyboardInput(const GameTimer& gt)
 {
+    if (ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureKeyboard)
+        return;
+
     if(GetAsyncKeyState('1') & 0x8000)
         mIsWireframe = true;
     else
