@@ -129,9 +129,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\Common\Camera.h" />
-    <ClInclude Include="..\Common\d3dApp.h" />
-    <ClInclude Include="..\Common\d3dUtil.h" />
+    <ClInclude Include="..\Common\Camera.hpp" />
+    <ClInclude Include="..\Common\d3dApp.hpp" />
+    <ClInclude Include="..\Common\d3dUtil.hpp" />
     <ClInclude Include="..\Common\DDSTextureLoader.h" />
     <ClInclude Include="..\Common\GameTimer.h" />
     <ClInclude Include="..\Common\GeometryGenerator.h" />
@@ -143,7 +143,7 @@
     <ClInclude Include="..\imgui\imgui_impl_win32.h" />
     <ClInclude Include="..\imgui\imgui_internal.h" />
     <ClInclude Include="FrameResource.h" />
-    <ClInclude Include="PhotonBeamApp.h" />
+    <ClInclude Include="PhotonBeamApp.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Common\Camera.cpp" />

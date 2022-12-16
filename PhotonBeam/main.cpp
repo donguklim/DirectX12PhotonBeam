@@ -1,5 +1,5 @@
 
-#include "PhotonBeamApp.h"
+#include "PhotonBeamApp.hpp"
 
 int main(int, char**)
 {

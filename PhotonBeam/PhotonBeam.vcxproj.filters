@@ -18,10 +18,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Common\d3dApp.h">
+    <ClInclude Include="..\Common\d3dApp.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\Common\d3dUtil.h">
+    <ClInclude Include="..\Common\d3dUtil.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Common\DDSTextureLoader.h">
@@ -42,7 +42,7 @@
     <ClInclude Include="FrameResource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PhotonBeamApp.h">
+    <ClInclude Include="PhotonBeamApp.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\imgui\imconfig.h">
@@ -60,7 +60,7 @@
     <ClInclude Include="..\imgui\imgui_impl_win32.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="..\Common\Camera.h">
+    <ClInclude Include="..\Common\Camera.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
