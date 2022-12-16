@@ -1,5 +1,5 @@
 //***************************************************************************************
-// ShapesApp.cpp by Frank Luna (C) 2015 All Rights Reserved.
+// PhotonBeamApp.cpp by Frank Luna (C) 2015 All Rights Reserved.
 //
 // Hold down '1' key to view scene in wireframe mode.
 //***************************************************************************************
@@ -47,13 +47,13 @@ struct RenderItem
     int BaseVertexLocation = 0;
 };
 
-class ShapesApp : public D3DApp
+class PhotonBeamApp : public D3DApp
 {
 public:
-    ShapesApp(HINSTANCE hInstance);
-    ShapesApp(const ShapesApp& rhs) = delete;
-    ShapesApp& operator=(const ShapesApp& rhs) = delete;
-    ~ShapesApp();
+    PhotonBeamApp(HINSTANCE hInstance);
+    PhotonBeamApp(const PhotonBeamApp& rhs) = delete;
+    PhotonBeamApp& operator=(const PhotonBeamApp& rhs) = delete;
+    ~PhotonBeamApp();
 
     virtual bool Initialize()override;
     virtual LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)override;

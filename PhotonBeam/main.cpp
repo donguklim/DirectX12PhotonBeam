@@ -9,7 +9,7 @@ int main(int, char**)
 #endif
 
     HINSTANCE hInstance = GetModuleHandle(NULL);
-    ShapesApp theApp(hInstance);
+    PhotonBeamApp theApp(hInstance);
 
     try
     {

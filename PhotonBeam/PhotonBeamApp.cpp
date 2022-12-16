@@ -1,5 +1,5 @@
 //***************************************************************************************
-// ShapesApp.cpp by Frank Luna (C) 2015 All Rights Reserved.
+// PhotonBeamApp.cpp by Frank Luna (C) 2015 All Rights Reserved.
 //
 // Hold down '1' key to view scene in wireframe mode.
 //***************************************************************************************
@@ -13,13 +13,13 @@ const int gNumFrameResources = 3;
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-ShapesApp::ShapesApp(HINSTANCE hInstance)
+PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance)
     : D3DApp(hInstance)
 {
     mLastMousePos = POINT{};
 }
 
-ShapesApp::~ShapesApp()
+PhotonBeamApp::~PhotonBeamApp()
 {
     if(md3dDevice != nullptr)
         FlushCommandQueue();
@@ -32,7 +32,7 @@ ShapesApp::~ShapesApp()
     }
 }
 
-bool ShapesApp::Initialize()
+bool PhotonBeamApp::Initialize()
 {
     if(!D3DApp::Initialize())
         return false;
@@ -60,7 +60,7 @@ bool ShapesApp::Initialize()
     return true;
 }
 
-void ShapesApp::InitGui()
+void PhotonBeamApp::InitGui()
 {
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -87,15 +87,15 @@ void ShapesApp::InitGui()
         
 }
 
-LRESULT ShapesApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT PhotonBeamApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    //if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wParam, lParam))
-       // return true;
+    if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wParam, lParam))
+        return true;
 
     return D3DApp::MsgProc(hwnd, msg, wParam, lParam);
 }
  
-void ShapesApp::OnResize()
+void PhotonBeamApp::OnResize()
 {
     D3DApp::OnResize();
 
@@ -104,7 +104,7 @@ void ShapesApp::OnResize()
     XMStoreFloat4x4(&mProj, P);
 }
 
-void ShapesApp::Update(const GameTimer& gt)
+void PhotonBeamApp::Update(const GameTimer& gt)
 {
     OnKeyboardInput(gt);
 	UpdateCamera(gt);
@@ -131,7 +131,7 @@ void ShapesApp::Update(const GameTimer& gt)
 	UpdateMainPassCB(gt);
 }
 
-void ShapesApp::Draw(const GameTimer& gt)
+void PhotonBeamApp::Draw(const GameTimer& gt)
 {
     // Start the Dear ImGui frame
     ImGui_ImplDX12_NewFrame();
@@ -252,7 +252,7 @@ void ShapesApp::Draw(const GameTimer& gt)
 }
 
 
-void ShapesApp::OnMouseDown(WPARAM btnState, int x, int y)
+void PhotonBeamApp::OnMouseDown(WPARAM btnState, int x, int y)
 {
     mLastMousePos.x = x;
     mLastMousePos.y = y;
@@ -260,12 +260,12 @@ void ShapesApp::OnMouseDown(WPARAM btnState, int x, int y)
     SetCapture(mhMainWnd);
 }
 
-void ShapesApp::OnMouseUp(WPARAM btnState, int x, int y)
+void PhotonBeamApp::OnMouseUp(WPARAM btnState, int x, int y)
 {
     ReleaseCapture();
 }
 
-void ShapesApp::OnMouseMove(WPARAM btnState, int x, int y)
+void PhotonBeamApp::OnMouseMove(WPARAM btnState, int x, int y)
 {
     if((btnState & MK_LBUTTON) != 0)
     {
@@ -297,7 +297,7 @@ void ShapesApp::OnMouseMove(WPARAM btnState, int x, int y)
     mLastMousePos.y = y;
 }
  
-void ShapesApp::OnKeyboardInput(const GameTimer& gt)
+void PhotonBeamApp::OnKeyboardInput(const GameTimer& gt)
 {
     if(GetAsyncKeyState('1') & 0x8000)
         mIsWireframe = true;
@@ -305,7 +305,7 @@ void ShapesApp::OnKeyboardInput(const GameTimer& gt)
         mIsWireframe = false;
 }
  
-void ShapesApp::UpdateCamera(const GameTimer& gt)
+void PhotonBeamApp::UpdateCamera(const GameTimer& gt)
 {
 	// Convert Spherical to Cartesian coordinates.
 	mEyePos.x = mRadius*sinf(mPhi)*cosf(mTheta);
@@ -321,7 +321,7 @@ void ShapesApp::UpdateCamera(const GameTimer& gt)
 	XMStoreFloat4x4(&mView, view);
 }
 
-void ShapesApp::UpdateObjectCBs(const GameTimer& gt)
+void PhotonBeamApp::UpdateObjectCBs(const GameTimer& gt)
 {
 	auto currObjectCB = mCurrFrameResource->ObjectCB.get();
 	for(auto& e : mAllRitems)
@@ -343,7 +343,7 @@ void ShapesApp::UpdateObjectCBs(const GameTimer& gt)
 	}
 }
 
-void ShapesApp::UpdateMainPassCB(const GameTimer& gt)
+void PhotonBeamApp::UpdateMainPassCB(const GameTimer& gt)
 {
 	XMMATRIX view = XMLoadFloat4x4(&mView);
 	XMMATRIX proj = XMLoadFloat4x4(&mProj);
@@ -376,7 +376,7 @@ void ShapesApp::UpdateMainPassCB(const GameTimer& gt)
 	currPassCB->CopyData(0, mMainPassCB);
 }
 
-void ShapesApp::BuildDescriptorHeaps()
+void PhotonBeamApp::BuildDescriptorHeaps()
 {
     UINT objCount = (UINT)mOpaqueRitems.size();
 
@@ -404,7 +404,7 @@ void ShapesApp::BuildDescriptorHeaps()
 
 }
 
-void ShapesApp::BuildConstantBufferViews()
+void PhotonBeamApp::BuildConstantBufferViews()
 {
     UINT objCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
 
@@ -455,7 +455,7 @@ void ShapesApp::BuildConstantBufferViews()
     }
 }
 
-void ShapesApp::BuildRootSignature()
+void PhotonBeamApp::BuildRootSignature()
 {
     CD3DX12_DESCRIPTOR_RANGE cbvTable0;
     cbvTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
@@ -493,7 +493,7 @@ void ShapesApp::BuildRootSignature()
 		IID_PPV_ARGS(mRootSignature.GetAddressOf())));
 }
 
-void ShapesApp::BuildShadersAndInputLayout()
+void PhotonBeamApp::BuildShadersAndInputLayout()
 {
 	mShaders["standardVS"] = d3dUtil::CompileShader(L"Shaders\\color.hlsl", nullptr, "VS", "vs_5_1");
 	mShaders["opaquePS"] = d3dUtil::CompileShader(L"Shaders\\color.hlsl", nullptr, "PS", "ps_5_1");
@@ -505,7 +505,7 @@ void ShapesApp::BuildShadersAndInputLayout()
     };
 }
 
-void ShapesApp::BuildShapeGeometry()
+void PhotonBeamApp::BuildShapeGeometry()
 {
     GeometryGenerator geoGen;
 	GeometryGenerator::MeshData box = geoGen.CreateBox(1.5f, 0.5f, 1.5f, 3);
@@ -628,7 +628,7 @@ void ShapesApp::BuildShapeGeometry()
 	mGeometries[geo->Name] = std::move(geo);
 }
 
-void ShapesApp::BuildPSOs()
+void PhotonBeamApp::BuildPSOs()
 {
     D3D12_GRAPHICS_PIPELINE_STATE_DESC opaquePsoDesc;
 
@@ -671,7 +671,7 @@ void ShapesApp::BuildPSOs()
     ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaqueWireframePsoDesc, IID_PPV_ARGS(&mPSOs["opaque_wireframe"])));
 }
 
-void ShapesApp::BuildFrameResources()
+void PhotonBeamApp::BuildFrameResources()
 {
     for(int i = 0; i < gNumFrameResources; ++i)
     {
@@ -680,7 +680,7 @@ void ShapesApp::BuildFrameResources()
     }
 }
 
-void ShapesApp::BuildRenderItems()
+void PhotonBeamApp::BuildRenderItems()
 {
 	auto boxRitem = std::make_unique<RenderItem>();
 	XMStoreFloat4x4(&boxRitem->World, XMMatrixScaling(2.0f, 2.0f, 2.0f)*XMMatrixTranslation(0.0f, 0.5f, 0.0f));
@@ -759,7 +759,7 @@ void ShapesApp::BuildRenderItems()
 		mOpaqueRitems.push_back(e.get());
 }
 
-void ShapesApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems)
+void PhotonBeamApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems)
 {
     UINT objCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
  
