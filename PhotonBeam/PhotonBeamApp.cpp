@@ -311,6 +311,12 @@ void PhotonBeamApp::OnKeyboardInput(const GameTimer& gt)
     if (GetAsyncKeyState('D') & 0x8000)
         mCamera.Strafe(10.0f * dt);
 
+    if (GetAsyncKeyState('Q') & 0x8000)
+        mCamera.Pedestal(-10.0f * dt);
+
+    if (GetAsyncKeyState('E') & 0x8000)
+        mCamera.Pedestal(10.0f * dt);
+
     mCamera.UpdateViewMatrix();
 }
  
