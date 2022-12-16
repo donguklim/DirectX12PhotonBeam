@@ -408,7 +408,7 @@ void ShapesApp::BuildConstantBufferViews()
             D3D12_GPU_VIRTUAL_ADDRESS cbAddress = objectCB->GetGPUVirtualAddress();
 
             // Offset to the ith object constant buffer in the buffer.
-            cbAddress += i*objCBByteSize;
+            cbAddress += static_cast<UINT64>(i)*objCBByteSize;
 
             // Offset to the object cbv in the descriptor heap.
             int heapIndex = frameIndex*objCount + i;
