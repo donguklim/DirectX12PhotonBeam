@@ -59,6 +59,7 @@ public:
     virtual bool Initialize()override;
     virtual LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)override;
     void InitGui();
+    void LoadScene();
 
 private:
     virtual void OnResize()override;

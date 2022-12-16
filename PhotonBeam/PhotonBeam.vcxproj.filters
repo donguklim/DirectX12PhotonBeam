@@ -16,6 +16,9 @@
     <Filter Include="imgui">
       <UniqueIdentifier>{5c05676d-1b9b-4941-a927-e2c480ae40fb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="tiny gltf">
+      <UniqueIdentifier>{1a30e091-5532-48dd-b1d9-b0b0ee28020c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\d3dApp.hpp">
@@ -62,6 +65,18 @@
     </ClInclude>
     <ClInclude Include="..\Common\Camera.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tiny-gltf\json.hpp">
+      <Filter>tiny gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tiny-gltf\stb_image.h">
+      <Filter>tiny gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tiny-gltf\stb_image_write.h">
+      <Filter>tiny gltf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tiny-gltf\tiny_gltf.h">
+      <Filter>tiny gltf</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

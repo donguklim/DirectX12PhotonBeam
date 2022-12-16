@@ -142,6 +142,10 @@
     <ClInclude Include="..\imgui\imgui_impl_dx12.h" />
     <ClInclude Include="..\imgui\imgui_impl_win32.h" />
     <ClInclude Include="..\imgui\imgui_internal.h" />
+    <ClInclude Include="..\tiny-gltf\json.hpp" />
+    <ClInclude Include="..\tiny-gltf\stb_image.h" />
+    <ClInclude Include="..\tiny-gltf\stb_image_write.h" />
+    <ClInclude Include="..\tiny-gltf\tiny_gltf.h" />
     <ClInclude Include="FrameResource.h" />
     <ClInclude Include="PhotonBeamApp.hpp" />
   </ItemGroup>

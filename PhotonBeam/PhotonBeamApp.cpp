@@ -530,6 +530,11 @@ void PhotonBeamApp::BuildShadersAndInputLayout()
     };
 }
 
+void PhotonBeamApp::LoadScene()
+{
+    auto Filename = L"media\\cornellBox.gltf";
+}
+
 void PhotonBeamApp::BuildShapeGeometry()
 {
     GeometryGenerator geoGen;
