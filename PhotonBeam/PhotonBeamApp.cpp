@@ -11,6 +11,8 @@
 
 const int gNumFrameResources = 3;
 
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 ShapesApp::ShapesApp(HINSTANCE hInstance)
     : D3DApp(hInstance)
 {
@@ -83,6 +85,14 @@ void ShapesApp::InitGui()
         mSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
     );
         
+}
+
+LRESULT ShapesApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    //if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wParam, lParam))
+       // return true;
+
+    return D3DApp::MsgProc(hwnd, msg, wParam, lParam);
 }
  
 void ShapesApp::OnResize()
@@ -240,6 +250,7 @@ void ShapesApp::Draw(const GameTimer& gt)
     // set until the GPU finishes processing all the commands prior to this Signal().
     mCommandQueue->Signal(mFence.Get(), mCurrentFence);
 }
+
 
 void ShapesApp::OnMouseDown(WPARAM btnState, int x, int y)
 {

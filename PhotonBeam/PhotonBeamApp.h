@@ -56,6 +56,7 @@ public:
     ~ShapesApp();
 
     virtual bool Initialize()override;
+    virtual LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)override;
     void InitGui();
 
 private:
