@@ -452,21 +452,15 @@ void GltfScene::createTangents(GltfPrimMesh& resultMesh)
         const auto& uv1 = m_texcoords0[gi1];
         const auto& uv2 = m_texcoords0[gi2];
 
+        XMVECTOR e1 = p1 - p0;
+        XMVECTOR e2 = p2 - p0;
+
         XMFLOAT2 duvE1 = { uv1.x - uv0.x, uv1.y - uv0.y };
         XMFLOAT2 duvE2 = { uv2.x - uv0.x, uv2.y - uv0.y };
 
         float r = 1.0F;
         float a = duvE1.x * duvE2.y - duvE2.x * duvE1.y;
 
-        XMVECTOR e1 = p1 - p0;
-        XMVECTOR e2 = p2 - p0;
-
-        XMVECTOR duvE1 = uv1 - uv0;
-        XMVECTOR duvE2 = uv2 - uv0;
-
-        
-        float r = 1.0F;
-        float a = duvE1.x * duvE2.y - duvE2.x * duvE1.y;
         if (fabs(a) > 0)  // Catch degenerated UV
         {
             r = 1.0f / a;
@@ -501,13 +495,20 @@ void GltfScene::createTangents(GltfPrimMesh& resultMesh)
         if (otangent.x == 0 && otangent.y == 0 && otangent.z ==0)
         {
             if (abs(normal.x) > abs(normal.y))
-                otangent = XMFLOAT3(normal.z, 0, -normal.x) / sqrt(normal.x * normal.x + normal.z * normal.z);
-            else
-                otangent = XMFLOAT3(0, -normal.z, normal.y) / sqrt(normal.y * normal.y + normal.z * normal.z);
+            {
+                float divisor = sqrt(normal.x * normal.x + normal.z * normal.z);
+                otangent = XMFLOAT4(normal.z / divisor, 0, -normal.x / divisor, 0);
+            }
+               
+            else 
+            {
+                float divisor = sqrt(normal.y * normal.y + normal.z * normal.z);
+                otangent = XMFLOAT4(0, -normal.z / divisor, normal.y / divisor, 0);
+            }
         }
 
         float hardnessDeter{};
-        XMStoreFloat(*hardnessDeter, XMVector3Dot(XMVector3Cross(n, t), b))
+        XMStoreFloat(&hardnessDeter, XMVector3Dot(XMVector3Cross(n, t), b));
         // Calculate handedness
         float hardness = ( hardnessDeter < 0.0F) ? 1.0F : -1.0F;
         otangent.w = hardness;
