@@ -182,7 +182,7 @@ static HRESULT LoadTextureDataFromFile( _In_z_ const wchar_t* fileName,
     LARGE_INTEGER FileSize = { 0 };
 
 #if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
-    FILE_STANDARD_INFO fileInfo;
+    FILE_STANDARD_INFO fileInfo{};
     if ( !GetFileInformationByHandleEx( hFile.get(), FileStandardInfo, &fileInfo, sizeof(fileInfo) ) )
     {
         return HRESULT_FROM_WIN32( GetLastError() );
@@ -1024,7 +1024,7 @@ static HRESULT CreateD3DResources( _In_ ID3D11Device* d3dDevice,
     {
         case D3D11_RESOURCE_DIMENSION_TEXTURE1D:
             {
-                D3D11_TEXTURE1D_DESC desc;
+                D3D11_TEXTURE1D_DESC desc{};
                 desc.Width = static_cast<UINT>( width ); 
                 desc.MipLevels = static_cast<UINT>( mipCount );
                 desc.ArraySize = static_cast<UINT>( arraySize );
@@ -1085,7 +1085,7 @@ static HRESULT CreateD3DResources( _In_ ID3D11Device* d3dDevice,
 
         case D3D11_RESOURCE_DIMENSION_TEXTURE2D:
             {
-                D3D11_TEXTURE2D_DESC desc;
+                D3D11_TEXTURE2D_DESC desc{};
                 desc.Width = static_cast<UINT>( width );
                 desc.Height = static_cast<UINT>( height );
                 desc.MipLevels = static_cast<UINT>( mipCount );
@@ -1172,7 +1172,7 @@ static HRESULT CreateD3DResources( _In_ ID3D11Device* d3dDevice,
 
         case D3D11_RESOURCE_DIMENSION_TEXTURE3D:
             {
-                D3D11_TEXTURE3D_DESC desc;
+                D3D11_TEXTURE3D_DESC desc{};
                 desc.Width = static_cast<UINT>( width );
                 desc.Height = static_cast<UINT>( height );
                 desc.Depth = static_cast<UINT>( depth );
@@ -1244,7 +1244,7 @@ static HRESULT CreateD3DResources12(
 	ComPtr<ID3D12Resource>& textureUploadHeap
 	)
 {
-	if (device == nullptr)
+	if (device == nullptr || initData == nullptr)
 		return E_POINTER;
 
 	if (forceSRGB)

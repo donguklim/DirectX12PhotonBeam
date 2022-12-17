@@ -122,7 +122,7 @@ bool D3DApp::Initialize()
  
 void D3DApp::CreateRtvAndDsvDescriptorHeaps()
 {
-    D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc;
+	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc{};
     rtvHeapDesc.NumDescriptors = SwapChainBufferCount;
     rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
     rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
@@ -131,7 +131,7 @@ void D3DApp::CreateRtvAndDsvDescriptorHeaps()
         &rtvHeapDesc, IID_PPV_ARGS(mRtvHeap.GetAddressOf())));
 
 
-    D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc;
+	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{};
     dsvHeapDesc.NumDescriptors = 1;
     dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
     dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
@@ -174,7 +174,7 @@ void D3DApp::OnResize()
 	}
 
     // Create the depth/stencil buffer and view.
-    D3D12_RESOURCE_DESC depthStencilDesc;
+	D3D12_RESOURCE_DESC depthStencilDesc{};
     depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     depthStencilDesc.Alignment = 0;
     depthStencilDesc.Width = mClientWidth;
@@ -194,7 +194,7 @@ void D3DApp::OnResize()
     depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
     depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
-    D3D12_CLEAR_VALUE optClear;
+	D3D12_CLEAR_VALUE optClear{};
     optClear.Format = mDepthStencilFormat;
     optClear.DepthStencil.Depth = 1.0f;
     optClear.DepthStencil.Stencil = 0;
@@ -208,7 +208,7 @@ void D3DApp::OnResize()
         IID_PPV_ARGS(mDepthStencilBuffer.GetAddressOf())));
 
     // Create descriptor to mip level 0 of entire resource using the format of the resource.
-	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc;
+	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
 	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Format = mDepthStencilFormat;
@@ -463,7 +463,7 @@ bool D3DApp::InitDirect3D()
     // All Direct3D 11 capable devices support 4X MSAA for all render 
     // target formats, so we only need to check quality support.
 
-	D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msQualityLevels;
+	D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msQualityLevels{};
 	msQualityLevels.Format = mBackBufferFormat;
 	msQualityLevels.SampleCount = 4;
 	msQualityLevels.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
@@ -516,7 +516,7 @@ void D3DApp::CreateSwapChain()
     // Release the previous swapchain we will be recreating.
     mSwapChain.Reset();
 
-    DXGI_SWAP_CHAIN_DESC sd;
+	DXGI_SWAP_CHAIN_DESC sd{};
     sd.BufferDesc.Width = mClientWidth;
     sd.BufferDesc.Height = mClientHeight;
     sd.BufferDesc.RefreshRate.Numerator = 60;
