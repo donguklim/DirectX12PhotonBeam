@@ -123,7 +123,7 @@ void GltfScene::importMaterials(const tinygltf::Model& tmodel)
             //tt.uvTransform = scale * rotation * translation;
 
 
-            XMStoreFloat3x3(
+            DirectX::XMStoreFloat3x3(
                 &tt.uvTransform,
                 XMMatrixScaling(tt.scale.x, tt.scale.y, 1.0f) 
                 * XMMatrixRotationX(tt.rotation) 
@@ -292,29 +292,41 @@ void GltfScene::processNode(const tinygltf::Model& tmodel, int& nodeIdx, const X
     XMMATRIX matrix = XMMatrixIdentity();
 ;
     if (!tnode.translation.empty())
-        mtranslation = XMMatrixTranslation(tnode.translation[0], tnode.translation[1], tnode.translation[2]);
+        mtranslation = XMMatrixTranslation(
+            static_cast<float>(tnode.translation[0]), 
+            static_cast<float>(tnode.translation[1]), 
+            static_cast<float>(tnode.translation[2])
+        );
 
     if (!tnode.scale.empty())
-        mscale = XMMatrixScaling(tnode.scale[0], tnode.scale[1], tnode.scale[2]);
+        mscale = XMMatrixScaling(
+            static_cast<float>(tnode.scale[0]),
+            static_cast<float>(tnode.scale[1]), 
+            static_cast<float>(tnode.scale[2])
+        );
 
     if (!tnode.rotation.empty())
     {
-        XMFLOAT4 quaternion(tnode.rotation[0], tnode.rotation[1], tnode.rotation[2], tnode.rotation[3]);
-        mrot = XMMatrixRotationQuaternion(XMLoadFloat4(&quaternion));
+        XMFLOAT4 quaternion(
+            static_cast<float>(tnode.rotation[0]), 
+            static_cast<float>(tnode.rotation[1]), static_cast<float>(tnode.rotation[2]), 
+            static_cast<float>(tnode.rotation[3])
+        );
+        mrot = XMMatrixRotationQuaternion(DirectX::XMLoadFloat4(&quaternion));
     }
     if (!tnode.matrix.empty())
     {
-        float matVal[16];
+        float matVal[16]{};
         for (int i = 0; i < 16; ++i)
             matVal[i] = static_cast<float>(tnode.matrix[i]);
 
 
         XMFLOAT4X4 mat4x4{ matVal };
-        matrix = XMLoadFloat4x4(&mat4x4);
+        matrix = DirectX::XMLoadFloat4x4(&mat4x4);
     }
 
     XMFLOAT4X4 worldMatrix{};    
-    XMStoreFloat4x4(&worldMatrix, XMLoadFloat4x4(&parentMatrix) * mtranslation* mrot* mscale* matrix);
+    DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMLoadFloat4x4(&parentMatrix) * mtranslation* mrot* mscale* matrix);
 
     if (tnode.mesh > -1)
     {
@@ -367,8 +379,8 @@ void GltfScene::createNormals(GltfPrimMesh& resultMesh)
         const auto& pos2 = m_positions[static_cast<size_t>(ind2 + resultMesh.vertexOffset)];
 
         
-        const auto  v1 = XMVector3Normalize(XMLoadFloat3(&pos1) - XMLoadFloat3(&pos0)); // Many normalize, but when objects are really small the
-        const auto  v2 = XMVector3Normalize(XMLoadFloat3(&pos2) - XMLoadFloat3(&pos0)); // cross will go below nv_eps and the normal will be (0,0,0)
+        const auto  v1 = XMVector3Normalize(DirectX::XMLoadFloat3(&pos1) - DirectX::XMLoadFloat3(&pos0)); // Many normalize, but when objects are really small the
+        const auto  v2 = XMVector3Normalize(DirectX::XMLoadFloat3(&pos2) - DirectX::XMLoadFloat3(&pos0)); // cross will go below nv_eps and the normal will be (0,0,0)
         const auto n = XMVector3Cross(v2, v1);
         geonormal[ind0] += n;
         geonormal[ind1] += n;
@@ -379,7 +391,7 @@ void GltfScene::createNormals(GltfPrimMesh& resultMesh)
     for (auto& n : geonormal)
     { 
         XMFLOAT3 normal{};
-        XMStoreFloat3(&normal, XMVector3Normalize(n));
+        DirectX::XMStoreFloat3(&normal, XMVector3Normalize(n));
         m_normals.push_back(normal);
     }
     
@@ -493,9 +505,9 @@ void GltfScene::createTangents(GltfPrimMesh& resultMesh)
         uint32_t gi1 = i1 + resultMesh.vertexOffset;
         uint32_t gi2 = i2 + resultMesh.vertexOffset;
 
-        const auto& p0 = XMLoadFloat3(&m_positions[gi0]);
-        const auto& p1 = XMLoadFloat3(&m_positions[gi1]);
-        const auto& p2 = XMLoadFloat3(&m_positions[gi2]);
+        const auto& p0 = DirectX::XMLoadFloat3(&m_positions[gi0]);
+        const auto& p1 = DirectX::XMLoadFloat3(&m_positions[gi1]);
+        const auto& p2 = DirectX::XMLoadFloat3(&m_positions[gi2]);
 
         const auto& uv0 = m_texcoords0[gi0];
         const auto& uv1 = m_texcoords0[gi1];
@@ -534,11 +546,11 @@ void GltfScene::createTangents(GltfPrimMesh& resultMesh)
         const auto& normal = m_normals[static_cast<size_t>(resultMesh.vertexOffset + a)];
         const auto& t = tangent[a];
         const auto& b = bitangent[a];
-        const auto& n = XMLoadFloat3(&normal);
+        const auto& n = DirectX::XMLoadFloat3(&normal);
 
         // Gram-Schmidt orthogonalize
         XMFLOAT4 otangent{};
-        XMStoreFloat4(&otangent, XMVector3Normalize(t - (XMVector3Dot(n, t) * n)));
+        DirectX::XMStoreFloat4(&otangent, XMVector3Normalize(t - (XMVector3Dot(n, t) * n)));
 
         // In case the tangent is invalid
         if (otangent.x == 0 && otangent.y == 0 && otangent.z ==0)
@@ -557,7 +569,7 @@ void GltfScene::createTangents(GltfPrimMesh& resultMesh)
         }
 
         float hardnessDeter{};
-        XMStoreFloat(&hardnessDeter, XMVector3Dot(XMVector3Cross(n, t), b));
+        DirectX::XMStoreFloat(&hardnessDeter, XMVector3Dot(XMVector3Cross(n, t), b));
         // Calculate handedness
         float hardness = ( hardnessDeter < 0.0F) ? 1.0F : -1.0F;
         otangent.w = hardness;
