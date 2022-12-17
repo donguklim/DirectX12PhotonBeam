@@ -449,7 +449,7 @@ void GltfScene::processMesh(const tinygltf::Model& tmodel,
 
         // POSITION
         {
-            bool result = getAttribute<nvmath::vec3f>(tmodel, tmesh, m_positions, "POSITION");
+            bool result = getAttribute<XMFLOAT3>(tmodel, tmesh, m_positions, "POSITION");
 
             // Keeping the size of this primitive (Spec says this is required information)
             const auto& accessor = tmodel.accessors[tmesh.attributes.find("POSITION")->second];
@@ -513,7 +513,7 @@ void GltfScene::processMesh(const tinygltf::Model& tmodel,
         // NORMAL
         if (hasFlag(requestedAttributes, GltfAttributes::Normal))
         {
-            bool normalCreated = getAttribute<nvmath::vec3f>(tmodel, tmesh, m_normals, "NORMAL");
+            bool normalCreated = getAttribute<XMFLOAT3>(tmodel, tmesh, m_normals, "NORMAL");
 
             if (!normalCreated && hasFlag(forceRequested, GltfAttributes::Normal))
                 createNormals(resultMesh);
@@ -522,9 +522,9 @@ void GltfScene::processMesh(const tinygltf::Model& tmodel,
         // TEXCOORD_0
         if (hasFlag(requestedAttributes, GltfAttributes::Texcoord_0))
         {
-            bool texcoordCreated = getAttribute<nvmath::vec2f>(tmodel, tmesh, m_texcoords0, "TEXCOORD_0");
+            bool texcoordCreated = getAttribute<XMFLOAT2>(tmodel, tmesh, m_texcoords0, "TEXCOORD_0");
             if (!texcoordCreated)
-                texcoordCreated = getAttribute<nvmath::vec2f>(tmodel, tmesh, m_texcoords0, "TEXCOORD");
+                texcoordCreated = getAttribute<XMFLOAT2>(tmodel, tmesh, m_texcoords0, "TEXCOORD");
             if (!texcoordCreated && hasFlag(forceRequested, GltfAttributes::Texcoord_0))
                 createTexcoords(resultMesh);
         }
@@ -533,7 +533,7 @@ void GltfScene::processMesh(const tinygltf::Model& tmodel,
         // TANGENT
         if (hasFlag(requestedAttributes, GltfAttributes::Tangent))
         {
-            bool tangentCreated = getAttribute<nvmath::vec4f>(tmodel, tmesh, m_tangents, "TANGENT");
+            bool tangentCreated = getAttribute<XMFLOAT4>(tmodel, tmesh, m_tangents, "TANGENT");
 
             if (!tangentCreated && hasFlag(forceRequested, GltfAttributes::Tangent))
                 createTangents(resultMesh);
@@ -542,7 +542,7 @@ void GltfScene::processMesh(const tinygltf::Model& tmodel,
         // COLOR_0
         if (hasFlag(requestedAttributes, GltfAttributes::Color_0))
         {
-            bool colorCreated = getAttribute<nvmath::vec4f>(tmodel, tmesh, m_colors0, "COLOR_0");
+            bool colorCreated = getAttribute<XMFLOAT4>(tmodel, tmesh, m_colors0, "COLOR_0");
             if (!colorCreated && hasFlag(forceRequested, GltfAttributes::Color_0))
                 createColors(resultMesh);
         }
