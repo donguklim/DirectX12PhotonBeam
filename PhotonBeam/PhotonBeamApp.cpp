@@ -17,7 +17,6 @@
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx12.h"
-#include "GltfScene.hpp"
 
 const int gNumFrameResources = 3;
 
@@ -40,6 +39,7 @@ PhotonBeamApp::~PhotonBeamApp()
         ImGui_ImplWin32_Shutdown();
         ImGui::DestroyContext();
     }
+    m_gltfScene.destroy();
 }
 
 bool PhotonBeamApp::Initialize()
@@ -60,6 +60,7 @@ bool PhotonBeamApp::Initialize()
     BuildDescriptorHeaps();
     BuildConstantBufferViews();
     BuildPSOs();
+    LoadScene();
 
     // Execute the initialization commands.
     ThrowIfFailed(mCommandList->Close());
@@ -542,6 +543,9 @@ void PhotonBeamApp::BuildShadersAndInputLayout()
 void PhotonBeamApp::LoadScene()
 {
     auto Filename = L"media\\cornellBox.gltf";
+
+    m_gltfScene.loadFile("E:/cpp_projects/DirectX12PhotonBeam/PhotonBeam/media/cornellBox.gltf");
+    
 }
 
 void PhotonBeamApp::BuildShapeGeometry()

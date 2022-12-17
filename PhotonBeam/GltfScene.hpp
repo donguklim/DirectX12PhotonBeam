@@ -206,7 +206,9 @@ inline GltfAttributes operator&(GltfAttributes lhs, GltfAttributes rhs)
 class GltfScene
 {
 public:
-    GltfScene(const std::string& filepath);
+    GltfScene() = default;
+
+    void loadFile(const std::string& filepath);
     // Importing all materials in a vector of GltfMaterial structure
     void importMaterials(const tinygltf::Model& tmodel);
 

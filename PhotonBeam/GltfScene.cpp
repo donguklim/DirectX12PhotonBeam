@@ -12,13 +12,13 @@ inline bool hasFlag(T a, TFlag flag)
 }
 
 
-GltfScene::GltfScene(const std::string& filepath)
+void GltfScene::loadFile(const std::string& filepath)
 {
 	tinygltf::Model    tmodel;
 	tinygltf::TinyGLTF tcontext;
 	std::string        warn, error;
 
-	std::string loadingMsg = "Loading file: " + filepath;
+	std::string loadingMsg = "Loading file: " + filepath + " ";
 	
 	OutputDebugStringA(loadingMsg.c_str());
 	if (!tcontext.LoadASCIIFromFile(&tmodel, &error, &warn, filepath))
@@ -31,7 +31,6 @@ GltfScene::GltfScene(const std::string& filepath)
 
 	if (!error.empty())
 		OutputDebugStringA(error.c_str());
-
 
 	importMaterials(tmodel);
     importDrawableNodes(tmodel, GltfAttributes::Normal | GltfAttributes::Texcoord_0);

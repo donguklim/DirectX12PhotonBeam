@@ -5,6 +5,7 @@
 //***************************************************************************************
 
 #pragma once
+#define NOMINMAX
 
 #include "../Common/d3dApp.h"
 #include "../Common/Camera.h"
@@ -12,6 +13,7 @@
 #include "../Common/UploadBuffer.h"
 #include "../Common/GeometryGenerator.h"
 #include "FrameResource.h"
+#include "GltfScene.hpp"
 
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
@@ -60,6 +62,8 @@ public:
     virtual LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)override;
     void InitGui();
     void LoadScene();
+
+    GltfScene m_gltfScene;
 
 private:
     virtual void OnResize()override;
