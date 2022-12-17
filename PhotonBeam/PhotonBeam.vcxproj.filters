@@ -16,17 +16,8 @@
     <Filter Include="imgui">
       <UniqueIdentifier>{5c05676d-1b9b-4941-a927-e2c480ae40fb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="tiny gltf">
-      <UniqueIdentifier>{1a30e091-5532-48dd-b1d9-b0b0ee28020c}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Common\d3dApp.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\d3dUtil.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\Common\DDSTextureLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -63,20 +54,17 @@
     <ClInclude Include="..\imgui\imgui_impl_win32.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="..\Common\Camera.hpp">
+    <ClInclude Include="GltfScene.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\tiny-gltf\json.hpp">
-      <Filter>tiny gltf</Filter>
+    <ClInclude Include="..\Common\Camera.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\tiny-gltf\stb_image.h">
-      <Filter>tiny gltf</Filter>
+    <ClInclude Include="..\Common\d3dApp.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\tiny-gltf\stb_image_write.h">
-      <Filter>tiny gltf</Filter>
-    </ClInclude>
-    <ClInclude Include="..\tiny-gltf\tiny_gltf.h">
-      <Filter>tiny gltf</Filter>
+    <ClInclude Include="..\Common\d3dUtil.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -129,6 +117,9 @@
       <Filter>imgui</Filter>
     </ClCompile>
     <ClCompile Include="..\Common\Camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GltfScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
