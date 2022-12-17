@@ -13,9 +13,7 @@
 #include <vector>
 #include <DirectXMath.h>
 
-#pragma warning(push, 0)
 #include "tiny_gltf.h"
-#pragma warning(pop)
 
 #include "../Common/MathHelper.h"
 
