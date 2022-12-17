@@ -8,17 +8,17 @@ GltfScene::GltfScene(const std::string& filepath)
 
 	std::string loadingMsg = "Loading file: " + filepath;
 	
-	//OutputDebugStringA(loadingMsg.c_str());
+	OutputDebugStringA(loadingMsg.c_str());
 	if (!tcontext.LoadASCIIFromFile(&tmodel, &error, &warn, filepath))
 	{
 		assert(!"Error while loading scene");
 	}
 
-	//if (!warn.empty())
-		//OutputDebugStringA(warn.c_str());
+	if (!warn.empty())
+		OutputDebugStringA(warn.c_str());
 
-	//if (!error.empty())
-		//OutputDebugStringA(error.c_str());
+	if (!error.empty())
+		OutputDebugStringA(error.c_str());
 
 
 	importMaterials(tmodel);
@@ -44,8 +44,7 @@ void GltfScene::checkRequiredExtensions(const tinygltf::Model& tmodel)
         if (supportedExtensions.find(e) == supportedExtensions.end())
         {
             std::string debugMsg = "\n---------------------------------------\n The extension %s is REQUIRED and not supported \n" + e;
-
-            //OutputDebugStringA(debugMsg.c_str());
+            OutputDebugStringA(debugMsg.c_str());
         }
     }
 }
