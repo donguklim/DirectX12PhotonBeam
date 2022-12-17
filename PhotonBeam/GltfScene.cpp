@@ -1,5 +1,7 @@
 #include "GltfScene.hpp"
 
+using namespace DirectX;
+
 GltfScene::GltfScene(const std::string& filepath)
 {
 	tinygltf::Model    tmodel;
@@ -65,12 +67,12 @@ void GltfScene::importMaterials(const tinygltf::Model& tmodel)
         gmat.alphaMode = tmat.alphaMode == "MASK" ? 1 : (tmat.alphaMode == "BLEND" ? 2 : 0);
         gmat.doubleSided = tmat.doubleSided ? 1 : 0;
         gmat.emissiveFactor = tmat.emissiveFactor.size() == 3 ?
-            DirectX::XMFLOAT3(
+            XMFLOAT3(
                 static_cast<float>(tmat.emissiveFactor[0]), 
                 static_cast<float>(tmat.emissiveFactor[1]),
                 static_cast<float>(tmat.emissiveFactor[2])
             ) :
-            DirectX::XMFLOAT3(0.f, 0.f, 0.f);
+            XMFLOAT3(0.f, 0.f, 0.f);
         gmat.emissiveTexture = tmat.emissiveTexture.index;
         gmat.normalTexture = tmat.normalTexture.index;
         gmat.normalTextureScale = static_cast<float>(tmat.normalTexture.scale);
@@ -80,7 +82,7 @@ void GltfScene::importMaterials(const tinygltf::Model& tmodel)
         // PbrMetallicRoughness
         auto& tpbr = tmat.pbrMetallicRoughness;
         gmat.baseColorFactor =
-            DirectX::XMFLOAT4(
+            XMFLOAT4(
                 static_cast<float>(tpbr.baseColorFactor[0]),
                 static_cast<float>(tpbr.baseColorFactor[1]),
                 static_cast<float>(tpbr.baseColorFactor[2]),
@@ -115,17 +117,17 @@ void GltfScene::importMaterials(const tinygltf::Model& tmodel)
             getInt(ext, "texCoord", tt.texCoord);
 
             // Computing the transformation
-            //auto translation = DirectX::XMFLOAT3X3(1, 0, tt.offset.x, 0, 1, tt.offset.y, 0, 0, 1);
-            //auto rotation = DirectX::XMFLOAT3X3(cos(tt.rotation), sin(tt.rotation), 0, -sin(tt.rotation), cos(tt.rotation), 0, 0, 0, 1);
-            //auto scale = DirectX::XMFLOAT3X3(tt.scale.x, 0, 0, 0, tt.scale.y, 0, 0, 0, 1);
+            //auto translation = XMFLOAT3X3(1, 0, tt.offset.x, 0, 1, tt.offset.y, 0, 0, 1);
+            //auto rotation = XMFLOAT3X3(cos(tt.rotation), sin(tt.rotation), 0, -sin(tt.rotation), cos(tt.rotation), 0, 0, 0, 1);
+            //auto scale = XMFLOAT3X3(tt.scale.x, 0, 0, 0, tt.scale.y, 0, 0, 0, 1);
             //tt.uvTransform = scale * rotation * translation;
 
 
-            DirectX::XMStoreFloat3x3(
+            XMStoreFloat3x3(
                 &tt.uvTransform,
-                DirectX::XMMatrixScaling(tt.scale.x, tt.scale.y, 1.0f) 
-                * DirectX::XMMatrixRotationX(tt.rotation) 
-                * DirectX::XMMatrixTranslation(tt.offset.x, tt.offset.y, 0.0f)
+                XMMatrixScaling(tt.scale.x, tt.scale.y, 1.0f) 
+                * XMMatrixRotationX(tt.rotation) 
+                * XMMatrixTranslation(tt.offset.x, tt.offset.y, 0.0f)
            );
         }
 
@@ -275,7 +277,7 @@ void GltfScene::importDrawableNodes(const tinygltf::Model& tmodel, GltfAttribute
     }
 
     computeSceneDimensions();
-    //computeCamera();
+    computeCamera();
 
     m_meshToPrimMeshes.clear();
     primitiveIndices32u.clear();
@@ -283,7 +285,7 @@ void GltfScene::importDrawableNodes(const tinygltf::Model& tmodel, GltfAttribute
     primitiveIndices8u.clear();
 }
 
-void GltfScene::processNode(const tinygltf::Model& tmodel, int& nodeIdx, const DirectX::XMFLOAT4X4& parentMatrix)
+void GltfScene::processNode(const tinygltf::Model& tmodel, int& nodeIdx, const XMFLOAT4X4& parentMatrix)
 {
 
 }
@@ -298,9 +300,40 @@ void GltfScene::processMesh(const tinygltf::Model& tmodel,
 
 }
 
-void GltfScene::createNormals(GltfPrimMesh& resultMesh)
+void GltfScene::computeCamera()
 {
 
+}
+
+void GltfScene::createNormals(GltfPrimMesh& resultMesh)
+{
+    std::vector<XMVECTOR> geonormal(resultMesh.vertexCount, XMVectorZero());
+    for (size_t i = 0; i < resultMesh.indexCount; i += 3)
+    {
+        uint32_t    ind0 = m_indices[resultMesh.firstIndex + i + 0];
+        uint32_t    ind1 = m_indices[resultMesh.firstIndex + i + 1];
+        uint32_t    ind2 = m_indices[resultMesh.firstIndex + i + 2];
+        const auto& pos0 = m_positions[ind0 + resultMesh.vertexOffset];
+        const auto& pos1 = m_positions[ind1 + resultMesh.vertexOffset];
+        const auto& pos2 = m_positions[ind2 + resultMesh.vertexOffset];
+
+        
+        const auto  v1 = XMVector3Normalize(XMLoadFloat3(&pos1) - XMLoadFloat3(&pos0)); // Many normalize, but when objects are really small the
+        const auto  v2 = XMVector3Normalize(XMLoadFloat3(&pos2) - XMLoadFloat3(&pos0)); // cross will go below nv_eps and the normal will be (0,0,0)
+        const auto n = XMVector3Cross(v2, v1);
+        geonormal[ind0] += n;
+        geonormal[ind1] += n;
+        geonormal[ind2] += n;
+    }
+
+    m_normals.reserve(m_normals.size() + geonormal.size());
+    for (auto& n : geonormal)
+    { 
+        XMFLOAT3 normal{};
+        XMStoreFloat3(&normal, XMVector3Normalize(n));
+        m_normals.push_back(normal);
+    }
+    
 }
 
 void GltfScene::createTexcoords(GltfPrimMesh& resultMesh)

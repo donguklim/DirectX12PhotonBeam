@@ -11,7 +11,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <DirectXMath.h>
 #include <tiny_gltf.h>
 #include "../Common/MathHelper.h"
 
@@ -267,7 +266,7 @@ private:
 
     std::unordered_map<std::string, GltfPrimMesh> m_cachePrimMesh;
 
-    //void computeCamera();
+    void computeCamera();
     void checkRequiredExtensions(const tinygltf::Model& tmodel);
     void findUsedMeshes(const tinygltf::Model& tmodel, std::set<uint32_t>& usedMeshes, int nodeIdx);
 };
