@@ -338,12 +338,181 @@ void GltfScene::createNormals(GltfPrimMesh& resultMesh)
 
 void GltfScene::createTexcoords(GltfPrimMesh& resultMesh)
 {
+    // Set them all to zero
+  //      m_texcoords0.insert(m_texcoords0.end(), resultMesh.vertexCount, nvmath::vec2f(0, 0));
 
+  // Cube map projection
+    for (uint32_t i = 0; i < resultMesh.vertexCount; i++)
+    {
+        const auto& pos = m_positions[resultMesh.vertexOffset + i];
+        float       absX = fabs(pos.x);
+        float       absY = fabs(pos.y);
+        float       absZ = fabs(pos.z);
+
+        int isXPositive = pos.x > 0 ? 1 : 0;
+        int isYPositive = pos.y > 0 ? 1 : 0;
+        int isZPositive = pos.z > 0 ? 1 : 0;
+
+        float maxAxis, uc, vc;
+
+        // POSITIVE X
+        if (isXPositive && absX >= absY && absX >= absZ)
+        {
+            // u (0 to 1) goes from +z to -z
+            // v (0 to 1) goes from -y to +y
+            maxAxis = absX;
+            uc = -pos.z;
+            vc = pos.y;
+        }
+        // NEGATIVE X
+        if (!isXPositive && absX >= absY && absX >= absZ)
+        {
+            // u (0 to 1) goes from -z to +z
+            // v (0 to 1) goes from -y to +y
+            maxAxis = absX;
+            uc = pos.z;
+            vc = pos.y;
+        }
+        // POSITIVE Y
+        if (isYPositive && absY >= absX && absY >= absZ)
+        {
+            // u (0 to 1) goes from -x to +x
+            // v (0 to 1) goes from +z to -z
+            maxAxis = absY;
+            uc = pos.x;
+            vc = -pos.z;
+        }
+        // NEGATIVE Y
+        if (!isYPositive && absY >= absX && absY >= absZ)
+        {
+            // u (0 to 1) goes from -x to +x
+            // v (0 to 1) goes from -z to +z
+            maxAxis = absY;
+            uc = pos.x;
+            vc = pos.z;
+        }
+        // POSITIVE Z
+        if (isZPositive && absZ >= absX && absZ >= absY)
+        {
+            // u (0 to 1) goes from -x to +x
+            // v (0 to 1) goes from -y to +y
+            maxAxis = absZ;
+            uc = pos.x;
+            vc = pos.y;
+        }
+        // NEGATIVE Z
+        if (!isZPositive && absZ >= absX && absZ >= absY)
+        {
+            // u (0 to 1) goes from +x to -x
+            // v (0 to 1) goes from -y to +y
+            maxAxis = absZ;
+            uc = -pos.x;
+            vc = pos.y;
+        }
+
+        // Convert range from -1 to 1 to 0 to 1
+        float u = 0.5f * (uc / maxAxis + 1.0f);
+        float v = 0.5f * (vc / maxAxis + 1.0f);
+
+        m_texcoords0.emplace_back(u, v);
+    }
 }
 
 void GltfScene::createTangents(GltfPrimMesh& resultMesh)
 {
+    // #TODO - Should calculate tangents using default MikkTSpace algorithms
+  // See: https://github.com/mmikk/MikkTSpace
 
+    std::vector<XMVECTOR> tangent(resultMesh.vertexCount, XMVectorZero());
+    std::vector<XMVECTOR> bitangent(resultMesh.vertexCount, XMVectorZero());
+
+    // Current implementation
+    // http://foundationsofgameenginedev.com/FGED2-sample.pdf
+    for (size_t i = 0; i < resultMesh.indexCount; i += 3)
+    {
+        // local index
+        uint32_t i0 = m_indices[resultMesh.firstIndex + i + 0];
+        uint32_t i1 = m_indices[resultMesh.firstIndex + i + 1];
+        uint32_t i2 = m_indices[resultMesh.firstIndex + i + 2];
+        assert(i0 < resultMesh.vertexCount);
+        assert(i1 < resultMesh.vertexCount);
+        assert(i2 < resultMesh.vertexCount);
+
+
+        // global index
+        uint32_t gi0 = i0 + resultMesh.vertexOffset;
+        uint32_t gi1 = i1 + resultMesh.vertexOffset;
+        uint32_t gi2 = i2 + resultMesh.vertexOffset;
+
+        const auto& p0 = XMLoadFloat3(&m_positions[gi0]);
+        const auto& p1 = XMLoadFloat3(&m_positions[gi1]);
+        const auto& p2 = XMLoadFloat3(&m_positions[gi2]);
+
+        const auto& uv0 = m_texcoords0[gi0];
+        const auto& uv1 = m_texcoords0[gi1];
+        const auto& uv2 = m_texcoords0[gi2];
+
+        XMFLOAT2 duvE1 = { uv1.x - uv0.x, uv1.y - uv0.y };
+        XMFLOAT2 duvE2 = { uv2.x - uv0.x, uv2.y - uv0.y };
+
+        float r = 1.0F;
+        float a = duvE1.x * duvE2.y - duvE2.x * duvE1.y;
+
+        XMVECTOR e1 = p1 - p0;
+        XMVECTOR e2 = p2 - p0;
+
+        XMVECTOR duvE1 = uv1 - uv0;
+        XMVECTOR duvE2 = uv2 - uv0;
+
+        
+        float r = 1.0F;
+        float a = duvE1.x * duvE2.y - duvE2.x * duvE1.y;
+        if (fabs(a) > 0)  // Catch degenerated UV
+        {
+            r = 1.0f / a;
+        }
+
+        
+        auto t = (XMVectorScale(e1, duvE2.y) - XMVectorScale(e2, duvE1.y)) * r;
+        auto b = (XMVectorScale(e2, duvE1.x) - XMVectorScale(e1, duvE2.x)) * r;
+
+
+        tangent[i0] += t;
+        tangent[i1] += t;
+        tangent[i2] += t;
+
+        bitangent[i0] += b;
+        bitangent[i1] += b;
+        bitangent[i2] += b;
+    }
+
+    for (uint32_t a = 0; a < resultMesh.vertexCount; a++)
+    {
+        const auto& normal = m_normals[resultMesh.vertexOffset + a];
+        const auto& t = tangent[a];
+        const auto& b = bitangent[a];
+        const auto& n = XMLoadFloat3(&normal);
+
+        // Gram-Schmidt orthogonalize
+        XMFLOAT4 otangent{};
+        XMStoreFloat4(&otangent, XMVector3Normalize(t - (XMVector3Dot(n, t) * n)));
+
+        // In case the tangent is invalid
+        if (otangent.x == 0 && otangent.y == 0 && otangent.z ==0)
+        {
+            if (abs(normal.x) > abs(normal.y))
+                otangent = XMFLOAT3(normal.z, 0, -normal.x) / sqrt(normal.x * normal.x + normal.z * normal.z);
+            else
+                otangent = XMFLOAT3(0, -normal.z, normal.y) / sqrt(normal.y * normal.y + normal.z * normal.z);
+        }
+
+        float hardnessDeter{};
+        XMStoreFloat(*hardnessDeter, XMVector3Dot(XMVector3Cross(n, t), b))
+        // Calculate handedness
+        float hardness = ( hardnessDeter < 0.0F) ? 1.0F : -1.0F;
+        otangent.w = hardness;
+        m_tangents.emplace_back(otangent);
+    }
 }
 
 void GltfScene::createColors(GltfPrimMesh& resultMesh)
