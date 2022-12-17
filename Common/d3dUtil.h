@@ -25,7 +25,7 @@
 #include <fstream>
 #include <sstream>
 #include <cassert>
-#include "../directx-headers/directx/d3dx12.h"
+#include "d3dx12.h"
 #include "DDSTextureLoader.h"
 #include "MathHelper.h"
 
