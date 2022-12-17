@@ -299,7 +299,7 @@ void GltfScene::processNode(const tinygltf::Model& tmodel, int& nodeIdx, const X
 
     if (!tnode.rotation.empty())
     {
-        XMFLOAT4 quaternion{ tnode.rotation[0], tnode.rotation[1], tnode.rotation[2], tnode.rotation[3] };
+        XMFLOAT4 quaternion(tnode.rotation[0], tnode.rotation[1], tnode.rotation[2], tnode.rotation[3]);
         mrot = XMMatrixRotationQuaternion(XMLoadFloat4(&quaternion));
     }
     if (!tnode.matrix.empty())
@@ -308,11 +308,13 @@ void GltfScene::processNode(const tinygltf::Model& tmodel, int& nodeIdx, const X
         for (int i = 0; i < 16; ++i)
             matVal[i] = static_cast<float>(tnode.matrix[i]);
 
-        XMFLOAT4X4(matVal);
+
+        XMFLOAT4X4 mat4x4{ matVal };
+        matrix = XMLoadFloat4x4(&mat4x4);
     }
 
     XMFLOAT4X4 worldMatrix{};    
-    XMStoreFloat4x4(&worldMatrix, XMLoadFloat4x4(parentMatrix) * mtranslation* mrot* mscale* matrix);
+    XMStoreFloat4x4(&worldMatrix, XMLoadFloat4x4(&parentMatrix) * mtranslation* mrot* mscale* matrix);
 
     if (tnode.mesh > -1)
     {
