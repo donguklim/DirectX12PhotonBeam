@@ -222,9 +222,6 @@ public:
 
     //void exportDrawableNodes(tinygltf::Model& tmodel, GltfAttributes requestedAttributes);
 
-    // Compute the scene bounding box
-    void computeSceneDimensions();
-
     // Removes everything
     void destroy();
 
@@ -266,7 +263,6 @@ private:
 
     std::unordered_map<std::string, GltfPrimMesh> m_cachePrimMesh;
 
-    void computeCamera();
     void checkRequiredExtensions(const tinygltf::Model& tmodel);
     void findUsedMeshes(const tinygltf::Model& tmodel, std::set<uint32_t>& usedMeshes, int nodeIdx);
 };

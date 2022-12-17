@@ -276,9 +276,6 @@ void GltfScene::importDrawableNodes(const tinygltf::Model& tmodel, GltfAttribute
         processNode(tmodel, nodeIdx, MathHelper::Identity4x4());
     }
 
-    computeSceneDimensions();
-    computeCamera();
-
     m_meshToPrimMeshes.clear();
     primitiveIndices32u.clear();
     primitiveIndices16u.clear();
@@ -300,11 +297,6 @@ void GltfScene::processMesh(const tinygltf::Model& tmodel,
 
 }
 
-void GltfScene::computeCamera()
-{
-
-}
-
 void GltfScene::createNormals(GltfPrimMesh& resultMesh)
 {
     std::vector<XMVECTOR> geonormal(resultMesh.vertexCount, XMVectorZero());
@@ -313,9 +305,9 @@ void GltfScene::createNormals(GltfPrimMesh& resultMesh)
         uint32_t    ind0 = m_indices[resultMesh.firstIndex + i + 0];
         uint32_t    ind1 = m_indices[resultMesh.firstIndex + i + 1];
         uint32_t    ind2 = m_indices[resultMesh.firstIndex + i + 2];
-        const auto& pos0 = m_positions[ind0 + resultMesh.vertexOffset];
-        const auto& pos1 = m_positions[ind1 + resultMesh.vertexOffset];
-        const auto& pos2 = m_positions[ind2 + resultMesh.vertexOffset];
+        const auto& pos0 = m_positions[static_cast<size_t>(ind0 + resultMesh.vertexOffset)];
+        const auto& pos1 = m_positions[static_cast<size_t>(ind1 + resultMesh.vertexOffset)];
+        const auto& pos2 = m_positions[static_cast<size_t>(ind2 + resultMesh.vertexOffset)];
 
         
         const auto  v1 = XMVector3Normalize(XMLoadFloat3(&pos1) - XMLoadFloat3(&pos0)); // Many normalize, but when objects are really small the
@@ -344,7 +336,7 @@ void GltfScene::createTexcoords(GltfPrimMesh& resultMesh)
   // Cube map projection
     for (uint32_t i = 0; i < resultMesh.vertexCount; i++)
     {
-        const auto& pos = m_positions[resultMesh.vertexOffset + i];
+        const auto& pos = m_positions[static_cast<size_t>(resultMesh.vertexOffset + i)];
         float       absX = fabs(pos.x);
         float       absY = fabs(pos.y);
         float       absZ = fabs(pos.z);
@@ -482,7 +474,7 @@ void GltfScene::createTangents(GltfPrimMesh& resultMesh)
 
     for (uint32_t a = 0; a < resultMesh.vertexCount; a++)
     {
-        const auto& normal = m_normals[resultMesh.vertexOffset + a];
+        const auto& normal = m_normals[static_cast<size_t>(resultMesh.vertexOffset + a)];
         const auto& t = tangent[a];
         const auto& b = bitangent[a];
         const auto& n = XMLoadFloat3(&normal);
@@ -518,19 +510,40 @@ void GltfScene::createTangents(GltfPrimMesh& resultMesh)
 
 void GltfScene::createColors(GltfPrimMesh& resultMesh)
 {
-
-}
-
-void GltfScene::computeSceneDimensions()
-{
-
+    // Set them all to one
+    m_colors0.insert(m_colors0.end(), resultMesh.vertexCount, XMFLOAT4(1, 1, 1, 1));
 }
 
 void GltfScene::destroy()
 {
+    m_materials.clear();
+    m_nodes.clear();
+    m_primMeshes.clear();
+    //m_cameras.clear();
+    //m_lights.clear();
+
+    m_positions.clear();
+    m_indices.clear();
+    m_normals.clear();
+    m_tangents.clear();
+    m_texcoords0.clear();
+    m_texcoords1.clear();
+    m_colors0.clear();
+    //m_joints0.clear();
+    //m_weights0.clear();
+    //m_dimensions = {};
+    m_meshToPrimMeshes.clear();
+    primitiveIndices32u.clear();
+    primitiveIndices16u.clear();
+    primitiveIndices8u.clear();
+    m_cachePrimMesh.clear();
 }
 
 void GltfScene::findUsedMeshes(const tinygltf::Model& tmodel, std::set<uint32_t>& usedMeshes, int nodeIdx)
 {
-
+    const auto& node = tmodel.nodes[nodeIdx];
+    if (node.mesh >= 0)
+        usedMeshes.insert(node.mesh);
+    for (const auto& c : node.children)
+        findUsedMeshes(tmodel, usedMeshes, c);
 }
