@@ -1,11 +1,6 @@
 #pragma once
 
-#define TINYGLTF_IMPLEMENTATION
-#define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-
-// tiny gltf uses sprintf, so bellow define is needed
-#define _CRT_SECURE_NO_WARNINGS
+#define NOMINMAX
 
 #include <algorithm>
 #include <set>
@@ -477,50 +472,13 @@ void copyAccessorData(std::vector<T>& outData,
 }
 
 template <typename T>
-float& accessVecAttr(T& vec, size_t index)
-{
-    return T[index];
-}
+float& accessVecAttr(T& vec, size_t index);
 
-float& accessVecAttr(DirectX::XMFLOAT2 &vec, size_t index)
-{
-    assert(index < 2);
+float& accessVecAttr(DirectX::XMFLOAT2& vec, size_t index);
 
-    if (index == 0)
-        return vec.x;
+float& accessVecAttr(DirectX::XMFLOAT3& vec, size_t index);
 
-    return vec.y;
-}
-
-float& accessVecAttr(DirectX::XMFLOAT3& vec, size_t index)
-{
-    assert(index < 3);
-
-    if (index == 0)
-        return vec.x;
-
-    if (index == 1)
-        return vec.y;
-
-    return vec.z;
-}
-
-float& accessVecAttr(DirectX::XMFLOAT4& vec, size_t index)
-{
-    assert(index < 4);
-
-    if (index == 0)
-        return vec.x;
-
-    if (index == 1)
-        return vec.y;
-
-    if (index == 2)
-        return vec.z;
-
-    return vec.w;
-
-}
+float& accessVecAttr(DirectX::XMFLOAT4& vec, size_t index);
 
 
 // Appending to \p attribVec, all the values of \p accessor

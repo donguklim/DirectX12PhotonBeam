@@ -1,5 +1,7 @@
 #include "GltfScene.hpp"
 #include <iostream>
+#include <sstream>
+#include <windows.h>
 
 using namespace DirectX;
 
@@ -804,4 +806,50 @@ void GltfScene::findUsedMeshes(const tinygltf::Model& tmodel, std::set<uint32_t>
         usedMeshes.insert(node.mesh);
     for (const auto& c : node.children)
         findUsedMeshes(tmodel, usedMeshes, c);
+}
+
+template <typename T>
+float& accessVecAttr(T& vec, size_t index)
+{
+    return T[index];
+}
+
+float& accessVecAttr(DirectX::XMFLOAT2& vec, size_t index)
+{
+    assert(index < 2);
+
+    if (index == 0)
+        return vec.x;
+
+    return vec.y;
+}
+
+float& accessVecAttr(DirectX::XMFLOAT3& vec, size_t index)
+{
+    assert(index < 3);
+
+    if (index == 0)
+        return vec.x;
+
+    if (index == 1)
+        return vec.y;
+
+    return vec.z;
+}
+
+float& accessVecAttr(DirectX::XMFLOAT4& vec, size_t index)
+{
+    assert(index < 4);
+
+    if (index == 0)
+        return vec.x;
+
+    if (index == 1)
+        return vec.y;
+
+    if (index == 2)
+        return vec.z;
+
+    return vec.w;
+
 }

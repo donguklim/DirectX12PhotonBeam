@@ -3,11 +3,21 @@
 //
 // Hold down '1' key to view scene in wireframe mode.
 //***************************************************************************************
+#pragma once
+
+#define NOMINMAX
+
+#define TINYGLTF_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+// tiny gltf used in GltfScene.hpp uses sprintf, so bellow define is needed
+#define _CRT_SECURE_NO_WARNINGS
 
 #include "PhotonBeamApp.hpp"
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx12.h"
+#include "GltfScene.hpp"
 
 const int gNumFrameResources = 3;
 
