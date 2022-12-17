@@ -333,3 +333,144 @@ static inline void getTexId(const tinygltf::Value& value, const std::string& nam
         val = value.Get(name).Get("index").Get<int>();
     }
 }
+
+// Calls a function (such as a lambda function) for each (index, value) pair in
+// a sparse accessor. It's only potentially called for indices from
+// accessorFirstElement through accessorFirstElement + numElementsToProcess - 1.
+template <class T>
+void forEachSparseValue(const tinygltf::Model& tmodel,
+    const tinygltf::Accessor& accessor,
+    size_t                                            accessorFirstElement,
+    size_t                                            numElementsToProcess,
+    std::function<void(size_t index, const T* value)> fn)
+{
+    if (!accessor.sparse.isSparse)
+    {
+        return;  // Nothing to do
+    }
+
+    const auto& idxs = accessor.sparse.indices;
+    if (!(idxs.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE      //
+        || idxs.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT  //
+        || idxs.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT))
+    {
+        assert(!"Unsupported sparse accessor index type.");
+        return;
+    }
+
+    const tinygltf::BufferView& idxBufferView = tmodel.bufferViews[idxs.bufferView];
+    const unsigned char* idxBuffer = &tmodel.buffers[idxBufferView.buffer].data[idxBufferView.byteOffset];
+    const size_t                idxBufferByteStride =
+        idxBufferView.byteStride ? idxBufferView.byteStride : tinygltf::GetComponentSizeInBytes(idxs.componentType);
+    if (idxBufferByteStride == size_t(-1))
+        return;  // Invalid
+
+    const auto& vals = accessor.sparse.values;
+    const tinygltf::BufferView& valBufferView = tmodel.bufferViews[vals.bufferView];
+    const unsigned char* valBuffer = &tmodel.buffers[valBufferView.buffer].data[valBufferView.byteOffset];
+    const size_t                valBufferByteStride = accessor.ByteStride(valBufferView);
+    if (valBufferByteStride == size_t(-1))
+        return;  // Invalid
+
+    // Note that this could be faster for lots of small copies, since we could
+    // binary search for the first sparse accessor index to use (since the
+    // glTF specification requires the indices be sorted)!
+    for (size_t pairIdx = 0; pairIdx < accessor.sparse.count; pairIdx++)
+    {
+        // Read the index from the index buffer, converting its type
+        size_t               index = 0;
+        const unsigned char* pIdx = idxBuffer + idxBufferByteStride * pairIdx;
+        switch (idxs.componentType)
+        {
+        case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
+            index = *reinterpret_cast<const uint8_t*>(pIdx);
+            break;
+        case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
+            index = *reinterpret_cast<const uint16_t*>(pIdx);
+            break;
+        case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:
+            index = *reinterpret_cast<const uint32_t*>(pIdx);
+            break;
+        }
+
+        // If it's not in range, skip it
+        if (index < accessorFirstElement || (index - accessorFirstElement) >= numElementsToProcess)
+        {
+            continue;
+        }
+
+        fn(index, reinterpret_cast<const T*>(valBuffer + valBufferByteStride * pairIdx));
+    }
+}
+
+// Copies accessor elements accessorFirstElement through
+// accessorFirstElement + numElementsToCopy - 1 to outData elements
+// outFirstElement through outFirstElement + numElementsToCopy - 1.
+// This handles sparse accessors correctly! It's intended as a replacement for
+// what would be memcpy(..., &buffer.data[...], ...) calls.
+//
+// However, it performs no conversion: it assumes (but does not check) that
+// accessor's elements are of type T. For instance, T should be a struct of two
+// floats for a VEC2 float accessor.
+//
+// This is range-checked, so elements that would be out-of-bounds are not
+// copied. We assume size_t overflow does not occur.
+// Note that outDataSizeInT is the number of elements in the outDataBuffer,
+// while numElementsToCopy is the number of elements to copy, not the number
+// of elements in accessor.
+template <class T>
+void copyAccessorData(T* outData,
+    size_t                    outDataSizeInElements,
+    size_t                    outFirstElement,
+    const tinygltf::Model& tmodel,
+    const tinygltf::Accessor& accessor,
+    size_t                    accessorFirstElement,
+    size_t                    numElementsToCopy)
+{
+    if (outFirstElement >= outDataSizeInElements)
+    {
+        assert(!"Invalid outFirstElement!");
+        return;
+    }
+
+    if (accessorFirstElement >= accessor.count)
+    {
+        assert(!"Invalid accessorFirstElement!");
+        return;
+    }
+
+    const tinygltf::BufferView& bufferView = tmodel.bufferViews[accessor.bufferView];
+    const unsigned char* buffer = &tmodel.buffers[bufferView.buffer].data[accessor.byteOffset + bufferView.byteOffset];
+
+    const size_t maxSafeCopySize = std::min(accessor.count - accessorFirstElement, outDataSizeInElements - outFirstElement);
+    numElementsToCopy = std::min(numElementsToCopy, maxSafeCopySize);
+
+    if (bufferView.byteStride == 0)
+    {
+        memcpy(outData + outFirstElement, reinterpret_cast<const T*>(buffer) + accessorFirstElement, numElementsToCopy * sizeof(T));
+    }
+    else
+    {
+        // Must copy one-by-one
+        for (size_t i = 0; i < numElementsToCopy; i++)
+        {
+            outData[outFirstElement + i] = *reinterpret_cast<const T*>(buffer + bufferView.byteStride * i);
+        }
+    }
+
+    // Handle sparse accessors by overwriting already copied elements.
+    forEachSparseValue<T>(tmodel, accessor, accessorFirstElement, numElementsToCopy,
+        [&outData](size_t index, const T* value) { outData[index] = *value; });
+}
+
+// Same as copyAccessorData(T*, ...), but taking a vector.
+template <class T>
+void copyAccessorData(std::vector<T>& outData,
+    size_t                    outFirstElement,
+    const tinygltf::Model& tmodel,
+    const tinygltf::Accessor& accessor,
+    size_t                    accessorFirstElement,
+    size_t                    numElementsToCopy)
+{
+    copyAccessorData<T>(outData.data(), outData.size(), outFirstElement, tmodel, accessor, accessorFirstElement, numElementsToCopy);
+}

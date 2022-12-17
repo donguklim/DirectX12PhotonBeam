@@ -1,6 +1,14 @@
 #include "GltfScene.hpp"
+#include <iostream>
 
 using namespace DirectX;
+
+template <typename T, typename TFlag>
+inline bool hasFlag(T a, TFlag flag)
+{
+    return (a & flag) == flag;
+}
+
 
 GltfScene::GltfScene(const std::string& filepath)
 {
@@ -363,7 +371,188 @@ void GltfScene::processMesh(const tinygltf::Model& tmodel,
     const std::string& name
 )
 {
+    // Only triangles are supported
+    // 0:point, 1:lines, 2:line_loop, 3:line_strip, 4:triangles, 5:triangle_strip, 6:triangle_fan
+    if (tmesh.mode != 4)
+        return;
 
+    GltfPrimMesh resultMesh;
+    resultMesh.name = name;
+    resultMesh.materialIndex = std::max(0, tmesh.material);
+    resultMesh.vertexOffset = static_cast<uint32_t>(m_positions.size());
+    resultMesh.firstIndex = static_cast<uint32_t>(m_indices.size());
+
+    // Create a key made of the attributes, to see if the primitive was already
+    // processed. If it is, we will re-use the cache, but allow the material and
+    // indices to be different.
+    std::stringstream o;
+    for (auto& a : tmesh.attributes)
+    {
+        o << a.first << a.second;
+    }
+    std::string key = o.str();
+    bool        primMeshCached = false;
+
+    // Found a cache - will not need to append vertex
+    auto it = m_cachePrimMesh.find(key);
+    if (it != m_cachePrimMesh.end())
+    {
+        primMeshCached = true;
+        GltfPrimMesh cacheMesh = it->second;
+        resultMesh.vertexCount = cacheMesh.vertexCount;
+        resultMesh.vertexOffset = cacheMesh.vertexOffset;
+    }
+
+
+    // INDICES
+    if (tmesh.indices > -1)
+    {
+        const tinygltf::Accessor& indexAccessor = tmodel.accessors[tmesh.indices];
+        resultMesh.indexCount = static_cast<uint32_t>(indexAccessor.count);
+
+        switch (indexAccessor.componentType)
+        {
+        case TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT: {
+            primitiveIndices32u.resize(indexAccessor.count);
+            copyAccessorData(primitiveIndices32u, 0, tmodel, indexAccessor, 0, indexAccessor.count);
+            m_indices.insert(m_indices.end(), primitiveIndices32u.begin(), primitiveIndices32u.end());
+            break;
+        }
+        case TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT: {
+            primitiveIndices16u.resize(indexAccessor.count);
+            copyAccessorData(primitiveIndices16u, 0, tmodel, indexAccessor, 0, indexAccessor.count);
+            m_indices.insert(m_indices.end(), primitiveIndices16u.begin(), primitiveIndices16u.end());
+            break;
+        }
+        case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE: {
+            primitiveIndices8u.resize(indexAccessor.count);
+            copyAccessorData(primitiveIndices8u, 0, tmodel, indexAccessor, 0, indexAccessor.count);
+            m_indices.insert(m_indices.end(), primitiveIndices8u.begin(), primitiveIndices8u.end());
+            break;
+        }
+        default:
+            std::cerr << "Index component type " << indexAccessor.componentType << " not supported!" << std::endl;
+            return;
+        }
+    }
+    else
+    {
+        // Primitive without indices, creating them
+        const auto& accessor = tmodel.accessors[tmesh.attributes.find("POSITION")->second];
+        for (auto i = 0; i < accessor.count; i++)
+            m_indices.push_back(i);
+        resultMesh.indexCount = static_cast<uint32_t>(accessor.count);
+    }
+
+    if (primMeshCached == false)  // Need to add this primitive
+    {
+
+        // POSITION
+        {
+            bool result = getAttribute<nvmath::vec3f>(tmodel, tmesh, m_positions, "POSITION");
+
+            // Keeping the size of this primitive (Spec says this is required information)
+            const auto& accessor = tmodel.accessors[tmesh.attributes.find("POSITION")->second];
+            resultMesh.vertexCount = static_cast<uint32_t>(accessor.count);
+            if (!accessor.minValues.empty())
+            {
+                resultMesh.posMin = XMFLOAT3(
+                    static_cast<float>(accessor.minValues[0]), 
+                    static_cast<float>(accessor.minValues[1]), 
+                    static_cast<float>(accessor.minValues[2])
+                );
+            }
+            else
+            {
+                resultMesh.posMin = XMFLOAT3(
+                    std::numeric_limits<float>::max(), 
+                    std::numeric_limits<float>::max(), 
+                    std::numeric_limits<float>::max()
+                );
+                for (const auto& p : m_positions)
+                {
+                    if (p.x < resultMesh.posMin.x)
+                        resultMesh.posMin.x = p.x;
+
+                    if (p.y < resultMesh.posMin.y)
+                        resultMesh.posMin.y = p.y;
+
+                    if (p.z < resultMesh.posMin.z)
+                        resultMesh.posMin.z = p.z;
+                }
+            }
+            if (!accessor.maxValues.empty())
+            {
+                resultMesh.posMax = XMFLOAT3(
+                    static_cast<float>(accessor.maxValues[0]),
+                    static_cast<float>(accessor.maxValues[1]),
+                    static_cast<float>(accessor.maxValues[2])
+                );
+            }
+            else
+            {
+                resultMesh.posMax = XMFLOAT3(
+                    -std::numeric_limits<float>::max(),
+                    -std::numeric_limits<float>::max(),
+                    -std::numeric_limits<float>::max()
+                );
+                for (const auto& p : m_positions)
+                {
+                    if (p.x > resultMesh.posMax.x)
+                        resultMesh.posMax.x = p.x;
+
+                    if (p.y > resultMesh.posMax.y)
+                        resultMesh.posMax.y = p.y;
+
+                    if (p.z > resultMesh.posMax.z)
+                        resultMesh.posMax.z = p.z;
+                }
+            }
+        }
+
+        // NORMAL
+        if (hasFlag(requestedAttributes, GltfAttributes::Normal))
+        {
+            bool normalCreated = getAttribute<nvmath::vec3f>(tmodel, tmesh, m_normals, "NORMAL");
+
+            if (!normalCreated && hasFlag(forceRequested, GltfAttributes::Normal))
+                createNormals(resultMesh);
+        }
+
+        // TEXCOORD_0
+        if (hasFlag(requestedAttributes, GltfAttributes::Texcoord_0))
+        {
+            bool texcoordCreated = getAttribute<nvmath::vec2f>(tmodel, tmesh, m_texcoords0, "TEXCOORD_0");
+            if (!texcoordCreated)
+                texcoordCreated = getAttribute<nvmath::vec2f>(tmodel, tmesh, m_texcoords0, "TEXCOORD");
+            if (!texcoordCreated && hasFlag(forceRequested, GltfAttributes::Texcoord_0))
+                createTexcoords(resultMesh);
+        }
+
+
+        // TANGENT
+        if (hasFlag(requestedAttributes, GltfAttributes::Tangent))
+        {
+            bool tangentCreated = getAttribute<nvmath::vec4f>(tmodel, tmesh, m_tangents, "TANGENT");
+
+            if (!tangentCreated && hasFlag(forceRequested, GltfAttributes::Tangent))
+                createTangents(resultMesh);
+        }
+
+        // COLOR_0
+        if (hasFlag(requestedAttributes, GltfAttributes::Color_0))
+        {
+            bool colorCreated = getAttribute<nvmath::vec4f>(tmodel, tmesh, m_colors0, "COLOR_0");
+            if (!colorCreated && hasFlag(forceRequested, GltfAttributes::Color_0))
+                createColors(resultMesh);
+        }
+    }
+
+    // Keep result in cache
+    m_cachePrimMesh[key] = resultMesh;
+
+    // Append prim mesh to the list of all primitive meshes
+    m_primMeshes.emplace_back(resultMesh);
 }
 
 void GltfScene::createNormals(GltfPrimMesh& resultMesh)
