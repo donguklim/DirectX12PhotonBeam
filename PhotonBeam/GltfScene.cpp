@@ -284,7 +284,62 @@ void GltfScene::importDrawableNodes(const tinygltf::Model& tmodel, GltfAttribute
 
 void GltfScene::processNode(const tinygltf::Model& tmodel, int& nodeIdx, const XMFLOAT4X4& parentMatrix)
 {
+    const auto& tnode = tmodel.nodes[nodeIdx];
 
+    XMMATRIX mtranslation = XMMatrixIdentity();
+    XMMATRIX mscale = XMMatrixIdentity();
+    XMMATRIX mrot = XMMatrixIdentity();
+    XMMATRIX matrix = XMMatrixIdentity();
+;
+    if (!tnode.translation.empty())
+        mtranslation = XMMatrixTranslation(tnode.translation[0], tnode.translation[1], tnode.translation[2]);
+
+    if (!tnode.scale.empty())
+        mscale = XMMatrixScaling(tnode.scale[0], tnode.scale[1], tnode.scale[2]);
+
+    if (!tnode.rotation.empty())
+    {
+        XMFLOAT4 quaternion{ tnode.rotation[0], tnode.rotation[1], tnode.rotation[2], tnode.rotation[3] };
+        mrot = XMMatrixRotationQuaternion(XMLoadFloat4(&quaternion));
+    }
+    if (!tnode.matrix.empty())
+    {
+        float matVal[16];
+        for (int i = 0; i < 16; ++i)
+            matVal[i] = static_cast<float>(tnode.matrix[i]);
+
+        XMFLOAT4X4(matVal);
+    }
+
+    XMFLOAT4X4 worldMatrix{};    
+    XMStoreFloat4x4(&worldMatrix, XMLoadFloat4x4(parentMatrix) * mtranslation* mrot* mscale* matrix);
+
+    if (tnode.mesh > -1)
+    {
+        const auto& meshes = m_meshToPrimMeshes[tnode.mesh];  // A mesh could have many primitives
+        for (const auto& mesh : meshes)
+        {
+            GltfNode node;
+            node.primMesh = mesh;
+            node.worldMatrix = worldMatrix;
+            node.tnode = &tnode;
+            m_nodes.emplace_back(node);
+        }
+    }
+    else if (tnode.camera > -1)
+    {
+        // skip cameras
+    }
+    else if (tnode.extensions.find(KHR_LIGHTS_PUNCTUAL_EXTENSION_NAME) != tnode.extensions.end())
+    {
+        // skip lights
+    }
+
+    // Recursion for all children
+    for (auto child : tnode.children)
+    {
+        processNode(tmodel, child, worldMatrix);
+    }
 }
 
 void GltfScene::processMesh(const tinygltf::Model& tmodel,
