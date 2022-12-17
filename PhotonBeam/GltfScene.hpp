@@ -12,9 +12,7 @@
 #include <unordered_map>
 #include <vector>
 #include <DirectXMath.h>
-
-#include "tiny_gltf.h"
-
+#include <tiny_gltf.h>
 #include "../Common/MathHelper.h"
 
 #define KHR_LIGHTS_PUNCTUAL_EXTENSION_NAME "KHR_lights_punctual"

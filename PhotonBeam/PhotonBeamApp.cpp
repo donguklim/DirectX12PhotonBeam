@@ -170,7 +170,7 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
 
     ImGui::Render();
 
-    auto cmdListAlloc = mCurrFrameResource->CmdListAlloc;
+    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc = mCurrFrameResource->CmdListAlloc;
 
     // Reuse the memory associated with command recording.
     // We can only reset when the associated command lists have finished execution on the GPU.
@@ -250,7 +250,6 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
     // set until the GPU finishes processing all the commands prior to this Signal().
     mCommandQueue->Signal(mFence.Get(), mCurrentFence);
 }
-
 
 void PhotonBeamApp::OnMouseDown(WPARAM btnState, int x, int y)
 {
@@ -412,7 +411,7 @@ void PhotonBeamApp::BuildDescriptorHeaps()
     // Save an offset to the start of the pass CBVs.  These are the last 3 descriptors.
     mPassCbvOffset = objCount * gNumFrameResources;
 
-    D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
+    D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc{};
     cbvHeapDesc.NumDescriptors = numDescriptors;
     cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
@@ -451,7 +450,7 @@ void PhotonBeamApp::BuildConstantBufferViews()
             auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mCbvHeap->GetCPUDescriptorHandleForHeapStart());
             handle.Offset(heapIndex, mCbvSrvUavDescriptorSize);
 
-            D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
+            D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
             cbvDesc.BufferLocation = cbAddress;
             cbvDesc.SizeInBytes = objCBByteSize;
 
@@ -472,7 +471,7 @@ void PhotonBeamApp::BuildConstantBufferViews()
         auto handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(mCbvHeap->GetCPUDescriptorHandleForHeapStart());
         handle.Offset(heapIndex, mCbvSrvUavDescriptorSize);
 
-        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
+        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
         cbvDesc.BufferLocation = cbAddress;
         cbvDesc.SizeInBytes = passCBByteSize;
         
@@ -482,10 +481,10 @@ void PhotonBeamApp::BuildConstantBufferViews()
 
 void PhotonBeamApp::BuildRootSignature()
 {
-    CD3DX12_DESCRIPTOR_RANGE cbvTable0;
+    CD3DX12_DESCRIPTOR_RANGE cbvTable0{};
     cbvTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 
-    CD3DX12_DESCRIPTOR_RANGE cbvTable1;
+    CD3DX12_DESCRIPTOR_RANGE cbvTable1{};
     cbvTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
 
 	// Root parameter can be a table, root descriptor or root constants.
