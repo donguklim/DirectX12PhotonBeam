@@ -474,3 +474,165 @@ void copyAccessorData(std::vector<T>& outData,
 {
     copyAccessorData<T>(outData.data(), outData.size(), outFirstElement, tmodel, accessor, accessorFirstElement, numElementsToCopy);
 }
+
+
+// Appending to \p attribVec, all the values of \p accessor
+// Return false if the accessor is invalid.
+// T must be nvmath::vec2f, nvmath::vec3f, or nvmath::vec4f.
+template <typename T>
+static bool getAccessorData(const tinygltf::Model& tmodel, const tinygltf::Accessor& accessor, std::vector<T>& attribVec)
+{
+    // Retrieving the data of the accessor
+    const auto nbElems = accessor.count;
+
+    const size_t oldNumElements = attribVec.size();
+    attribVec.resize(oldNumElements + nbElems);
+
+    // Copying the attributes
+    if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT)
+    {
+        copyAccessorData<T>(attribVec, oldNumElements, tmodel, accessor, 0, accessor.count);
+    }
+    else
+    {
+        // The component is smaller than float and need to be converted
+        const auto& bufView = tmodel.bufferViews[accessor.bufferView];
+        const auto& buffer = tmodel.buffers[bufView.buffer];
+        const unsigned char* bufferByte = &buffer.data[accessor.byteOffset + bufView.byteOffset];
+
+        // 2, 3, 4 for VEC2, VEC3, VEC4
+        const int nbComponents = tinygltf::GetNumComponentsInType(accessor.type);
+        if (nbComponents == -1)
+            return false;  // Invalid
+
+        // Stride per element
+        const size_t byteStride = accessor.ByteStride(bufView);
+        if (byteStride == size_t(-1))
+            return false;  // Invalid
+
+        if (!(accessor.componentType == TINYGLTF_COMPONENT_TYPE_BYTE || accessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE
+            || accessor.componentType == TINYGLTF_COMPONENT_TYPE_SHORT || accessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT))
+        {
+            assert(!"Unhandled tinygltf component type!");
+            return false;
+        }
+
+        const auto& copyElementFn = [&](size_t elementIdx, const unsigned char* pElement) {
+            T vecValue;
+
+            for (int c = 0; c < nbComponents; c++)
+            {
+                if (c > 3)
+                    break;
+
+                switch (accessor.componentType)
+                {
+                case TINYGLTF_COMPONENT_TYPE_BYTE:
+                    if (c == 0)
+                        vecValue.x = float(*(reinterpret_cast<const char*>(pElement) + c));
+                    else if (c == 1)
+                        vecValue.y = float(*(reinterpret_cast<const char*>(pElement) + c));
+                    else if (c == 2)
+                        vecValue.z = float(*(reinterpret_cast<const char*>(pElement) + c));
+                    else if (c == 3)
+                        vecValue.w = float(*(reinterpret_cast<const char*>(pElement) + c));
+
+                    if (accessor.normalized)
+                    {
+                        if (c == 0)
+                            vecValue.x = std::max(vecValue.x / 127.f, -1.f);
+                        else if (c == 1)
+                            vecValue.y = std::max(vecValue.y / 127.f, -1.f);
+                        else if (c == 2)
+                            vecValue.z = std::max(vecValue.z / 127.f, -1.f);
+                        else if (c == 3)
+                            vecValue.w = std::max(vecValue.w / 127.f, -1.f);
+                    }
+                    break;
+                case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
+                    if (c == 0)
+                        vecValue.x = float(*(reinterpret_cast<const unsigned char*>(pElement) + c));
+                    else if (c == 1)
+                        vecValue.y = float(*(reinterpret_cast<const unsigned char*>(pElement) + c));
+                    else if (c == 2)
+                        vecValue.z = float(*(reinterpret_cast<const unsigned char*>(pElement) + c));
+                    else if (c == 3)
+                        vecValue.w = float(*(reinterpret_cast<const unsigned char*>(pElement) + c));
+
+                    if (accessor.normalized)
+                    {
+                        if (c == 0)
+                            vecValue.x = vecValue.x / 255.f;
+                        else if (c == 1)
+                            vecValue.y = vecValue.y / 255.f;
+                        else if (c == 2)
+                            vecValue.z = vecValue.z / 255.f;
+                        else if (c == 3)
+                            vecValue.w = vecValue.w / 255.f;
+                    }
+                    break;
+                case TINYGLTF_COMPONENT_TYPE_SHORT:
+                    if (c == 0)
+                        vecValue.x = float(*(reinterpret_cast<const short*>(pElement) + c));
+                    else if (c == 1)
+                        vecValue.y = float(*(reinterpret_cast<const short*>(pElement) + c));
+                    else if (c == 2)
+                        vecValue.z = float(*(reinterpret_cast<const short*>(pElement) + c));
+                    else if (c == 3)
+                        vecValue.w = float(*(reinterpret_cast<const short*>(pElement) + c));
+
+                    if (accessor.normalized)
+                    {
+                        if (c == 0)
+                            vecValue.x = std::max(vecValue.x / 32767.f, -1.f);
+                        else if (c == 1)
+                            vecValue.y = std::max(vecValue.y / 32767.f, -1.f);
+                        else if (c == 2)
+                            vecValue.z = std::max(vecValue.z / 32767.f, -1.f);
+                        else if (c == 3)
+                            vecValue.w = std::max(vecValue.w / 32767.f, -1.f);
+                    }
+                    break;
+                case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
+                    vecValue[c] = float(*(reinterpret_cast<const unsigned short*>(pElement) + c));
+                    if (accessor.normalized)
+                    {
+                        if (c == 0)
+                            vecValue.x = vecValue.x / 65535.f;
+                        else if (c == 1)
+                            vecValue.y = vecValue.y / 65535.f;
+                        else if (c == 2)
+                            vecValue.z = vecValue.z / 65535.f;
+                        else if (c == 3)
+                            vecValue.w = vecValue.w / 65535.f;
+                    }
+                    break;
+                }
+            }
+
+            attribVec[oldNumElements + elementIdx] = vecValue;
+        };
+
+        for (size_t i = 0; i < nbElems; i++)
+        {
+            copyElementFn(i, bufferByte + byteStride * i);
+        }
+
+        forEachSparseValue<unsigned char>(tmodel, accessor, 0, nbElems, copyElementFn);
+    }
+
+    return true;
+}
+
+// Appending to \p attribVec, all the values of \p attribName
+// Return false if the attribute is missing or invalid.
+// T must be nvmath::vec2f, nvmath::vec3f, or nvmath::vec4f.
+template <typename T>
+static bool getAttribute(const tinygltf::Model& tmodel, const tinygltf::Primitive& primitive, std::vector<T>& attribVec, const std::string& attribName)
+{
+    const auto& it = primitive.attributes.find(attribName);
+    if (it == primitive.attributes.end())
+        return false;
+    const auto& accessor = tmodel.accessors[it->second];
+    return getAccessorData(tmodel, accessor, attribVec);
+}
