@@ -46,7 +46,7 @@ cbuffer cbPass : register(b1)
 struct VertexIn
 {
 	float3 PosL    : POSITION;
-    float3 NormalL : NORMAL;
+    float3 NormaL : NORMAL;
 	float2 TexC    : TEXCOORD;
 };
 
@@ -54,27 +54,31 @@ struct VertexIn
 struct VertexOut
 {
 	float4 PosH  : SV_POSITION;
-    float4 Color : COLOR;
+    float3 PosW : POSITION;
+    float3 NormalW : NORMAL;
+    float4 ViewDir : VIEWDIR;
+    float2 TexC : TEXCOORD;
 };
 
 VertexOut VS(VertexIn vin)
 {
 	VertexOut vout;
 	
-	// Transform to homogeneous clip space.
-    float4 posW = mul(float4(vin.PosL, 1.0f), gWorld);
-    vout.PosH = mul(posW, gViewProj);
-	
-    MaterialData matData = gMaterialData[materialIndex];
-	// Just pass vertex color into the pixel shader.
-    vout.Color = matData.pbrBaseColorFactor;
+    vout.TexC = vin.TexC;
+    vout.PosW = float3(mul(float4(vin.PosL, 1.0f), gWorld));
+    vout.PosH = mul(float4(vout.PosW, 1.0f), gViewProj);
+
+    float3 viewOrigin = float(gInvView * float4(0, 0, 0, 1.0f));
+    vout.ViewDir = vout.PosW - viewOrigin;
+    vout.NormalW = mul(float3x3(gWorld), gworld);
     
     return vout;
 }
 
 float4 PS(VertexOut pin) : SV_Target
 {
-    return pin.Color;
+    MaterialData matData = gMaterialData[materialIndex];
+    return  matData.pbrBaseColorFactor;
 }
 
 
