@@ -210,13 +210,21 @@ public:
 
     void LoadFile(const std::string& filepath);
 
-
-    //void exportDrawableNodes(tinygltf::Model& tmodel, GltfAttributes requestedAttributes);
-
     // Removes everything
     void destroy();
 
-    //static GltfStats getStatistics(const tinygltf::Model& tinyModel);
+    const std::vector<GltfMaterial>& GetMmterials();
+    const std::vector<GltfNode>& GetNodes();
+    const std::vector<GltfPrimMesh>& GetPrimMeshes(); 
+
+    // Attributes, all same length if valid
+    const std::vector<DirectX::XMFLOAT3>& GetVertexPositions();
+    const std::vector<uint32_t>& GetVertexIndices();
+    const std::vector<DirectX::XMFLOAT3>& GetVertexNormals();
+    const std::vector<DirectX::XMFLOAT4>& GetVertexTangents();
+    const std::vector<DirectX::XMFLOAT2>& GetVertextexcoords0();
+    const std::vector<DirectX::XMFLOAT2>& GetVertextexcoords1();
+    const std::vector<DirectX::XMFLOAT4>& GetVertexColors();
 
 private:
     // Scene data

@@ -12,6 +12,57 @@ inline bool hasFlag(T a, TFlag flag)
 }
 
 
+const std::vector<GltfMaterial>& GltfScene::GetMmterials()
+{
+    return m_materials;
+}
+
+const std::vector<GltfNode>& GltfScene::GetNodes()
+{
+    return m_nodes;
+}
+
+const std::vector<GltfPrimMesh>& GltfScene::GetPrimMeshes()
+{
+    return m_primMeshes;
+}
+
+// Attributes, all same length if valid
+const std::vector<DirectX::XMFLOAT3>& GltfScene::GetVertexPositions()
+{
+    return m_positions;
+}
+
+const std::vector<uint32_t>& GltfScene::GetVertexIndices()
+{
+    return m_indices;
+}
+
+const std::vector<DirectX::XMFLOAT3>& GltfScene::GetVertexNormals()
+{
+    return m_normals;
+}
+
+const std::vector<DirectX::XMFLOAT4>& GltfScene::GetVertexTangents()
+{
+    return m_tangents;
+}
+
+const std::vector<DirectX::XMFLOAT2>& GltfScene::GetVertextexcoords0()
+{
+    return m_texcoords0;
+}
+
+const std::vector<DirectX::XMFLOAT2>& GltfScene::GetVertextexcoords1()
+{
+    return m_texcoords1;
+}
+
+const std::vector<DirectX::XMFLOAT4>& GltfScene::GetVertexColors()
+{
+    return m_colors0;
+}
+
 void GltfScene::LoadFile(const std::string& filepath)
 {
 	tinygltf::Model    tmodel;
