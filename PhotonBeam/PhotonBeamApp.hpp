@@ -85,7 +85,6 @@ private:
     void BuildConstantBufferViews();
     void BuildRootSignature();
     void BuildShadersAndInputLayout();
-    void BuildShapeGeometry();
     void BuildPSOs();
     void BuildFrameResources();
     void BuildRenderItems();
