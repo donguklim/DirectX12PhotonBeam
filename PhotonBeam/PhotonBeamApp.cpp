@@ -593,7 +593,7 @@ void PhotonBeamApp::LoadScene()
     geo->NormalBufferByteSize = nbByteSize;
     geo->UvByteStride = sizeof(XMFLOAT2);
     geo->UvBufferByteSize = ubByteSize;
-    geo->IndexFormat = DXGI_FORMAT_R16_UINT;
+    geo->IndexFormat = DXGI_FORMAT_R32_UINT;
     geo->IndexBufferByteSize = ibByteSize;
 
     mGeometries[geo->Name] = std::move(geo);
