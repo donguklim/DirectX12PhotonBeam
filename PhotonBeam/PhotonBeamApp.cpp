@@ -92,9 +92,9 @@ void PhotonBeamApp::InitGui()
         md3dDevice.Get(), 
         gNumFrameResources,
         DXGI_FORMAT_R8G8B8A8_UNORM, 
-        mSrvDescriptorHeap.Get(),
-        mSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
-        mSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
+        mGuiDescriptorHeap.Get(),
+        mGuiDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
+        mGuiDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
     );
         
 }
@@ -231,7 +231,7 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
 
     DrawRenderItems(mCommandList.Get(), mOpaqueRitems);
 
-    ID3D12DescriptorHeap* guiDescriptorHeaps[] = { mSrvDescriptorHeap.Get() };
+    ID3D12DescriptorHeap* guiDescriptorHeaps[] = { mGuiDescriptorHeap.Get() };
     mCommandList->SetDescriptorHeaps(_countof(guiDescriptorHeaps), guiDescriptorHeaps);
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList.Get());
 
@@ -422,6 +422,13 @@ void PhotonBeamApp::BuildDescriptorHeaps()
     srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&srvHeapDesc,
         IID_PPV_ARGS(&mSrvDescriptorHeap)));
+
+    D3D12_DESCRIPTOR_HEAP_DESC guiHeapDesc = {};
+    guiHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    guiHeapDesc.NumDescriptors = 1;
+    guiHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&guiHeapDesc,
+        IID_PPV_ARGS(&mGuiDescriptorHeap)));
 }
 
 void PhotonBeamApp::BuildRootSignature()

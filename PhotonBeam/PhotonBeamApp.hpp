@@ -109,6 +109,8 @@ private:
 
     ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
 
+    ComPtr<ID3D12DescriptorHeap> mGuiDescriptorHeap = nullptr;
+
     std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> mGeometries;
     std::unordered_map<std::string, ComPtr<ID3DBlob>> mShaders;
     std::unordered_map<std::string, ComPtr<ID3D12PipelineState>> mPSOs;
