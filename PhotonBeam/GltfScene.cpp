@@ -12,7 +12,7 @@ inline bool hasFlag(T a, TFlag flag)
 }
 
 
-const std::vector<GltfMaterial>& GltfScene::GetMmterials()
+const std::vector<GltfMaterial>& GltfScene::GetMaterials()
 {
     return m_materials;
 }

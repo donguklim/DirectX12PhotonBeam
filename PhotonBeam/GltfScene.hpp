@@ -213,7 +213,7 @@ public:
     // Removes everything
     void destroy();
 
-    const std::vector<GltfMaterial>& GetMmterials();
+    const std::vector<GltfMaterial>& GetMaterials();
     const std::vector<GltfNode>& GetNodes();
     const std::vector<GltfPrimMesh>& GetPrimMeshes(); 
 

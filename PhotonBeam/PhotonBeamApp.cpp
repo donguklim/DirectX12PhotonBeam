@@ -554,6 +554,22 @@ void PhotonBeamApp::LoadScene()
     auto& vertexUVs = m_gltfScene.GetVertextexcoords0();
     auto& indices = m_gltfScene.GetVertexIndices();
 
+    auto& materials = m_gltfScene.GetMaterials();
+    std::vector<GltfShadeMaterial> shadeMaterials;
+    
+    for (const auto& m : materials)
+    {
+        shadeMaterials.emplace_back(
+            GltfShadeMaterial{
+                m.baseColorFactor,
+                m.emissiveFactor,
+                m.baseColorTexture,
+                m.metallicFactor,
+                m.roughnessFactor
+            }
+        );
+    }
+
     auto geo = std::make_unique<MeshGeometry>();
     geo->Name = "cornellBox";
 
@@ -561,6 +577,7 @@ void PhotonBeamApp::LoadScene()
     const UINT nbByteSize = (UINT)vertexNormals.size() * sizeof(XMFLOAT3);
     const UINT ubByteSize = (UINT)vertexUVs.size() * sizeof(XMFLOAT2);
     const UINT ibByteSize = (UINT)indices.size() * sizeof(std::uint32_t);
+    const UINT mbByteSize = (UINT)shadeMaterials.size() * sizeof(GltfShadeMaterial);
 
     // upload to cpu is not necessary now
     ThrowIfFailed(D3DCreateBlob(vbByteSize, &geo->VertexBufferCPU));
@@ -587,6 +604,9 @@ void PhotonBeamApp::LoadScene()
     geo->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
         mCommandList.Get(), indices.data(), ibByteSize, geo->IndexBufferUploader);
 
+    geo->MaterialBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
+        mCommandList.Get(), shadeMaterials.data(), mbByteSize, geo->MaterialBufferUploader);
+
     geo->VertexByteStride = sizeof(XMFLOAT3);
     geo->VertexBufferByteSize = vbByteSize;
     geo->NormalByteStride = sizeof(XMFLOAT3);
@@ -595,6 +615,9 @@ void PhotonBeamApp::LoadScene()
     geo->UvBufferByteSize = ubByteSize;
     geo->IndexFormat = DXGI_FORMAT_R32_UINT;
     geo->IndexBufferByteSize = ibByteSize;
+
+    geo->MaterialByteStride = sizeof(shadeMaterials);
+    geo->MaterialBufferByteSize = mbByteSize;
 
     mGeometries[geo->Name] = std::move(geo);
     

@@ -19,6 +19,16 @@ using Microsoft::WRL::ComPtr;
 using namespace DirectX;
 using namespace DirectX::PackedVector;
 
+struct GltfShadeMaterial
+{
+    XMFLOAT4 pbrBaseColorFactor;
+    XMFLOAT3 emissiveFactor;
+    int  pbrBaseColorTexture;
+    float metallic;
+    float roughness;
+    UINT   padding[2];
+};
+
 // Lightweight structure stores parameters to draw a shape.  This will
 // vary from app-to-app.
 struct RenderItem
