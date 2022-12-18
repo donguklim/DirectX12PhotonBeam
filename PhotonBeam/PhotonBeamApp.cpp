@@ -415,14 +415,6 @@ void PhotonBeamApp::UpdateMainPassCB(const GameTimer& gt)
 
 void PhotonBeamApp::BuildDescriptorHeaps()
 {
-
-    D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-    srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    srvHeapDesc.NumDescriptors = 1;
-    srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&srvHeapDesc,
-        IID_PPV_ARGS(&mSrvDescriptorHeap)));
-
     D3D12_DESCRIPTOR_HEAP_DESC guiHeapDesc = {};
     guiHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     guiHeapDesc.NumDescriptors = 1;
