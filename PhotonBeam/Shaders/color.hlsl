@@ -61,8 +61,9 @@ VertexOut VS(VertexIn vin)
     float4 posW = mul(float4(vin.PosL, 1.0f), gWorld);
     vout.PosH = mul(posW, gViewProj);
 	
+    MaterialData matData = gMaterialData[materialIndex];
 	// Just pass vertex color into the pixel shader.
-    vout.Color = float4(0.5, 0.5, 0.5, 1);
+    vout.Color = matData.pbrBaseColorFactor;
     
     return vout;
 }
