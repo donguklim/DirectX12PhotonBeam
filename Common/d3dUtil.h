@@ -165,17 +165,34 @@ struct MeshGeometry
 	// System memory copies.  Use Blobs because the vertex/index format can be generic.
 	// It is up to the client to cast appropriately.  
 	Microsoft::WRL::ComPtr<ID3DBlob> VertexBufferCPU = nullptr;
+    Microsoft::WRL::ComPtr<ID3DBlob> NormalBufferCPU = nullptr;
+    Microsoft::WRL::ComPtr<ID3DBlob> UvBufferCPU = nullptr;
 	Microsoft::WRL::ComPtr<ID3DBlob> IndexBufferCPU  = nullptr;
+    Microsoft::WRL::ComPtr<ID3DBlob> MaterialBufferCPU = nullptr;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> VertexBufferGPU = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> NormalBufferGPU = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> UvBufferGPU = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Resource> IndexBufferGPU = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> MaterialBufferGPU = nullptr;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> VertexBufferUploader = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> NormalBufferUploader = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> UvBufferUploader = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Resource> IndexBufferUploader = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> MaterialBufferUploader = nullptr;
 
     // Data about the buffers.
 	UINT VertexByteStride = 0;
 	UINT VertexBufferByteSize = 0;
+    UINT NormalByteStride = 0;
+    UINT NormalBufferByteSize = 0;
+    UINT UvByteStride = 0;
+    UINT UvBufferByteSize = 0;
+
+    UINT MaterialByteStride = 0;
+    UINT MaterialBufferByteSize = 0;
+
 	DXGI_FORMAT IndexFormat = DXGI_FORMAT_R16_UINT;
 	UINT IndexBufferByteSize = 0;
 
@@ -194,6 +211,26 @@ struct MeshGeometry
 		return vbv;
 	}
 
+    D3D12_VERTEX_BUFFER_VIEW NormalBufferView()const
+    {
+        D3D12_VERTEX_BUFFER_VIEW vbv{};
+        vbv.BufferLocation = NormalBufferGPU->GetGPUVirtualAddress();
+        vbv.StrideInBytes = NormalByteStride;
+        vbv.SizeInBytes = NormalBufferByteSize;
+
+        return vbv;
+    }
+
+    D3D12_VERTEX_BUFFER_VIEW UvBufferView()const
+    {
+        D3D12_VERTEX_BUFFER_VIEW vbv{};
+        vbv.BufferLocation = UvBufferGPU->GetGPUVirtualAddress();
+        vbv.StrideInBytes = UvByteStride;
+        vbv.SizeInBytes = UvBufferByteSize;
+
+        return vbv;
+    }
+
 	D3D12_INDEX_BUFFER_VIEW IndexBufferView()const
 	{
         D3D12_INDEX_BUFFER_VIEW ibv{};
@@ -204,11 +241,24 @@ struct MeshGeometry
 		return ibv;
 	}
 
+    D3D12_INDEX_BUFFER_VIEW MaterialBufferView()const
+    {
+        D3D12_INDEX_BUFFER_VIEW ibv{};
+        ibv.BufferLocation = MaterialBufferGPU->GetGPUVirtualAddress();
+        ibv.Format = IndexFormat;
+        ibv.SizeInBytes = IndexBufferByteSize;
+
+        return ibv;
+    }
+
 	// We can free this memory after we finish upload to the GPU.
 	void DisposeUploaders()
 	{
 		VertexBufferUploader = nullptr;
+        NormalBufferUploader = nullptr;
+        UvBufferUploader = nullptr;
 		IndexBufferUploader = nullptr;
+        MaterialBufferUploader = nullptr;
 	}
 };
 
