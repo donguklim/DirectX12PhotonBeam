@@ -110,7 +110,10 @@ float4 PS(VertexOut pin) : SV_Target
     lightIntensity = lightIntensity / (d * d);
     float3 L = normalize(lDir);
 
-    return matData.pbrBaseColorFactor;
+    float3 diffuse = computeDiffuse(matData, L, normal);
+    float3 specular = computeSpecular(matData, pin.ViewDir, L, normal);
+
+    return float4(lightIntensity * (diffuse + specular), 1);
 }
 
 
