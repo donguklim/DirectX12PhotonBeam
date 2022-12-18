@@ -39,6 +39,8 @@ struct RenderItem
     // Index into GPU constant buffer corresponding to the ObjectCB for this render item.
     UINT ObjCBIndex = -1;
 
+    UINT MaterialIndex = -1;
+
     MeshGeometry* Geo = nullptr;
 
     // Primitive topology.
