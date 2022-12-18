@@ -208,16 +208,8 @@ class GltfScene
 public:
     GltfScene() = default;
 
-    void loadFile(const std::string& filepath);
-    // Importing all materials in a vector of GltfMaterial structure
-    void importMaterials(const tinygltf::Model& tmodel);
+    void LoadFile(const std::string& filepath);
 
-    // Import all Mesh and primitives in a vector of GltfPrimMesh,
-    // - Reads all requested GltfAttributes and create them if `forceRequested` contains it.
-    // - Create a vector of GltfNode, GltfLight and GltfCamera
-    void importDrawableNodes(const tinygltf::Model& tmodel,
-        GltfAttributes         requestedAttributes,
-        GltfAttributes         forceRequested = GltfAttributes::All);
 
     //void exportDrawableNodes(tinygltf::Model& tmodel, GltfAttributes requestedAttributes);
 
@@ -226,6 +218,7 @@ public:
 
     //static GltfStats getStatistics(const tinygltf::Model& tinyModel);
 
+private:
     // Scene data
     std::vector<GltfMaterial> m_materials;   // Material for shading
     std::vector<GltfNode>     m_nodes;       // Drawable nodes, flat hierarchy
@@ -240,8 +233,16 @@ public:
     std::vector<DirectX::XMFLOAT2> m_texcoords1;
     std::vector<DirectX::XMFLOAT4> m_colors0;
 
+    // Importing all materials in a vector of GltfMaterial structure
+    void importMaterials(const tinygltf::Model& tmodel);
 
-private:
+    // Import all Mesh and primitives in a vector of GltfPrimMesh,
+    // - Reads all requested GltfAttributes and create them if `forceRequested` contains it.
+    // - Create a vector of GltfNode, GltfLight and GltfCamera
+    void importDrawableNodes(const tinygltf::Model& tmodel,
+        GltfAttributes         requestedAttributes,
+        GltfAttributes         forceRequested = GltfAttributes::All);
+
     void processNode(const tinygltf::Model& tmodel, int& nodeIdx, const DirectX::XMFLOAT4X4& parentMatrix);
     void processMesh(const tinygltf::Model& tmodel,
         const tinygltf::Primitive& tmesh,

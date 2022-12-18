@@ -544,7 +544,7 @@ void PhotonBeamApp::LoadScene()
 {
     auto Filename = L"media\\cornellBox.gltf";
 
-    m_gltfScene.loadFile("E:/cpp_projects/DirectX12PhotonBeam/PhotonBeam/media/cornellBox.gltf");
+    m_gltfScene.LoadFile("./media/cornellBox.gltf");
     
 }
 

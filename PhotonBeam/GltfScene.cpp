@@ -12,7 +12,7 @@ inline bool hasFlag(T a, TFlag flag)
 }
 
 
-void GltfScene::loadFile(const std::string& filepath)
+void GltfScene::LoadFile(const std::string& filepath)
 {
 	tinygltf::Model    tmodel;
 	tinygltf::TinyGLTF tcontext;
