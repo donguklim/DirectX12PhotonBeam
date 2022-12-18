@@ -54,13 +54,14 @@ bool PhotonBeamApp::Initialize()
 
     BuildRootSignature();
     BuildShadersAndInputLayout();
+    LoadScene();
     BuildShapeGeometry();
     BuildRenderItems();
     BuildFrameResources();
     BuildDescriptorHeaps();
     BuildConstantBufferViews();
     BuildPSOs();
-    LoadScene();
+
 
     // Execute the initialization commands.
     ThrowIfFailed(mCommandList->Close());
@@ -722,6 +723,22 @@ void PhotonBeamApp::BuildShapeGeometry()
 
 void PhotonBeamApp::BuildRenderItems()
 {
+    auto& primMeshes = m_gltfScene.GetPrimMeshes();
+    for (auto& node : m_gltfScene.GetNodes())
+    {
+        auto rItem = std::make_unique<RenderItem>();
+        auto& primitive = primMeshes[node.primMesh];
+
+        rItem->World = node.worldMatrix;
+        rItem->ObjCBIndex = node.primMesh;
+        rItem->Geo = mGeometries["cornellBox"].get();
+        rItem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+        rItem->IndexCount = primitive.indexCount;
+        rItem->StartIndexLocation = primitive.firstIndex;
+        rItem->BaseVertexLocation = primitive.vertexOffset;
+        mAllRitems.push_back(std::move(rItem));
+    }
+
     auto boxRitem = std::make_unique<RenderItem>();
     XMStoreFloat4x4(&boxRitem->World, XMMatrixScaling(2.0f, 2.0f, 2.0f) * XMMatrixTranslation(0.0f, 0.5f, 0.0f));
     boxRitem->ObjCBIndex = 0;
