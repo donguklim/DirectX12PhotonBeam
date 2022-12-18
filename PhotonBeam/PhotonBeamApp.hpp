@@ -92,7 +92,6 @@ private:
     void UpdateMainPassCB(const GameTimer& gt);
 
     void BuildDescriptorHeaps();
-    void BuildConstantBufferViews();
     void BuildRootSignature();
     void BuildShadersAndInputLayout();
     void BuildPSOs();
@@ -107,7 +106,6 @@ private:
     int mCurrFrameResourceIndex = 0;
 
     ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
-    ComPtr<ID3D12DescriptorHeap> mCbvHeap = nullptr;
 
     ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
 
@@ -124,8 +122,6 @@ private:
     std::vector<RenderItem*> mOpaqueRitems;
 
     PassConstants mMainPassCB;
-
-    UINT mPassCbvOffset = 0;
 
     bool mIsWireframe = false;
 

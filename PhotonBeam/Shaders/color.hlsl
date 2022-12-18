@@ -4,6 +4,20 @@
 // Transforms and colors geometry.
 //***************************************************************************************
  
+
+struct MaterialData
+{
+    float4 pbrBaseColorFactor;
+    float3 emissiveFactor;
+    int  pbrBaseColorTexture;
+    float metallic;
+    float roughness;
+    uint   padding[2];
+};
+
+StructuredBuffer<MaterialData> gMaterialData : register(t0, space1);
+
+
 cbuffer cbPerObject : register(b0)
 {
 	float4x4 gWorld;
