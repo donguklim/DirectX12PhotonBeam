@@ -79,6 +79,15 @@ VertexOut VS(VertexIn vin)
 float4 PS(VertexOut pin) : SV_Target
 {
     MaterialData matData = gMaterialData[materialIndex];
+    float3 normal = normalize(pin.NormalW);
+    float3 lightPos = float3(0, 0, 0);
+    float lightIntensity = 10.0f;
+
+    float3 lDir = lightPos - pin.PosW;
+    float d = length(lDir);
+    lightIntensity = lightIntensity / (d * d);
+    float3 L = normalize(lDir);
+
     return matData.pbrBaseColorFactor;
 }
 
