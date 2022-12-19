@@ -303,7 +303,7 @@ void PhotonBeamApp::OnMouseMove(WPARAM btnState, int x, int y)
     }
     else if ((btnState & MK_MBUTTON) != 0)
     {
-        float dx = -0.02f * static_cast<float>(x - mLastMousePos.x);
+        float dx = 0.02f * static_cast<float>(x - mLastMousePos.x);
         float dy = 0.02f * static_cast<float>(y - mLastMousePos.y);
 
         mCamera.Strafe(dx);
