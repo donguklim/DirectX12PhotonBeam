@@ -318,14 +318,14 @@ inline bool key_button(int button, int action, int mods)
 }
 
 //////////////////////////////////////////////////////////////////////////
-
+*/
 enum FontMode
 {
   FONT_DEFAULT_SCALED,
   FONT_PROPORTIONAL_SCALED,
   FONT_MONOSPACED_SCALED,
 };
-
+/*
 void Init(int width, int height, void* userData, FontMode fontmode = FONT_DEFAULT_SCALED);
 void Deinit();
 
@@ -566,7 +566,7 @@ inline ImVec2 dpiScaled(float x, float y)
 {
   return ImVec2(x * getDPIScale(), y * getDPIScale());
 }
-
+*/
 //--------------------------------------------------------------------------------------------------
 //
 // Setting common style across samples
@@ -579,7 +579,7 @@ void setStyle(bool useLinearColor = false);
 //
 void setFonts(FontMode fontmode = FONT_PROPORTIONAL_SCALED);
 
-*/
+
 
 // Display a tooltip for the previous item
 void tooltip(const char* description, bool questionMark = false, float timerThreshold = 0.5f);

@@ -17,6 +17,7 @@
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx12.h"
+#include "imgui_helper.h"
 
 const int gNumFrameResources = 3;
 
@@ -78,12 +79,18 @@ void PhotonBeamApp::InitGui()
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.IniFilename = nullptr;  // Avoiding the INI file
+    io.LogFilename = nullptr;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;      // Enable Docking
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
     // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsDark();
     // ImGui::StyleColorsLight();
+
+    ImGuiH::setStyle();
+    ImGuiH::setFonts();
 
     // Setup Platform/Renderer backends
     ImGui_ImplWin32_Init(mhMainWnd);
@@ -96,6 +103,7 @@ void PhotonBeamApp::InitGui()
         mGuiDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
         mGuiDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
     );
+   
         
 }
 
@@ -160,7 +168,7 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
         static float f = 0.0f;
         static int counter = 0;
 
-        ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+        ImGuiH::Panel::Begin();
 
         ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
         ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
@@ -178,7 +186,7 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
         ImGui::Text("counter = %d", counter);
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        ImGui::End();
+        ImGuiH::Panel::End();
     }
 
     ImGui::Render();

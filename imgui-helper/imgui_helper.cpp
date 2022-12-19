@@ -278,7 +278,7 @@ static bool fileExists(const char* filename)
 //--------------------------------------------------------------------------------------------------
 // Looking for TTF fonts, first on the VULKAN SDK, then Windows default fonts
 //
-/*
+
 void setFonts(FontMode fontmode)
 {
   ImGuiIO&    io             = ImGui::GetIO();
@@ -304,13 +304,6 @@ void setFonts(FontMode fontmode)
   }
   else if(fontmode == FONT_PROPORTIONAL_SCALED)
   {
-    const char* vk_path = getenv("VK_SDK_PATH");
-    if(vk_path)
-    {
-      const std::string p = std::string(vk_path) + R"(/Samples/Layer-Samples/data/FreeSans.ttf)";
-      if(fileExists(p.c_str()))
-        font = io.Fonts->AddFontFromFileTTF(p.c_str(), 16.0f * high_dpi_scale);
-    }
     if(font == nullptr)
     {
       const std::string p = R"(C:/Windows/Fonts/segoeui.ttf)";
@@ -332,7 +325,7 @@ void setFonts(FontMode fontmode)
     io.Fonts->AddFontDefault(&font_config);
   }
 }
-*/
+
 void tooltip(const char* description, bool questionMark /*= false*/, float timerThreshold /*= 0.5f*/)
 {
   bool passTimer = GImGui->HoveredIdTimer >= timerThreshold && GImGui->ActiveIdTimer == 0.0f;
