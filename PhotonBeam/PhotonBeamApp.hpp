@@ -128,6 +128,7 @@ private:
     bool mIsWireframe = false;
 
     XMFLOAT3 mEyePos = { 0.0f, 0.0f, 0.0f };
+    XMVECTORF32 mClearColor;
 
     POINT mLastMousePos;
     Camera mCamera;

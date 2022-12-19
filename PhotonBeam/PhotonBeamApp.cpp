@@ -27,6 +27,7 @@ PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance)
     : D3DApp(hInstance)
 {
     mLastMousePos = POINT{};
+    mClearColor = Colors::LightSteelBlue;
 }
 
 PhotonBeamApp::~PhotonBeamApp()
@@ -158,7 +159,6 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
 
     static bool show_demo_window = false;
     static bool show_another_window = false;
-    static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
     if (show_demo_window)
         ImGui::ShowDemoWindow(&show_demo_window);
@@ -178,7 +178,7 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
         ImGui::InputFloat3("##Eye", &cameraFloat.x, "%.5f");
 
         ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-        ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+        ImGui::ColorEdit3("clear color", (float*)&mClearColor); // Edit 3 floats representing a color
 
         if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
             counter++;
@@ -220,7 +220,7 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
 	mCommandList->ResourceBarrier(1, &resourceBarrierRender);
 
     // Clear the back buffer and depth buffer.
-    mCommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
+    mCommandList->ClearRenderTargetView(CurrentBackBufferView(), mClearColor, 0, nullptr);
     mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
     // Specify the buffers we are going to render to.
@@ -333,8 +333,9 @@ void PhotonBeamApp::OnMouseWheel(WPARAM btnState, int delta)
  
 void PhotonBeamApp::OnKeyboardInput(const GameTimer& gt)
 {
-    if (ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureKeyboard)
-        return;
+    // Bellow will cause error 
+    //if (ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureKeyboard)
+        //return;
 
     if(GetAsyncKeyState('1') & 0x8000)
         mIsWireframe = true;
