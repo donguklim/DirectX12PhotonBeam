@@ -164,34 +164,7 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
-
-    // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
-    {
-        static float f = 0.0f;
-        static int counter = 0;
-
-        ImGuiH::Panel::Begin();
-
-        auto cameraFloat = mCamera.GetPosition3f();
-        ImGui::InputFloat3("Camera Position", &cameraFloat.x, "%.5f");
-        ImGui::SliderFloat("FOV", &m_camearaFOV, 1.0f, 179.f);
-
-        if (m_camearaFOV != m_prevCameraFOV)
-        {
-            mCamera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
-            m_prevCameraFOV = m_camearaFOV;
-        }
-
-        ImGui::ColorEdit3("clear color", (float*)&m_clearColor); // Edit 3 floats representing a color
-
-        ImGui::Checkbox("Ray Tracer mode", &m_useRayTracer);  // Switch between raster and ray tracing
-
-        RenderExtraUI();
-
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        ImGuiH::Panel::End();
-    }
-
+    RenderUI();
     ImGui::Render();
 
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc = mCurrFrameResource->CmdListAlloc;
@@ -699,115 +672,158 @@ void PhotonBeamApp::SetDefaults()
 }
 
 // Extra UI
-void PhotonBeamApp::RenderExtraUI()
+void PhotonBeamApp::RenderUI()
 {
     const uint32_t minValBeam = 1;
     const uint32_t maxValBeam = m_maxNumBeamSamples;
     const uint32_t minValPhoton = 4 * 4;
     const uint32_t maxValPhoton = m_maxNumPhotonSamples;
 
-    bool isCollapsed = ImGui::CollapsingHeader("Light");
-    if (isCollapsed)
-        return;
+    ImGuiH::Panel::Begin();
 
-    ImGui::SliderFloat3("Position", (float*)&m_lightPosition, -20.f, 20.f);
+    auto cameraFloat = mCamera.GetPosition3f();
+    ImGui::InputFloat3("Camera Position", &cameraFloat.x, "%.5f", ImGuiItemFlags_Disabled);
+    ImGui::SliderFloat("FOV", &m_camearaFOV, 1.0f, 179.f);
 
-    if (!m_useRayTracer)
+    if (m_camearaFOV != m_prevCameraFOV)
     {
-        ImGui::SliderFloat("Intensity", &m_lightIntensity, 0.f, 20.f);
-        return;
+        mCamera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
+        m_prevCameraFOV = m_camearaFOV;
     }
 
+    ImGui::ColorEdit3("clear color", (float*)&m_clearColor); // Edit 3 floats representing a color
 
-    ImGui::ColorEdit3("Near Color", reinterpret_cast<float*>(&m_beamNearColor), ImGuiColorEditFlags_NoSmallPreview);
-    ImGuiH::Control::Color(
-        std::string("Near Color"), "Air color near the light source, seen at the eye position",
-        reinterpret_cast<float*>(&(m_beamNearColor))
-    );
-
-    ImGui::ColorEdit3("Distant Color", reinterpret_cast<float*>(&m_beamUnitDistantColor), ImGuiColorEditFlags_NoSmallPreview);
-    ImGuiH::Control::Color(
-        std::string("Distant Color"),
-        "Air color one unit distance away from the light source, at direction orthogonal from the "
-        "line between eye and the light source, seen at eye position.\n"
-        "Each color channel will be adjusted to fit between 0.1% to 100% of the value in the same "
-        "channel of Near Color\n",
-        reinterpret_cast<float*>(&(m_beamUnitDistantColor))
-    );
-
-    ImGui::SliderFloat("Air Albedo", &m_airAlbedo, 0.0f, 1.0f);
-
-    //ImGui::SliderFloat("Color Intensity", &helloVk.m_beamColorIntensity, 1.f, 150.f);
-    //ImGui::SliderFloat("Beam Radius", &helloVk.m_beamRadius, 0.05f, 5.0f);
-    //ImGui::SliderFloat("Surface Photon Radius", &helloVk.m_photonRadius, 0.05f, 5.0f);
-    //ImGui::SliderFloat("HG Assymetric Factor", &helloVk.m_hgAssymFactor, -0.99f, 0.99f);
-
-    ImGui::SliderFloat("Light Intensity", &m_beamIntensity, 0.0f, 300.f);
+    ImGui::Checkbox("Ray Tracer mode", &m_useRayTracer);  // Switch between raster and ray tracing
 
 
-    ImGuiH::Control::Custom(
-        "Air Scatter",
-        "Light Scattering Coffiecient in Air",
-        [&] { return ImGui::InputFloat3("##Eye", (float*) &m_airScatterCoff, "%.5f"); },
-        ImGuiH::Control::Flags::Disabled
-    );
+    do
+    {
+        bool isCollapsed = ImGui::CollapsingHeader("Light");
+        if (isCollapsed)
+            break;
 
-    ImGuiH::Control::Custom(
-        "Air Extinction",
-        "Light Extinction Coffiecient in Air",
-        [&] { return ImGui::InputFloat3("##Eye", (float*) &m_airExtinctCoff, "%.5f"); },
-        ImGuiH::Control::Flags::Disabled
-    );
+        ImGui::SliderFloat3("Position", (float*)&m_lightPosition, -20.f, 20.f);
 
-    ImGuiH::Control::Custom(
-        "Light Power",
-        "Source Light Power",
-        [&] { return ImGui::InputFloat3("##Eye", (float*) &m_sourceLight, "%.5f"); },
-        ImGuiH::Control::Flags::Disabled
-    );
+        if (!m_useRayTracer)
+        {
+            ImGui::SliderFloat("Intensity", &m_lightIntensity, 0.f, 20.f);
+            break;
+        }
+
+        ImGui::ColorEdit3("Near Color", reinterpret_cast<float*>(&m_beamNearColor), ImGuiColorEditFlags_NoSmallPreview);
+        ImGuiH::Control::Color(
+            std::string("Near Color"), "Air color near the light source, seen at the eye position",
+            reinterpret_cast<float*>(&(m_beamNearColor))
+        );
+
+        ImGui::ColorEdit3("Distant Color", reinterpret_cast<float*>(&m_beamUnitDistantColor), ImGuiColorEditFlags_NoSmallPreview);
+        ImGuiH::Control::Color(
+            std::string("Distant Color"),
+            "Air color one unit distance away from the light source, at direction orthogonal from the "
+            "line between eye and the light source, seen at eye position.\n"
+            "Each color channel will be adjusted to fit between 0.1% to 100% of the value in the same "
+            "channel of Near Color\n",
+            reinterpret_cast<float*>(&(m_beamUnitDistantColor))
+        );
+
+        ImGui::SliderFloat("Air Albedo", &m_airAlbedo, 0.0f, 1.0f);
+
+        //ImGui::SliderFloat("Color Intensity", &helloVk.m_beamColorIntensity, 1.f, 150.f);
+        //ImGui::SliderFloat("Beam Radius", &helloVk.m_beamRadius, 0.05f, 5.0f);
+        //ImGui::SliderFloat("Surface Photon Radius", &helloVk.m_photonRadius, 0.05f, 5.0f);
+        //ImGui::SliderFloat("HG Assymetric Factor", &helloVk.m_hgAssymFactor, -0.99f, 0.99f);
+
+        ImGui::SliderFloat("Light Intensity", &m_beamIntensity, 0.0f, 300.f);
+
+
+        ImGuiH::Control::Custom(
+            "Air Scatter",
+            "Light Scattering Coffiecient in Air",
+            [&] { return ImGui::InputFloat3("##Eye", (float*)&m_airScatterCoff, "%.5f"); },
+            ImGuiH::Control::Flags::Disabled
+        );
+
+        ImGuiH::Control::Custom(
+            "Air Extinction",
+            "Light Extinction Coffiecient in Air",
+            [&] { return ImGui::InputFloat3("##Eye", (float*)&m_airExtinctCoff, "%.5f"); },
+            ImGuiH::Control::Flags::Disabled
+        );
+
+        ImGuiH::Control::Custom(
+            "Light Power",
+            "Source Light Power",
+            [&] { return ImGui::InputFloat3("##Eye", (float*)&m_sourceLight, "%.5f"); },
+            ImGuiH::Control::Flags::Disabled
+        );
 
 
 
-    ImGuiH::Control::Slider(
-        std::string("Beam Radius"), "Sampling radius for beams",
-        &m_beamRadius,
-        nullptr,
-        ImGuiH::Control::Flags::Normal,
-        0.05f, 5.0f
-    );
+        ImGuiH::Control::Slider(
+            std::string("Beam Radius"), "Sampling radius for beams",
+            &m_beamRadius,
+            nullptr,
+            ImGuiH::Control::Flags::Normal,
+            0.05f, 5.0f
+        );
 
-    ImGuiH::Control::Slider(
-        std::string("Photon Radius"),  // Name of the parameter
-        "Sampling radius for surface photons",
-        &m_photonRadius,
-        nullptr,
-        ImGuiH::Control::Flags::Normal,
-        0.05f, 5.0f
-    );
+        ImGuiH::Control::Slider(
+            std::string("Photon Radius"),  // Name of the parameter
+            "Sampling radius for surface photons",
+            &m_photonRadius,
+            nullptr,
+            ImGuiH::Control::Flags::Normal,
+            0.05f, 5.0f
+        );
 
-    ImGuiH::Control::Slider(
-        std::string("HG Assymetric Factor"),  // Name of the parameter
-        "Henyey and Greenstein Assymetric Factor for air.\n"
-        "Positive: more front light scattering.\n"
-        "Negative: more back light scattering.",
-        &m_hgAssymFactor,
-        nullptr,
-        ImGuiH::Control::Flags::Normal,
-        -0.99f, 0.99f
-    );
+        ImGuiH::Control::Slider(
+            std::string("HG Assymetric Factor"),  // Name of the parameter
+            "Henyey and Greenstein Assymetric Factor for air.\n"
+            "Positive: more front light scattering.\n"
+            "Negative: more back light scattering.",
+            &m_hgAssymFactor,
+            nullptr,
+            ImGuiH::Control::Flags::Normal,
+            -0.99f, 0.99f
+        );
 
-    ImGui::Checkbox("Surface Photon", &m_usePhotonMapping);
-    ImGui::Checkbox("Photon Beam", &m_usePhotonBeam);
-    ImGui::Checkbox("Show Solid Beam/Surface Color", &m_showDirectColor);
+        ImGui::Checkbox("Surface Photon", &m_usePhotonMapping);
+        ImGui::Checkbox("Photon Beam", &m_usePhotonBeam);
+        ImGui::Checkbox("Show Solid Beam/Surface Color", &m_showDirectColor);
 
-    ImGui::SliderScalar("Sample Beams", ImGuiDataType_U32, &m_numBeamSamples, &minValBeam, &maxValBeam, nullptr, ImGuiSliderFlags_None);
-    ImGui::SliderScalar("Sample Photons", ImGuiDataType_U32, &m_numPhotonSamples, &minValPhoton, &maxValPhoton, nullptr, ImGuiSliderFlags_None);
+        ImGui::SliderScalar(
+            "Sample Beams", 
+            ImGuiDataType_U32, &m_numBeamSamples, 
+            &minValBeam, 
+            &maxValBeam, 
+            nullptr, 
+            ImGuiSliderFlags_None
+        );
+        ImGui::SliderScalar(
+            "Sample Photons", 
+            ImGuiDataType_U32, 
+            &m_numPhotonSamples, 
+            &minValPhoton, 
+            &maxValPhoton, 
+            nullptr, 
+            ImGuiSliderFlags_None
+        );
 
-    if (ImGui::SmallButton("Refresh Beam"))
-        m_createBeamPhotonAS = true;
+        if (ImGui::SmallButton("Refresh Beam"))
+            m_createBeamPhotonAS = true;
 
-    ImGuiH::Control::Info("", "", "Click Refresh Beam to fully reflect changed parameters, some parameters do not get fully reflected before the click", ImGuiH::Control::Flags::Disabled);
+        ImGuiH::Control::Info(
+            "", 
+            "", 
+            "Click Refresh Beam to fully reflect changed parameters, some parameters do not get fully reflected before the click", 
+            ImGuiH::Control::Flags::Disabled
+        );
+
+    } while (false);
 
     if (ImGui::SmallButton("Set Defaults"))
         SetDefaults();
+
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGuiH::Panel::End();
 }

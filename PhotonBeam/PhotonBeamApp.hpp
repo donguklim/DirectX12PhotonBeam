@@ -98,7 +98,7 @@ private:
     void BuildFrameResources();
     void BuildRenderItems();
     void DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems);
-    void RenderExtraUI();
+    void RenderUI();
     void SetDefaults();
 
 private:
