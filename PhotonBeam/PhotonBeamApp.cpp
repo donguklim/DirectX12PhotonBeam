@@ -150,6 +150,7 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
 
     static bool show_demo_window = false;
     static bool show_another_window = false;
+    static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
     if (show_demo_window)
         ImGui::ShowDemoWindow(&show_demo_window);
@@ -159,16 +160,17 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
         static float f = 0.0f;
         static int counter = 0;
 
-        ImGui::Begin("Photon Beam");                          // Create a window called "Hello, world!" and append into it.
+        ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
 
         ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
         ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
         ImGui::Checkbox("Another Window", &show_another_window);
-        ImGui::ColorEdit3("Clear color", reinterpret_cast<float*>(&mClearColor));
-        ImGui::Checkbox("Ray Tracer mode", &mUseRaytracer);  // Switch between raster and ray tracing
 
         auto cameraFloat = mCamera.GetPosition3f();
         ImGui::InputFloat3("##Eye", &cameraFloat.x, "%.5f");
+
+        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+        ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
         if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
             counter++;
@@ -177,20 +179,6 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         ImGui::End();
-
-
-
-        /*
-        ImGuiH::Panel::Begin();
-        ImGui::ColorEdit3("Clear color", reinterpret_cast<float*>(&clearColor));
-        ImGui::Checkbox("Ray Tracer mode", &useRaytracer);  // Switch between raster and ray tracing
-
-        renderUI(helloVk, useRaytracer, createBeamPhotonAS, newNumPhotons, newNumBeams);
-
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        ImGuiH::Control::Info("", "", "(F10) Toggle Pane", ImGuiH::Control::Flags::Disabled);
-        ImGuiH::Panel::End();
-        */
     }
 
     ImGui::Render();
@@ -224,7 +212,7 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
 	mCommandList->ResourceBarrier(1, &resourceBarrierRender);
 
     // Clear the back buffer and depth buffer.
-    mCommandList->ClearRenderTargetView(CurrentBackBufferView(), mClearColor, 0, nullptr);
+    mCommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
     mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
     // Specify the buffers we are going to render to.
