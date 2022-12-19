@@ -131,7 +131,7 @@ void Camera::SetLens(float fovY, float aspect, float zn, float zf)
 void Camera::LookAt(FXMVECTOR pos, FXMVECTOR target, FXMVECTOR worldUp)
 {
 	XMVECTOR L = XMVector3Normalize(XMVectorSubtract(target, pos));
-	XMVECTOR R = XMVector3Normalize(XMVector3Cross(L, worldUp));
+	XMVECTOR R = XMVector3Normalize(XMVector3Cross(worldUp, L));
 	XMVECTOR U = XMVector3Normalize(worldUp);
 
 	XMStoreFloat3(&mPosition, pos);
@@ -245,10 +245,10 @@ void Camera::UpdateViewMatrix()
 
 		// Keep camera's axes orthogonal to each other and of unit length.
 		L = XMVector3Normalize(L);
-		U = XMVector3Normalize(XMVector3Cross(R, L));
+		U = XMVector3Normalize(XMVector3Cross(L, R));
 
 		// U, L already ortho-normal, so no need to normalize cross product.
-		R = XMVector3Cross(L, U);
+		R = XMVector3Cross(U, L);
 
 		// Fill in the view matrix entries.
 		float x = -XMVectorGetX(XMVector3Dot(P, R));
