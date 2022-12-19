@@ -158,6 +158,56 @@ void PhotonBeamApp::Update(const GameTimer& gt)
 	UpdateMainPassCB(gt);
 }
 
+void PhotonBeamApp::Rasterize(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc)
+{
+    // A command list can be reset after it has been added to the command queue via ExecuteCommandList.
+    // Reusing the command list reuses memory.
+    if (mIsWireframe)
+    {
+        ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), mPSOs["opaque_wireframe"].Get()));
+    }
+    else
+    {
+        ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), mPSOs["opaque"].Get()));
+    }
+
+    mCommandList->RSSetViewports(1, &mScreenViewport);
+    mCommandList->RSSetScissorRects(1, &mScissorRect);
+
+    // Indicate a state transition on the resource usage.
+    auto resourceBarrierRender = CD3DX12_RESOURCE_BARRIER::Transition(
+        CurrentBackBuffer(),
+        D3D12_RESOURCE_STATE_PRESENT,
+        D3D12_RESOURCE_STATE_RENDER_TARGET
+    );
+    mCommandList->ResourceBarrier(1, &resourceBarrierRender);
+
+    // Clear the back buffer and depth buffer.
+    mCommandList->ClearRenderTargetView(CurrentBackBufferView(), m_clearColor, 0, nullptr);
+    mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+
+    // Specify the buffers we are going to render to.
+    auto backBufferView = CurrentBackBufferView();
+    auto dsView = DepthStencilView();
+    mCommandList->OMSetRenderTargets(1, &backBufferView, true, &dsView);
+
+    mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
+
+    auto passCB = mCurrFrameResource->PassCB->Resource();
+    mCommandList->SetGraphicsRootConstantBufferView(1, passCB->GetGPUVirtualAddress());
+
+    auto& matBuffer = mGeometries["cornellBox"].get()->MaterialBufferGPU;
+
+    mCommandList->SetGraphicsRootShaderResourceView(2, matBuffer->GetGPUVirtualAddress());
+
+    DrawRenderItems(mCommandList.Get(), mOpaqueRitems);
+}
+
+void PhotonBeamApp::LightTrace(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc)
+{
+
+}
+
 void PhotonBeamApp::Draw(const GameTimer& gt)
 {
     // Start the Dear ImGui frame
@@ -173,47 +223,7 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
     // We can only reset when the associated command lists have finished execution on the GPU.
     ThrowIfFailed(cmdListAlloc->Reset());
 
-    // A command list can be reset after it has been added to the command queue via ExecuteCommandList.
-    // Reusing the command list reuses memory.
-    if(mIsWireframe)
-    {
-        ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), mPSOs["opaque_wireframe"].Get()));
-    }
-    else
-    {
-        ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), mPSOs["opaque"].Get()));
-    }
-
-    mCommandList->RSSetViewports(1, &mScreenViewport);
-    mCommandList->RSSetScissorRects(1, &mScissorRect);
-
-    // Indicate a state transition on the resource usage.
-    auto resourceBarrierRender = CD3DX12_RESOURCE_BARRIER::Transition(
-        CurrentBackBuffer(),
-        D3D12_RESOURCE_STATE_PRESENT, 
-        D3D12_RESOURCE_STATE_RENDER_TARGET
-    );
-	mCommandList->ResourceBarrier(1, &resourceBarrierRender);
-
-    // Clear the back buffer and depth buffer.
-    mCommandList->ClearRenderTargetView(CurrentBackBufferView(), m_clearColor, 0, nullptr);
-    mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-
-    // Specify the buffers we are going to render to.
-    auto backBufferView = CurrentBackBufferView();
-    auto dsView = DepthStencilView();
-    mCommandList->OMSetRenderTargets(1, &backBufferView, true, &dsView);
-
-	mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
-
-    auto passCB = mCurrFrameResource->PassCB->Resource();
-    mCommandList->SetGraphicsRootConstantBufferView(1, passCB->GetGPUVirtualAddress());
-
-    auto& matBuffer = mGeometries["cornellBox"].get()->MaterialBufferGPU;
-
-    mCommandList->SetGraphicsRootShaderResourceView(2, matBuffer->GetGPUVirtualAddress());
-
-    DrawRenderItems(mCommandList.Get(), mOpaqueRitems);
+    Rasterize(cmdListAlloc);
 
     ID3D12DescriptorHeap* guiDescriptorHeaps[] = { mGuiDescriptorHeap.Get() };
     mCommandList->SetDescriptorHeaps(_countof(guiDescriptorHeaps), guiDescriptorHeaps);
