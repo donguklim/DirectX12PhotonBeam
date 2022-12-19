@@ -98,6 +98,8 @@ private:
     void BuildFrameResources();
     void BuildRenderItems();
     void DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems);
+    void RenderExtraUI();
+    void SetDefaults();
 
 private:
 
@@ -127,10 +129,33 @@ private:
 
     bool mIsWireframe = false;
 
-    XMFLOAT3 mEyePos = { 0.0f, 0.0f, 0.0f };
-    XMVECTORF32 mClearColor;
+    XMFLOAT3 mEyePos{};
+    XMVECTORF32 m_clearColor;
 
     POINT mLastMousePos;
     Camera mCamera;
+
+    float    m_airAlbedo{ 0.1f };
+    float m_beamRadius{ 0.5f };
+    float    m_photonRadius{ 0.5f };
+    uint32_t m_numBeamSamples{ 1024 };
+    uint32_t m_numPhotonSamples{ 4 * 4 * 1024 };
+
+    unsigned int m_maxNumBeamSamples;
+    unsigned int m_maxNumPhotonSamples;
+    bool m_useRayTracer;
+    XMVECTORF32 m_beamNearColor;
+    XMVECTORF32 m_beamUnitDistantColor;
+    XMVECTORF32 m_airScatterCoff;
+    XMVECTORF32 m_airExtinctCoff;
+    XMVECTORF32 m_sourceLight;
+    XMVECTORF32 m_lightPosition{ 0.0f, 0.0f, 0.0f };
+    float m_lightIntensity;
+    float         m_beamIntensity;
+    bool          m_usePhotonMapping;
+    bool          m_usePhotonBeam;
+    float         m_hgAssymFactor;
+    bool          m_showDirectColor;
+    bool m_createBeamPhotonAS;
 };
 
