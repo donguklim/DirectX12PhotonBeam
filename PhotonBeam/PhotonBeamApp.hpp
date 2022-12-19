@@ -157,5 +157,7 @@ private:
     float         m_hgAssymFactor;
     bool          m_showDirectColor;
     bool m_createBeamPhotonAS;
+    float m_camearaFOV;
+    float m_prevCameraFOV;
 };
 

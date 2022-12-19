@@ -29,7 +29,12 @@ PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance)
     : D3DApp(hInstance)
 {
     mLastMousePos = POINT{};
-    m_clearColor = Colors::LightSteelBlue;
+    m_useRayTracer = true;
+    m_airScatterCoff = XMVECTORF32{};
+    m_airExtinctCoff = XMVECTORF32{};
+    m_sourceLight = XMVECTORF32{};
+
+    SetDefaults();
 }
 
 PhotonBeamApp::~PhotonBeamApp()
@@ -54,6 +59,7 @@ bool PhotonBeamApp::Initialize()
     // Reset the command list to prep for initialization commands.
     ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
 
+    mCamera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
     mCamera.LookAt(XMFLOAT3{ 0.0f, 0.0f, 15.0f }, XMFLOAT3{ 0.0f, 0.0f, 0.0f }, XMFLOAT3{ 0.0f, 1.0f, 0.0f });
     mCamera.UpdateViewMatrix();
 
@@ -122,7 +128,7 @@ void PhotonBeamApp::OnResize()
 {
     D3DApp::OnResize();
 
-    mCamera.SetLens(0.25f * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
+    mCamera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
 
 }
 
@@ -168,6 +174,13 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
 
         auto cameraFloat = mCamera.GetPosition3f();
         ImGui::InputFloat3("Camera Position", &cameraFloat.x, "%.5f");
+        ImGui::SliderFloat("FOV", &m_camearaFOV, 1.0f, 179.f);
+
+        if (m_camearaFOV != m_prevCameraFOV)
+        {
+            mCamera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
+            m_prevCameraFOV = m_camearaFOV;
+        }
 
         ImGui::ColorEdit3("clear color", (float*)&m_clearColor); // Edit 3 floats representing a color
 
@@ -659,6 +672,29 @@ void PhotonBeamApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const st
 
 void PhotonBeamApp::SetDefaults()
 {
+    const XMVECTORF32 defaultBeamNearColor{ 1.0f, 1.0f, 1.0f, 1.0f };
+    const XMVECTORF32 defaultBeamUnitDistantColor{ 0.816, 0.906, 0.906, 1.0f };
+
+    m_clearColor = Colors::LightSteelBlue;
+    m_beamNearColor = defaultBeamNearColor;
+    m_beamUnitDistantColor = defaultBeamUnitDistantColor;
+    m_beamRadius = 0.6;
+    m_photonRadius = 1.0;
+    m_beamIntensity = 15.0f;
+    m_usePhotonMapping = true;
+    m_usePhotonBeam = true;
+    m_hgAssymFactor = 0.0;
+    m_showDirectColor = false;
+    m_airAlbedo = 0.06;
+
+    m_numBeamSamples = 1024;
+    m_numPhotonSamples = 4 * 4 * 2048;
+
+    m_lightPosition = XMVECTORF32{ 0.0f, 0.0f, 0.0f };
+    m_lightIntensity = 10;
+    m_createBeamPhotonAS = true;
+    m_camearaFOV = 60.0;
+    m_prevCameraFOV = m_camearaFOV;
 
 }
 
