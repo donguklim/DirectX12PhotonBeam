@@ -387,6 +387,8 @@ void PhotonBeamApp::UpdateMainPassCB(const GameTimer& gt)
 	XMStoreFloat4x4(&mMainPassCB.ViewProj, XMMatrixTranspose(viewProj));
 	XMStoreFloat4x4(&mMainPassCB.InvViewProj, XMMatrixTranspose(invViewProj));
 	mMainPassCB.EyePosW = mCamera.GetPosition3f();
+    mMainPassCB.LightPos = XMFLOAT3(m_lightPosition[0], m_lightPosition[1], m_lightPosition[2]);
+    mMainPassCB.lightIntensity = m_lightIntensity;
 	mMainPassCB.RenderTargetSize = XMFLOAT2((float)mClientWidth, (float)mClientHeight);
 	mMainPassCB.InvRenderTargetSize = XMFLOAT2(1.0f / mClientWidth, 1.0f / mClientHeight);
 	mMainPassCB.NearZ = mCamera.GetNearZ();
