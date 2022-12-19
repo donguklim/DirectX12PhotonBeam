@@ -209,7 +209,7 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
     auto passCB = mCurrFrameResource->PassCB->Resource();
     mCommandList->SetGraphicsRootConstantBufferView(1, passCB->GetGPUVirtualAddress());
 
-    auto matBuffer = mGeometries["cornellBox"].get()->MaterialBufferGPU;
+    auto& matBuffer = mGeometries["cornellBox"].get()->MaterialBufferGPU;
 
     mCommandList->SetGraphicsRootShaderResourceView(2, matBuffer->GetGPUVirtualAddress());
 
@@ -648,27 +648,27 @@ void PhotonBeamApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const st
 void PhotonBeamApp::SetDefaults()
 {
     const XMVECTORF32 defaultBeamNearColor{ 1.0f, 1.0f, 1.0f, 1.0f };
-    const XMVECTORF32 defaultBeamUnitDistantColor{ 0.816, 0.906, 0.906, 1.0f };
+    const XMVECTORF32 defaultBeamUnitDistantColor{ 0.816f, 0.906f, 0.906f, 1.0f };
 
     m_clearColor = Colors::LightSteelBlue;
     m_beamNearColor = defaultBeamNearColor;
     m_beamUnitDistantColor = defaultBeamUnitDistantColor;
-    m_beamRadius = 0.6;
-    m_photonRadius = 1.0;
+    m_beamRadius = 0.6f;
+    m_photonRadius = 1.0f;
     m_beamIntensity = 15.0f;
     m_usePhotonMapping = true;
     m_usePhotonBeam = true;
-    m_hgAssymFactor = 0.0;
+    m_hgAssymFactor = 0.0f;
     m_showDirectColor = false;
-    m_airAlbedo = 0.06;
+    m_airAlbedo = 0.06f;
 
     m_numBeamSamples = 1024;
     m_numPhotonSamples = 4 * 4 * 2048;
 
     m_lightPosition = XMVECTORF32{ 0.0f, 0.0f, 0.0f };
-    m_lightIntensity = 10;
+    m_lightIntensity = 10.0f;
     m_createBeamPhotonAS = true;
-    m_camearaFOV = 60.0;
+    m_camearaFOV = 60.0f;
     m_prevCameraFOV = m_camearaFOV;
 
 }

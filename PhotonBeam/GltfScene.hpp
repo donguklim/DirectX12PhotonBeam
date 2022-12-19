@@ -283,7 +283,7 @@ static inline std::vector<T> getVector(const tinygltf::Value& value)
     if (!value.IsArray())
         return result;
     result.resize(value.ArrayLen());
-    for (int i = 0; i < value.ArrayLen(); i++)
+    for (unsigned int i = 0; i < value.ArrayLen(); i++)
     {
         result[i] = static_cast<T>(value.Get(i).IsNumber() ? value.Get(i).Get<double>() : value.Get(i).Get<int>());
     }

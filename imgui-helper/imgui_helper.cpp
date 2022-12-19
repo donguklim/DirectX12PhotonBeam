@@ -68,8 +68,8 @@ float getDPIScale()
     auto cyPhysical = devMode.dmPelsHeight;
 
     // Calculate the scaling factor
-    auto horizontalScale = ((double)cxPhysical / (double)cxLogical);
-    auto verticalScale = ((double)cyPhysical / (double)cyLogical);
+    float horizontalScale = static_cast<float>(((double)cxPhysical / (double)cxLogical));
+    float verticalScale = static_cast<float>(((double)cyPhysical / (double)cyLogical));
 
     cached_dpi_scale = horizontalScale;
 

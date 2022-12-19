@@ -21,7 +21,7 @@ struct PassConstants
     DirectX::XMFLOAT3 EyePosW = { 0.0f, 0.0f, 0.0f };
     float cbPerObjectPad1 = 0.0f;
     DirectX::XMFLOAT3 LightPos = { 0.0f, 0.0f, 0.0f };
-    float lightIntensity;
+    float lightIntensity = 10.0f;
     DirectX::XMFLOAT2 RenderTargetSize = { 0.0f, 0.0f };
     DirectX::XMFLOAT2 InvRenderTargetSize = { 0.0f, 0.0f };
     float NearZ = 0.0f;
