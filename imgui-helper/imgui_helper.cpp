@@ -19,15 +19,26 @@
 
 #define GLFW_INCLUDE_NONE
 #include "imgui_helper.h"
-#include "backends/imgui_impl_glfw.h"
-#include <GLFW/glfw3.h>
 #include <math.h>
 
 #include "imgui.h"
 #include <fstream>
 
+#include <DirectXMath.h>
+#include <windows.h>
+
+
 namespace ImGuiH {
 
+template <class T>
+inline T imguih_clamp(const T u, const T min, const T max)
+{
+    T o = (u < min) ? min : u;
+    o = (o > max) ? max : o;
+    return o;
+}
+
+/*
 void Init(int width, int height, void* userData, FontMode fontmode)
 {
   ImGui::CreateContext();
@@ -120,7 +131,7 @@ bool Combo(const char* label, size_t numEnums, const Enum* enums, void* valuePtr
 
   return changed;
 }
-
+*/
 //--------------------------------------------------------------------------------------------------
 //
 // If GLFW has been initialized, returns the DPI scale of the primary monitor. Otherwise, returns 1.
@@ -137,26 +148,28 @@ float getDPIScale()
     // set in the NVPRO_DPI_SCALE variable.
     cached_dpi_scale = 1.0f;
 
-    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-    assert(monitor);
-    if(monitor != nullptr)
-    {
-      float y_scale;
-      glfwGetMonitorContentScale(monitor, &cached_dpi_scale, &y_scale);
-    }
-    // Otherwise, GLFW isn't initialized yet, but might be in the future.
-    // (Note that this code assumes all samples use GLFW.)
+    auto activeWindow = GetActiveWindow();
+    HMONITOR monitor = MonitorFromWindow(activeWindow, MONITOR_DEFAULTTONEAREST);
 
-    // Multiply by the value of the NVPRO_DPI_SCALE environment variable.
-    const char* dpi_env = getenv("NVPRO_DPI_SCALE");
-    if(dpi_env)
-    {
-      const float parsed_dpi_env = strtof(dpi_env, nullptr);
-      if(parsed_dpi_env != 0.0f)
-      {
-        cached_dpi_scale *= parsed_dpi_env;
-      }
-    }
+    MONITORINFOEX monitorInfoEx;
+    monitorInfoEx.cbSize = sizeof(monitorInfoEx);
+    GetMonitorInfo(monitor, &monitorInfoEx);
+    auto cxLogical = monitorInfoEx.rcMonitor.right - monitorInfoEx.rcMonitor.left;
+    auto cyLogical = monitorInfoEx.rcMonitor.bottom - monitorInfoEx.rcMonitor.top;
+
+    // Get the physical width and height of the monitor
+    DEVMODE devMode;
+    devMode.dmSize = sizeof(devMode);
+    devMode.dmDriverExtra = 0;
+    EnumDisplaySettings(monitorInfoEx.szDevice, ENUM_CURRENT_SETTINGS, &devMode);
+    auto cxPhysical = devMode.dmPelsWidth;
+    auto cyPhysical = devMode.dmPelsHeight;
+
+    // Calculate the scaling factor
+    auto horizontalScale = ((double)cxPhysical / (double)cxLogical);
+    auto verticalScale = ((double)cyPhysical / (double)cyLogical);
+
+    cached_dpi_scale = horizontalScale;
 
     cached_dpi_scale = (cached_dpi_scale > 0.0f ? cached_dpi_scale : 1.0f);
   }
@@ -265,6 +278,7 @@ static bool fileExists(const char* filename)
 //--------------------------------------------------------------------------------------------------
 // Looking for TTF fonts, first on the VULKAN SDK, then Windows default fonts
 //
+/*
 void setFonts(FontMode fontmode)
 {
   ImGuiIO&    io             = ImGui::GetIO();
@@ -318,7 +332,7 @@ void setFonts(FontMode fontmode)
     io.Fonts->AddFontDefault(&font_config);
   }
 }
-
+*/
 void tooltip(const char* description, bool questionMark /*= false*/, float timerThreshold /*= 0.5f*/)
 {
   bool passTimer = GImGui->HoveredIdTimer >= timerThreshold && GImGui->ActiveIdTimer == 0.0f;
@@ -381,19 +395,19 @@ bool Control::show_slider_control<float>(float* value, float& min, float& max, c
 }
 
 template <>
-bool Control::show_slider_control<nvmath::vec2f>(nvmath::vec2f* value, nvmath::vec2f& min, nvmath::vec2f& max, const char* format)
+bool Control::show_slider_control<DirectX::XMFLOAT2>(DirectX::XMFLOAT2* value, DirectX::XMFLOAT2& min, DirectX::XMFLOAT2& max, const char* format)
 {
   return show_slider_control_scalar<float, ImGuiDataType_Float, 2>(&value->x, &min.x, &max.x, format ? format : "%.3f");
 }
 
 template <>
-bool Control::show_slider_control<nvmath::vec3f>(nvmath::vec3f* value, nvmath::vec3f& min, nvmath::vec3f& max, const char* format)
+bool Control::show_slider_control<DirectX::XMFLOAT3>(DirectX::XMFLOAT3* value, DirectX::XMFLOAT3& min, DirectX::XMFLOAT3& max, const char* format)
 {
   return show_slider_control_scalar<float, ImGuiDataType_Float, 3>(&value->x, &min.x, &max.x, format ? format : "%.3f");
 }
 
 template <>
-bool Control::show_slider_control<nvmath::vec4f>(nvmath::vec4f* value, nvmath::vec4f& min, nvmath::vec4f& max, const char* format)
+bool Control::show_slider_control<DirectX::XMFLOAT4>(DirectX::XMFLOAT4* value, DirectX::XMFLOAT4& min, DirectX::XMFLOAT4& max, const char* format)
 {
   return show_slider_control_scalar<float, ImGuiDataType_Float, 4>(&value->x, &min.x, &max.x, format ? format : "%.3f");
 }
@@ -405,19 +419,19 @@ bool Control::show_drag_control<float>(float* value, float speed, float& min, fl
 }
 
 template <>
-bool Control::show_drag_control<nvmath::vec2f>(nvmath::vec2f* value, float speed, nvmath::vec2f& min, nvmath::vec2f& max, const char* format)
+bool Control::show_drag_control<DirectX::XMFLOAT2>(DirectX::XMFLOAT2* value, float speed, DirectX::XMFLOAT2& min, DirectX::XMFLOAT2& max, const char* format)
 {
   return show_drag_control_scalar<float, ImGuiDataType_Float, 2>(&value->x, speed, &min.x, &max.x, format ? format : "%.3f");
 }
 
 template <>
-bool Control::show_drag_control<nvmath::vec3f>(nvmath::vec3f* value, float speed, nvmath::vec3f& min, nvmath::vec3f& max, const char* format)
+bool Control::show_drag_control<DirectX::XMFLOAT3>(DirectX::XMFLOAT3* value, float speed, DirectX::XMFLOAT3& min, DirectX::XMFLOAT3& max, const char* format)
 {
   return show_drag_control_scalar<float, ImGuiDataType_Float, 3>(&value->x, speed, &min.x, &max.x, format ? format : "%.3f");
 }
 
 template <>
-bool Control::show_drag_control<nvmath::vec4f>(nvmath::vec4f* value, float speed, nvmath::vec4f& min, nvmath::vec4f& max, const char* format)
+bool Control::show_drag_control<DirectX::XMFLOAT4>(DirectX::XMFLOAT4* value, float speed, DirectX::XMFLOAT4& min, DirectX::XMFLOAT4& max, const char* format)
 {
   return show_drag_control_scalar<float, ImGuiDataType_Float, 4>(&value->x, speed, &min.x, &max.x, format ? format : "%.3f");
 }
@@ -430,19 +444,19 @@ bool Control::show_slider_control<int>(int* value, int& min, int& max, const cha
 }
 
 template <>
-bool Control::show_slider_control<nvmath::vec2i>(nvmath::vec2i* value, nvmath::vec2i& min, nvmath::vec2i& max, const char* format)
+bool Control::show_slider_control<DirectX::XMINT2>(DirectX::XMINT2* value, DirectX::XMINT2& min, DirectX::XMINT2& max, const char* format)
 {
   return show_slider_control_scalar<int, ImGuiDataType_S32, 2>(&value->x, &min.x, &max.x, format ? format : "%d");
 }
 
 template <>
-bool Control::show_slider_control<nvmath::vec3i>(nvmath::vec3i* value, nvmath::vec3i& min, nvmath::vec3i& max, const char* format)
+bool Control::show_slider_control<DirectX::XMINT3>(DirectX::XMINT3* value, DirectX::XMINT3& min, DirectX::XMINT3& max, const char* format)
 {
   return show_slider_control_scalar<int, ImGuiDataType_S32, 3>(&value->x, &min.x, &max.x, format ? format : "%d");
 }
 
 template <>
-bool Control::show_slider_control<nvmath::vec4i>(nvmath::vec4i* value, nvmath::vec4i& min, nvmath::vec4i& max, const char* format)
+bool Control::show_slider_control<DirectX::XMINT4>(DirectX::XMINT4* value, DirectX::XMINT4& min, DirectX::XMINT4& max, const char* format)
 {
   return show_slider_control_scalar<int, ImGuiDataType_S32, 4>(&value->x, &min.x, &max.x, format ? format : "%d");
 }
@@ -454,19 +468,19 @@ bool Control::show_drag_control<int>(int* value, float speed, int& min, int& max
 }
 
 template <>
-bool Control::show_drag_control<nvmath::vec2i>(nvmath::vec2i* value, float speed, nvmath::vec2i& min, nvmath::vec2i& max, const char* format)
+bool Control::show_drag_control<DirectX::XMINT2>(DirectX::XMINT2* value, float speed, DirectX::XMINT2& min, DirectX::XMINT2& max, const char* format)
 {
   return show_drag_control_scalar<int, ImGuiDataType_S32, 2>(&value->x, speed, &min.x, &max.x, format ? format : "%d");
 }
 
 template <>
-bool Control::show_drag_control<nvmath::vec3i>(nvmath::vec3i* value, float speed, nvmath::vec3i& min, nvmath::vec3i& max, const char* format)
+bool Control::show_drag_control<DirectX::XMINT3>(DirectX::XMINT3* value, float speed, DirectX::XMINT3& min, DirectX::XMINT3& max, const char* format)
 {
   return show_drag_control_scalar<int, ImGuiDataType_S32, 3>(&value->x, speed, &min.x, &max.x, format ? format : "%d");
 }
 
 template <>
-bool Control::show_drag_control<nvmath::vec4i>(nvmath::vec4i* value, float speed, nvmath::vec4i& min, nvmath::vec4i& max, const char* format)
+bool Control::show_drag_control<DirectX::XMINT4>(DirectX::XMINT4* value, float speed, DirectX::XMINT4& min, DirectX::XMINT4& max, const char* format)
 {
   return show_drag_control_scalar<int, ImGuiDataType_S32, 4>(&value->x, speed, &min.x, &max.x, format ? format : "%d");
 }
@@ -584,8 +598,10 @@ void Panel::Begin(Side side /*= Side::Right*/, float alpha /*= 0.5f*/, char* nam
     ImGuiID dock_main_id = dockspaceID;
 
     // Slitting all 4 directions, targetting (320 pixel * DPI) panel width, (180 pixel * DPI) panel height.
-    const float xRatio = nvmath::nv_clamp<float>(320.0f * getDPIScale() / viewport->WorkSize[0], 0.01f, 0.499f);
-    const float yRatio = nvmath::nv_clamp<float>(180.0f * getDPIScale() / viewport->WorkSize[1], 0.01f, 0.499f);
+    float ratioTemp = 320.0f * getDPIScale() / viewport->WorkSize[0];
+    ratioTemp = ratioTemp < 0.01f ? 0.01f : ratioTemp;
+    const float xRatio = imguih_clamp<float>(320.0f * getDPIScale() / viewport->WorkSize[0], 0.01f, 0.499f);
+    const float yRatio = imguih_clamp<float>(180.0f * getDPIScale() / viewport->WorkSize[1], 0.01f, 0.499f);
     ImGuiID     id_left, id_right, id_up, id_down;
 
     // Note, for right, down panels, we use the n / (1 - n) formula to correctly split the space remaining from the left, up panels.
@@ -621,6 +637,7 @@ Control::Style Control::style{};
 
 }  // namespace ImGuiH
 
+/*
 void ImGui::PlotMultiEx(const char* label, int num_datas, ImPlotMulti* datas, const char* overlay_text, ImVec2 frame_size)
 {
   ImGuiWindow* window = GetCurrentWindow();
@@ -767,9 +784,9 @@ void ImGui::PlotMultiEx(const char* label, int num_datas, ImPlotMulti* datas, co
 }
 
 
-bool ImGuiH::azimuthElevationSliders(nvmath::vec3f& direction, bool negative, bool yIsUp /*=true*/)
+bool ImGuiH::azimuthElevationSliders(DirectX::XMFLOAT3& direction, bool negative, bool yIsUp )
 {
-  nvmath::vec3f normalized_dir = normalize(direction);
+  DirectX::XMFLOAT3 normalized_dir = normalize(direction);
   if(negative)
   {
     normalized_dir = -normalized_dir;
@@ -831,3 +848,4 @@ bool ImGuiH::azimuthElevationSliders(nvmath::vec3f& direction, bool negative, bo
 
   return changed;
 }
+*/

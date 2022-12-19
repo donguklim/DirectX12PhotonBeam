@@ -579,11 +579,12 @@ void setStyle(bool useLinearColor = false);
 //
 void setFonts(FontMode fontmode = FONT_PROPORTIONAL_SCALED);
 
+*/
 
 // Display a tooltip for the previous item
 void tooltip(const char* description, bool questionMark = false, float timerThreshold = 0.5f);
 
-*/
+
 
 //--------------------------------------------------------------------------------------------------
 // Creating a window panel
@@ -1315,8 +1316,8 @@ struct ImPlotMulti
 
 void PlotMultiEx(const char* label, int num_datas, ImPlotMulti* datas, const char* overlay_text, ImVec2 frame_size);
 
-
-}  // namespace ImGui
 */
+}  // namespace ImGui
+
 //#endif
 

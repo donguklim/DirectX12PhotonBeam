@@ -151,6 +151,7 @@
     <ClInclude Include="..\Common\GeometryGenerator.h" />
     <ClInclude Include="..\Common\MathHelper.h" />
     <ClInclude Include="..\Common\UploadBuffer.h" />
+    <ClInclude Include="..\imgui-helper\imgui_helper.h" />
     <ClInclude Include="..\imgui\imconfig.h" />
     <ClInclude Include="..\imgui\imgui.h" />
     <ClInclude Include="..\imgui\imgui_impl_dx12.h" />
@@ -168,6 +169,7 @@
     <ClCompile Include="..\Common\GameTimer.cpp" />
     <ClCompile Include="..\Common\GeometryGenerator.cpp" />
     <ClCompile Include="..\Common\MathHelper.cpp" />
+    <ClCompile Include="..\imgui-helper\imgui_helper.cpp" />
     <ClCompile Include="..\imgui\imgui.cpp" />
     <ClCompile Include="..\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\imgui\imgui_draw.cpp" />
