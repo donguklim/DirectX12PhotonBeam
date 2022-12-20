@@ -93,6 +93,7 @@ private:
 
     void BuildDescriptorHeaps();
     void BuildRootSignature();
+    void BuildPostRootSignature();
     void BuildShadersAndInputLayout();
     void BuildPSOs();
     void BuildFrameResources();
@@ -122,7 +123,6 @@ private:
     std::unordered_map<std::string, ComPtr<ID3D12PipelineState>> mPSOs;
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
-    std::vector<D3D12_INPUT_ELEMENT_DESC> mPostInputLayout;
 
     // List of all the render items.
     std::vector<std::unique_ptr<RenderItem>> mAllRitems;
