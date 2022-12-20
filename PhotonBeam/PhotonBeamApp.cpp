@@ -159,8 +159,63 @@ void PhotonBeamApp::Update(const GameTimer& gt)
 	UpdateMainPassCB(gt);
 }
 
-void PhotonBeamApp::drawPost()
+void PhotonBeamApp::drawPost(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc)
 {
+    ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), mPSOs["post"].Get()));
+
+    // Indicate a state transition on the resource usage.
+    auto resourceBarrierRender = CD3DX12_RESOURCE_BARRIER::Transition(
+        CurrentBackBuffer(),
+        D3D12_RESOURCE_STATE_PRESENT,
+        D3D12_RESOURCE_STATE_RENDER_TARGET
+    );
+    mCommandList->ResourceBarrier(1, &resourceBarrierRender);
+
+
+    CD3DX12_CLEAR_VALUE clearValue{ DXGI_FORMAT_R32G32B32_FLOAT, m_clearColor };
+
+    D3D12_RENDER_PASS_BEGINNING_ACCESS renderPassBeginningAccessClear{ D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR, { clearValue } };
+    static const D3D12_RENDER_PASS_ENDING_ACCESS renderPassEndingAccessPreserve{ D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE, {} };
+    D3D12_RENDER_PASS_RENDER_TARGET_DESC renderPassRenderTargetDesc{
+        CurrentBackBufferView(),
+        renderPassBeginningAccessClear,
+        renderPassEndingAccessPreserve
+    };
+
+    static const CD3DX12_CLEAR_VALUE depthStencilClearValue{ DXGI_FORMAT_D32_FLOAT_S8X24_UINT, 1.0f, 0 };
+    static const D3D12_RENDER_PASS_ENDING_ACCESS endingNoAccess{ D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_NO_ACCESS, {} };
+
+    static const D3D12_RENDER_PASS_BEGINNING_ACCESS beginningNoAccess{D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_NO_ACCESS, {} };
+
+    static const D3D12_RENDER_PASS_DEPTH_STENCIL_DESC renderPassDepthStencilDesc{
+        D3D12_CPU_DESCRIPTOR_HANDLE{0},
+        beginningNoAccess,
+        beginningNoAccess,
+        endingNoAccess,
+        endingNoAccess
+    };
+
+    mCommandList->BeginRenderPass(
+        1,
+        &renderPassRenderTargetDesc,
+        &renderPassDepthStencilDesc,
+        D3D12_RENDER_PASS_FLAG_NONE
+    );
+    mCommandList->RSSetViewports(1, &mScreenViewport);
+    mCommandList->RSSetScissorRects(1, &mScissorRect);
+
+    mCommandList->SetGraphicsRootSignature(mPostRootSignature.Get());
+
+    mCommandList->IASetVertexBuffers(0, 0, nullptr);
+    //mCommandList->IASetIndexBuffer(&indexBufferView);
+    mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    mCommandList->DrawInstanced(3, 1, 0, 0);
+    //mCommandList->DrawIndexedInstanced(3, 0, 0);
+
+    ID3D12DescriptorHeap* guiDescriptorHeaps[] = { mGuiDescriptorHeap.Get() };
+    mCommandList->SetDescriptorHeaps(_countof(guiDescriptorHeaps), guiDescriptorHeaps);
+    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList.Get());
+    mCommandList->EndRenderPass();
 
 }
 
@@ -219,10 +274,6 @@ void PhotonBeamApp::Rasterize(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmd
     );
     mCommandList->RSSetViewports(1, &mScreenViewport);
     mCommandList->RSSetScissorRects(1, &mScissorRect);
-
-    // Specify the buffers we are going to render to.
-    auto backBufferView = CurrentBackBufferView();
-    auto dsView = DepthStencilView();
 
     mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
 
