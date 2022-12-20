@@ -160,6 +160,7 @@ void PhotonBeamApp::Update(const GameTimer& gt)
 
 void PhotonBeamApp::Rasterize(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc)
 {
+    
     // A command list can be reset after it has been added to the command queue via ExecuteCommandList.
     // Reusing the command list reuses memory.
     if (mIsWireframe)
@@ -170,10 +171,6 @@ void PhotonBeamApp::Rasterize(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmd
     {
         ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), mPSOs["opaque"].Get()));
     }
-
-    mCommandList->RSSetViewports(1, &mScreenViewport);
-    mCommandList->RSSetScissorRects(1, &mScissorRect);
-
     // Indicate a state transition on the resource usage.
     auto resourceBarrierRender = CD3DX12_RESOURCE_BARRIER::Transition(
         CurrentBackBuffer(),
@@ -182,14 +179,40 @@ void PhotonBeamApp::Rasterize(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmd
     );
     mCommandList->ResourceBarrier(1, &resourceBarrierRender);
 
+
+    CD3DX12_CLEAR_VALUE clearValue{ DXGI_FORMAT_R32G32B32_FLOAT, m_clearColor };
+
+    D3D12_RENDER_PASS_BEGINNING_ACCESS renderPassBeginningAccessClear{ D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR, { clearValue } };
+    D3D12_RENDER_PASS_ENDING_ACCESS renderPassEndingAccessPreserve{ D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE, {} };
+    D3D12_RENDER_PASS_RENDER_TARGET_DESC renderPassRenderTargetDesc{ 
+        CurrentBackBufferView(), 
+        renderPassBeginningAccessClear, 
+        renderPassEndingAccessPreserve 
+    };
+
+    D3D12_RENDER_PASS_BEGINNING_ACCESS renderPassBeginningAccessNoAccess{ D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_NO_ACCESS, {} };
+    D3D12_RENDER_PASS_ENDING_ACCESS renderPassEndingAccessNoAccess{ D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_NO_ACCESS, {} };
+    D3D12_RENDER_PASS_DEPTH_STENCIL_DESC renderPassDepthStencilDesc{ 
+        DepthStencilView(), 
+        renderPassBeginningAccessNoAccess, 
+        renderPassBeginningAccessNoAccess, 
+        renderPassEndingAccessNoAccess, 
+        renderPassEndingAccessNoAccess 
+    };
+
+    mCommandList->BeginRenderPass(1, &renderPassRenderTargetDesc, &renderPassDepthStencilDesc, D3D12_RENDER_PASS_FLAG_NONE);
+
+    mCommandList->RSSetViewports(1, &mScreenViewport);
+    mCommandList->RSSetScissorRects(1, &mScissorRect);
+
     // Clear the back buffer and depth buffer.
-    mCommandList->ClearRenderTargetView(CurrentBackBufferView(), m_clearColor, 0, nullptr);
-    mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+    //mCommandList->ClearRenderTargetView(CurrentBackBufferView(), m_clearColor, 0, nullptr);
+    //mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
     // Specify the buffers we are going to render to.
     auto backBufferView = CurrentBackBufferView();
     auto dsView = DepthStencilView();
-    mCommandList->OMSetRenderTargets(1, &backBufferView, true, &dsView);
+    //mCommandList->OMSetRenderTargets(1, &backBufferView, true, &dsView);
 
     mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
 
@@ -201,6 +224,8 @@ void PhotonBeamApp::Rasterize(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmd
     mCommandList->SetGraphicsRootShaderResourceView(2, matBuffer->GetGPUVirtualAddress());
 
     DrawRenderItems(mCommandList.Get(), mOpaqueRitems);
+
+    
 }
 
 void PhotonBeamApp::LightTrace(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc)
@@ -228,7 +253,7 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
     ID3D12DescriptorHeap* guiDescriptorHeaps[] = { mGuiDescriptorHeap.Get() };
     mCommandList->SetDescriptorHeaps(_countof(guiDescriptorHeaps), guiDescriptorHeaps);
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList.Get());
-
+    mCommandList->EndRenderPass();
     // Indicate a state transition on the resource usage.
     auto presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
         CurrentBackBuffer(),
@@ -236,6 +261,8 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
         D3D12_RESOURCE_STATE_PRESENT
     );
 	mCommandList->ResourceBarrier(1, &presentBarrier);
+
+ 
 
     // Done recording commands.
     ThrowIfFailed(mCommandList->Close());
