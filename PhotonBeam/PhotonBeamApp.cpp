@@ -190,14 +190,18 @@ void PhotonBeamApp::Rasterize(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmd
         renderPassEndingAccessPreserve 
     };
 
-    D3D12_RENDER_PASS_BEGINNING_ACCESS renderPassBeginningAccessNoAccess{ D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_NO_ACCESS, {} };
-    D3D12_RENDER_PASS_ENDING_ACCESS renderPassEndingAccessNoAccess{ D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_NO_ACCESS, {} };
+    static const CD3DX12_CLEAR_VALUE depthStencilClearValue{ DXGI_FORMAT_D32_FLOAT_S8X24_UINT, 1.0f, 0 };
+
+    static const D3D12_RENDER_PASS_BEGINNING_ACCESS renderPassBeginningAccessClearDS{
+        D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR, {depthStencilClearValue}
+    };
+
     D3D12_RENDER_PASS_DEPTH_STENCIL_DESC renderPassDepthStencilDesc{ 
         DepthStencilView(), 
-        renderPassBeginningAccessNoAccess, 
-        renderPassBeginningAccessNoAccess, 
-        renderPassEndingAccessNoAccess, 
-        renderPassEndingAccessNoAccess 
+        renderPassBeginningAccessClearDS,
+        renderPassBeginningAccessClearDS,
+        renderPassEndingAccessPreserve,
+        renderPassEndingAccessPreserve
     };
 
     mCommandList->BeginRenderPass(1, &renderPassRenderTargetDesc, &renderPassDepthStencilDesc, D3D12_RENDER_PASS_FLAG_NONE);
