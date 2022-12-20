@@ -64,6 +64,7 @@ bool PhotonBeamApp::Initialize()
     mCamera.UpdateViewMatrix();
 
     BuildRootSignature();
+    BuildPostRootSignature();
     BuildShadersAndInputLayout();
     LoadScene();
     BuildRenderItems();
@@ -674,12 +675,10 @@ void PhotonBeamApp::BuildPSOs()
     opaqueWireframePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
     ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaqueWireframePsoDesc, IID_PPV_ARGS(&mPSOs["opaque_wireframe"])));
 
-
     D3D12_GRAPHICS_PIPELINE_STATE_DESC postPsoDesc;
-    
     ZeroMemory(&postPsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
     postPsoDesc.InputLayout = { nullptr, 0 };
-    postPsoDesc.pRootSignature = mRootSignature.Get();
+    postPsoDesc.pRootSignature = mPostRootSignature.Get();
     postPsoDesc.VS =
     {
         reinterpret_cast<BYTE*>(mShaders["postVS"]->GetBufferPointer()),
