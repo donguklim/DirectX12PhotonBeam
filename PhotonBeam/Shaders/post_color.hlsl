@@ -16,6 +16,9 @@ struct VertexOut
     float2 outUV    : TEXCOORD;
 };
 
+Texture2D gTexture : register(t0);
+
+SamplerState gsamPointWrap  : register(s0);
 
 VertexOut VS(VertexIn vin)
 {
@@ -29,9 +32,9 @@ VertexOut VS(VertexIn vin)
 
 float4 PS(VertexOut pin) : SV_Target
 {
-    float gamma = 1. / 2.2;
-    //return pow(texture(noisyTxt, uv).xyzw, float4(gamma));
-    return float4(gamma, 0.0, 0.0, 1);
+    const static float gamma = 1. / 2.2;
+    const static float4 gammaVec = float4(gamma, gamma, gamma, gamma);
+    return pow(gTexture.Sample(gsamPointWrap, pin.outUV), gammaVec);
 }
 
 
