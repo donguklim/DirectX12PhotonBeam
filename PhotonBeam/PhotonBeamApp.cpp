@@ -158,6 +158,11 @@ void PhotonBeamApp::Update(const GameTimer& gt)
 	UpdateMainPassCB(gt);
 }
 
+void PhotonBeamApp::drawPost()
+{
+
+}
+
 void PhotonBeamApp::Rasterize(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc)
 {
     
@@ -491,6 +496,9 @@ void PhotonBeamApp::BuildShadersAndInputLayout()
         { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 2, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
     };
+
+    mShaders["postVS"] = d3dUtil::CompileShader(L"Shaders\\color.hlsl", nullptr, "VS", "vs_5_1");
+    mShaders["postPS"] = d3dUtil::CompileShader(L"Shaders\\color.hlsl", nullptr, "PS", "ps_5_1");
 }
 
 void PhotonBeamApp::LoadScene()
@@ -603,9 +611,7 @@ void PhotonBeamApp::BuildPSOs()
 {
     D3D12_GRAPHICS_PIPELINE_STATE_DESC opaquePsoDesc;
 
-	//
 	// PSO for opaque objects.
-	//
     ZeroMemory(&opaquePsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 	opaquePsoDesc.InputLayout = { mInputLayout.data(), (UINT)mInputLayout.size() };
 	opaquePsoDesc.pRootSignature = mRootSignature.Get();
@@ -631,14 +637,39 @@ void PhotonBeamApp::BuildPSOs()
 	opaquePsoDesc.DSVFormat = mDepthStencilFormat;
     ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&mPSOs["opaque"])));
 
-
-    //
     // PSO for opaque wireframe objects.
-    //
-
     D3D12_GRAPHICS_PIPELINE_STATE_DESC opaqueWireframePsoDesc = opaquePsoDesc;
     opaqueWireframePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
     ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaqueWireframePsoDesc, IID_PPV_ARGS(&mPSOs["opaque_wireframe"])));
+
+
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC postPsoDesc;
+    
+    ZeroMemory(&postPsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
+    postPsoDesc.InputLayout = { mInputLayout.data(), (UINT)mInputLayout.size() };
+    postPsoDesc.pRootSignature = mRootSignature.Get();
+    postPsoDesc.VS =
+    {
+        reinterpret_cast<BYTE*>(mShaders["postVS"]->GetBufferPointer()),
+        mShaders["postVS"]->GetBufferSize()
+    };
+    postPsoDesc.PS =
+    {
+        reinterpret_cast<BYTE*>(mShaders["postPS"]->GetBufferPointer()),
+        mShaders["postPS"]->GetBufferSize()
+    };
+    postPsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+    postPsoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+    postPsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+    postPsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+    postPsoDesc.DepthStencilState.DepthEnable = false;
+    postPsoDesc.SampleMask = UINT_MAX;
+    postPsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    postPsoDesc.NumRenderTargets = 1;
+    postPsoDesc.RTVFormats[0] = mBackBufferFormat;
+    postPsoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
+    postPsoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
+    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&postPsoDesc, IID_PPV_ARGS(&mPSOs["post"])));
 }
 
 void PhotonBeamApp::BuildFrameResources()
