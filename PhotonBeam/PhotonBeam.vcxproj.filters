@@ -16,6 +16,9 @@
     <Filter Include="imgui">
       <UniqueIdentifier>{5c05676d-1b9b-4941-a927-e2c480ae40fb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="imgui helper">
+      <UniqueIdentifier>{48d4b0a2-3dfb-4395-96f0-97866b29598d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\DDSTextureLoader.h">
@@ -65,6 +68,9 @@
     </ClInclude>
     <ClInclude Include="..\Common\d3dUtil.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\imgui-helper\imgui_helper.h">
+      <Filter>imgui helper</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -121,6 +127,9 @@
     </ClCompile>
     <ClCompile Include="GltfScene.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imgui-helper\imgui_helper.cpp">
+      <Filter>imgui helper</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
