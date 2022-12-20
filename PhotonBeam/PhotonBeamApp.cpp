@@ -312,8 +312,8 @@ void PhotonBeamApp::OnMouseMove(WPARAM btnState, int x, int y)
         float dx = XMConvertToRadians(0.1f * static_cast<float>(x - mLastMousePos.x));
         float dy = XMConvertToRadians(0.1f * static_cast<float>(y - mLastMousePos.y));
 
-        mCamera.Pitch(dy);
-        mCamera.RotateY(dx);
+        mCamera.Pitch(-dy);
+        mCamera.RotateY(-dx);
     }
     else if ((btnState & MK_RBUTTON) != 0)
     {
@@ -325,10 +325,10 @@ void PhotonBeamApp::OnMouseMove(WPARAM btnState, int x, int y)
     }
     else if ((btnState & MK_MBUTTON) != 0)
     {
-        float dx = -0.02f * static_cast<float>(x - mLastMousePos.x);
+        float dx = 0.02f * static_cast<float>(x - mLastMousePos.x);
         float dy = 0.02f * static_cast<float>(y - mLastMousePos.y);
 
-        mCamera.Strafe(dx);
+        mCamera.Strafe(-dx);
         mCamera.Pedestal(dy);
     }
 
