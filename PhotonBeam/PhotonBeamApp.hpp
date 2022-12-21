@@ -101,6 +101,7 @@ private:
     void SetDefaults();
     void Rasterize(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc);
     void LightTrace(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc);
+    void RayTrace();
     void drawPost(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc);
 
 private:

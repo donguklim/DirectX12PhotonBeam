@@ -300,6 +300,11 @@ void PhotonBeamApp::LightTrace(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cm
 
 }
 
+void PhotonBeamApp::RayTrace()
+{
+    mCommandList->ClearRenderTargetView(CurrentBackBufferView(), m_clearColor, 0, nullptr);
+}
+
 void PhotonBeamApp::Draw(const GameTimer& gt)
 {
     // Start the Dear ImGui frame
