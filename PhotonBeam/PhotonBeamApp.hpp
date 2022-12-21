@@ -73,8 +73,7 @@ public:
     virtual LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)override;
     void InitGui();
     void LoadScene();
-
-    GltfScene m_gltfScene;
+    void CheckRaytracingSupport();
 
 private:
     virtual void OnResize()override;
@@ -130,6 +129,8 @@ private:
     std::vector<RenderItem*> mOpaqueRitems;
 
     PassConstants mMainPassCB;
+
+    GltfScene m_gltfScene;
 
     bool mIsWireframe = false;
 

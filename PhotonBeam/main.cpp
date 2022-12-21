@@ -17,12 +17,18 @@ int main(int, char**)
             return 0;
 
         theApp.InitGui();
+        theApp.CheckRaytracingSupport();
 
         return theApp.Run();
     }
     catch (DxException& e)
     {
         MessageBox(nullptr, e.ToString().c_str(), L"HR Failed", MB_OK);
+        return 0;
+    }
+    catch (std::runtime_error& e)
+    {
+        OutputDebugStringA(e.what());
         return 0;
     }
 

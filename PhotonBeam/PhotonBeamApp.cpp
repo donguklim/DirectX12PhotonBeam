@@ -83,6 +83,13 @@ bool PhotonBeamApp::Initialize()
     return true;
 }
 
+void PhotonBeamApp::CheckRaytracingSupport() {
+    D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5 = {}; 
+    ThrowIfFailed(md3dDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &options5, sizeof(options5)));
+    if (options5.RaytracingTier < D3D12_RAYTRACING_TIER_1_0) 
+        throw std::runtime_error("Raytracing not supported on device");
+}
+
 void PhotonBeamApp::InitGui()
 {
     // Setup Dear ImGui context
