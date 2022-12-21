@@ -1019,17 +1019,17 @@ void PhotonBeamApp::CreateBottomLevelAS() {
 
     auto geo = mGeometries["cornellBox"].get();
     auto vertexBufferView = geo->VertexBufferView();
-
+    auto indexbufferView = geo->IndexBufferView();
     const auto& primMeshes = m_gltfScene.GetPrimMeshes();
     for (const auto& mesh : primMeshes)
     {
         bottomLevelAS.AddVertexBuffer(
             geo->VertexBufferGPU.Get(), 
-            mesh.vertexOffset,   
-            vertexBufferView.SizeInBytes / vertexBufferView.StrideInBytes, 
+            mesh.vertexOffset * vertexBufferView.StrideInBytes,
+            vertexBufferView.SizeInBytes / vertexBufferView.StrideInBytes - mesh.vertexOffset,
             vertexBufferView.StrideInBytes,
             geo->IndexBufferGPU.Get(),
-            mesh.firstIndex,
+            mesh.firstIndex * sizeof(UINT16),
             mesh.indexCount,
             nullptr,
             0
