@@ -74,7 +74,7 @@ bool PhotonBeamApp::Initialize()
     BuildPSOs();
 
     CreateBottomLevelAS();
-    //CreateTopLevelAS();
+    CreateTopLevelAS();
 
     // Execute the initialization commands.
     ThrowIfFailed(mCommandList->Close());
@@ -1085,12 +1085,12 @@ void PhotonBeamApp::CreateTopLevelAS() {
         &resultSize, 
         &instanceDescsSize
     ); 
-
+    
     m_topLevelASBuffers.pScratch = photon_map_utils::CreateBuffer(
         md3dDevice.Get(), 
         scratchSize, 
         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, 
-        D3D12_RESOURCE_STATE_UNORDERED_ACCESS, 
+        D3D12_RESOURCE_STATE_COMMON,
         photon_map_utils::pmDefaultHeapProps
     ); 
 
@@ -1110,6 +1110,7 @@ void PhotonBeamApp::CreateTopLevelAS() {
         photon_map_utils::pmUploadHeapProps
     ); 
 
+
     m_topLevelASGenerator.Generate(
         mCommandList.Get(),
         m_topLevelASBuffers.pScratch.Get(), 
@@ -1117,4 +1118,5 @@ void PhotonBeamApp::CreateTopLevelAS() {
         m_topLevelASBuffers.pInstanceDesc.Get()
     );
 
+    return;
 }
