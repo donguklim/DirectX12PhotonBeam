@@ -11,7 +11,6 @@
 #include "../Common/Camera.h"
 #include "../Common/MathHelper.h"
 #include "../Common/UploadBuffer.h"
-#include "../Common/GeometryGenerator.h"
 #include "FrameResource.h"
 #include "GltfScene.hpp"
 
