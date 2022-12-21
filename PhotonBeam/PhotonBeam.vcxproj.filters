@@ -19,6 +19,9 @@
     <Filter Include="imgui helper">
       <UniqueIdentifier>{48d4b0a2-3dfb-4395-96f0-97866b29598d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DXR helpers">
+      <UniqueIdentifier>{0798450c-dd14-42b2-8d9f-0ba0aa28145d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\DDSTextureLoader.h">
@@ -68,6 +71,21 @@
     </ClInclude>
     <ClInclude Include="..\imgui-helper\imgui_helper.h">
       <Filter>imgui helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DXRHelpers\nv_helpers_dx12\BottomLevelASGenerator.h">
+      <Filter>DXR helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DXRHelpers\nv_helpers_dx12\RaytracingPipelineGenerator.h">
+      <Filter>DXR helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DXRHelpers\nv_helpers_dx12\RootSignatureGenerator.h">
+      <Filter>DXR helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DXRHelpers\nv_helpers_dx12\ShaderBindingTableGenerator.h">
+      <Filter>DXR helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DXRHelpers\nv_helpers_dx12\TopLevelASGenerator.h">
+      <Filter>DXR helpers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -124,6 +142,21 @@
     </ClCompile>
     <ClCompile Include="..\imgui-helper\imgui_helper.cpp">
       <Filter>imgui helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DXRHelpers\nv_helpers_dx12\BottomLevelASGenerator.cpp">
+      <Filter>DXR helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DXRHelpers\nv_helpers_dx12\RaytracingPipelineGenerator.cpp">
+      <Filter>DXR helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DXRHelpers\nv_helpers_dx12\RootSignatureGenerator.cpp">
+      <Filter>DXR helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DXRHelpers\nv_helpers_dx12\ShaderBindingTableGenerator.cpp">
+      <Filter>DXR helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DXRHelpers\nv_helpers_dx12\TopLevelASGenerator.cpp">
+      <Filter>DXR helpers</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

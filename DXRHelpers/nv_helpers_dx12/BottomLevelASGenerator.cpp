@@ -140,7 +140,7 @@ void BottomLevelASGenerator::ComputeASBufferSizes(
   // Describe the work being requested, in this case the construction of a
   // (possibly dynamic) bottom-level hierarchy, with the given vertex buffers
   
-  D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS prebuildDesc;
+  D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS prebuildDesc{};
   prebuildDesc.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
   prebuildDesc.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
   prebuildDesc.NumDescs = static_cast<UINT>(m_vertexBuffers.size());
@@ -217,7 +217,7 @@ void BottomLevelASGenerator::Generate(
   }
   // Create a descriptor of the requested builder work, to generate a
   // bottom-level AS from the input parameters
-  D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildDesc;
+  D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildDesc{};
   buildDesc.Inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
   buildDesc.Inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
   buildDesc.Inputs.NumDescs = static_cast<UINT>(m_vertexBuffers.size());
@@ -237,7 +237,7 @@ void BottomLevelASGenerator::Generate(
   // buffer. This is particularly important as the construction of the top-level
   // hierarchy may be called right afterwards, before executing the command
   // list.
-  D3D12_RESOURCE_BARRIER uavBarrier;
+  D3D12_RESOURCE_BARRIER uavBarrier{};
   uavBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
   uavBarrier.UAV.pResource = resultBuffer;
   uavBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;

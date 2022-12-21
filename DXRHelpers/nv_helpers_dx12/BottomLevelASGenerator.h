@@ -69,6 +69,7 @@ return buffers;
 
 #include "d3d12.h"
 
+#include <stdexcept>
 #include <vector>
 
 namespace nv_helpers_dx12

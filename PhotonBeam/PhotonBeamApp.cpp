@@ -551,7 +551,7 @@ void PhotonBeamApp::BuildRootSignature()
 
 void PhotonBeamApp::BuildPostRootSignature()
 {
-    CD3DX12_DESCRIPTOR_RANGE texTable0;
+    CD3DX12_DESCRIPTOR_RANGE texTable0{};
     texTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
 
     // Root parameter can be a table, root descriptor or root constants.
@@ -811,7 +811,7 @@ void PhotonBeamApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const st
         cmdList->IASetIndexBuffer(&indexBufferView);
         cmdList->IASetPrimitiveTopology(ri->PrimitiveType);
 
-        D3D12_GPU_VIRTUAL_ADDRESS objCBAddress = objectCB->GetGPUVirtualAddress() + ri->ObjCBIndex * objCBByteSize;
+        D3D12_GPU_VIRTUAL_ADDRESS objCBAddress = objectCB->GetGPUVirtualAddress() + static_cast<UINT64>(ri->ObjCBIndex) * objCBByteSize;
 
         cmdList->SetGraphicsRootConstantBufferView(0, objCBAddress);
 

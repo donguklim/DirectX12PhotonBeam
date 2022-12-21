@@ -43,6 +43,7 @@ compiling in debug mode.
 
 #include "dxcapi.h"
 #include <unordered_set>
+#include <stdexcept>
 
 namespace nv_helpers_dx12
 {
@@ -205,7 +206,7 @@ ID3D12StateObject* RayTracingPipelineGenerator::Generate()
   shaderPayloadAssociation.pExports = shaderExports;
 
   // Associate the set of shaders with the payload defined in the previous subobject
-  shaderPayloadAssociation.pSubobjectToAssociate = &subobjects[(currentIndex - 1)];
+  shaderPayloadAssociation.pSubobjectToAssociate = &subobjects[static_cast<UINT64>(currentIndex) - 1];
 
   // Create and store the payload association object
   D3D12_STATE_SUBOBJECT shaderPayloadAssociationObject = {};
@@ -229,7 +230,7 @@ ID3D12StateObject* RayTracingPipelineGenerator::Generate()
     // signature
     assoc.m_association.NumExports = static_cast<UINT>(assoc.m_symbolPointers.size());
     assoc.m_association.pExports = assoc.m_symbolPointers.data();
-    assoc.m_association.pSubobjectToAssociate = &subobjects[(currentIndex - 1)];
+    assoc.m_association.pSubobjectToAssociate = &subobjects[static_cast<UINT64>(currentIndex) - 1];
 
     D3D12_STATE_SUBOBJECT rootSigAssociationObject = {};
     rootSigAssociationObject.Type = D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION;
@@ -239,7 +240,7 @@ ID3D12StateObject* RayTracingPipelineGenerator::Generate()
   }
 
   // The pipeline construction always requires an empty global root signature
-  D3D12_STATE_SUBOBJECT globalRootSig;
+  D3D12_STATE_SUBOBJECT globalRootSig{};
   globalRootSig.Type = D3D12_STATE_SUBOBJECT_TYPE_GLOBAL_ROOT_SIGNATURE;
   ID3D12RootSignature* dgSig = m_dummyGlobalRootSignature;
   globalRootSig.pDesc = &dgSig;
@@ -247,7 +248,7 @@ ID3D12StateObject* RayTracingPipelineGenerator::Generate()
   subobjects[currentIndex++] = globalRootSig;
 
   // The pipeline construction always requires an empty local root signature
-  D3D12_STATE_SUBOBJECT dummyLocalRootSig;
+  D3D12_STATE_SUBOBJECT dummyLocalRootSig{};
   dummyLocalRootSig.Type = D3D12_STATE_SUBOBJECT_TYPE_LOCAL_ROOT_SIGNATURE;
   ID3D12RootSignature* dlSig = m_dummyLocalRootSignature;
   dummyLocalRootSig.pDesc = &dlSig;

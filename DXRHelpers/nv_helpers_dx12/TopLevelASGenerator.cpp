@@ -46,6 +46,7 @@ buffer needs to be kept until the command list execution is finished.
 */
 
 #include "TopLevelASGenerator.h"
+#include <stdexcept>
 
 // Helper to compute aligned buffer sizes
 #ifndef ROUND_UP
@@ -160,7 +161,7 @@ void TopLevelASGenerator::Generate(
 )
 {
   // Copy the descriptors in the target descriptor buffer
-  D3D12_RAYTRACING_INSTANCE_DESC* instanceDescs;
+    D3D12_RAYTRACING_INSTANCE_DESC* instanceDescs = nullptr;
   descriptorsBuffer->Map(0, nullptr, reinterpret_cast<void**>(&instanceDescs));
   if (!instanceDescs)
   {
@@ -241,7 +242,7 @@ void TopLevelASGenerator::Generate(
   // Wait for the builder to complete by setting a barrier on the resulting
   // buffer. This can be important in case the rendering is triggered
   // immediately afterwards, without executing the command list
-  D3D12_RESOURCE_BARRIER uavBarrier;
+  D3D12_RESOURCE_BARRIER uavBarrier{};
   uavBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
   uavBarrier.UAV.pResource = resultBuffer;
   uavBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;

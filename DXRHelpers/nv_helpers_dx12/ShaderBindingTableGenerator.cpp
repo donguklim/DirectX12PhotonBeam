@@ -35,6 +35,8 @@ dispatch rays description.
 */
 
 #include "ShaderBindingTableGenerator.h"
+#include <stdexcept>
+
 
 // Helper to compute aligned buffer sizes
 #ifndef ROUND_UP
@@ -105,7 +107,7 @@ void ShaderBindingTableGenerator::Generate(ID3D12Resource* sbtBuffer,
                                            ID3D12StateObjectProperties* raytracingPipeline)
 {
   // Map the SBT
-  uint8_t* pData;
+  uint8_t* pData = nullptr;
   HRESULT hr = sbtBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pData));
   if (FAILED(hr))
   {
