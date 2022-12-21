@@ -66,7 +66,8 @@ struct RenderItem
 struct AccelerationStructureBuffers
 {
     ComPtr<ID3D12Resource> pScratch; 
-    ComPtr<ID3D12Resource> pResult; 
+    ComPtr<ID3D12Resource> pResult;
+    ComPtr<ID3D12Resource> pInstanceDesc;
 };
 
 class PhotonBeamApp : public D3DApp
@@ -113,6 +114,7 @@ private:
     void drawPost(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc);
 
     void CreateBottomLevelAS();
+    void CreateTopLevelAS();
 
 private:
 
@@ -177,6 +179,7 @@ private:
     float m_prevCameraFOV;
 
     AccelerationStructureBuffers m_bottomLevelASBuffers{};
+    AccelerationStructureBuffers m_topLevelASBuffers{};
 
     ComPtr<ID3D12Resource> m_bottomLevelAS; // Storage for the bottom Level AS
     nv_helpers_dx12::TopLevelASGenerator m_topLevelASGenerator;

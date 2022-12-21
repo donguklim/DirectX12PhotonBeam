@@ -74,6 +74,7 @@ bool PhotonBeamApp::Initialize()
     BuildPSOs();
 
     CreateBottomLevelAS();
+    //CreateTopLevelAS();
 
     // Execute the initialization commands.
     ThrowIfFailed(mCommandList->Close());
@@ -1043,13 +1044,15 @@ void PhotonBeamApp::CreateBottomLevelAS() {
         md3dDevice.Get(),
         scratchSizeInBytes, 
         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, 
-        D3D12_RESOURCE_STATE_COMMON, photon_map_utils::pmDefaultHeapProps
+        D3D12_RESOURCE_STATE_COMMON, 
+        photon_map_utils::pmDefaultHeapProps
     );
     m_bottomLevelASBuffers.pResult = photon_map_utils::CreateBuffer(
         md3dDevice.Get(),
         resultSizeInBytes, 
         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, 
-        D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, photon_map_utils::pmDefaultHeapProps
+        D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, 
+        photon_map_utils::pmDefaultHeapProps
     );
 
     bottomLevelAS.Generate(
@@ -1059,4 +1062,59 @@ void PhotonBeamApp::CreateBottomLevelAS() {
         false, 
         nullptr
     );
+}
+
+void PhotonBeamApp::CreateTopLevelAS() {
+
+
+    for (auto& node : m_gltfScene.GetNodes())
+    {
+        m_topLevelASGenerator.AddInstance(
+            m_bottomLevelASBuffers.pResult.Get(),
+            XMLoadFloat4x4(&node.worldMatrix),
+            static_cast<UINT>(node.primMesh),
+            static_cast<UINT>(0)
+        );
+    }
+
+    UINT64 scratchSize, resultSize, instanceDescsSize; 
+    m_topLevelASGenerator.ComputeASBufferSizes(
+        md3dDevice.Get(),
+        true, 
+        &scratchSize, 
+        &resultSize, 
+        &instanceDescsSize
+    ); 
+
+    m_topLevelASBuffers.pScratch = photon_map_utils::CreateBuffer(
+        md3dDevice.Get(), 
+        scratchSize, 
+        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, 
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS, 
+        photon_map_utils::pmDefaultHeapProps
+    ); 
+
+    m_topLevelASBuffers.pResult = photon_map_utils::CreateBuffer(
+        md3dDevice.Get(), 
+        resultSize, 
+        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, 
+        D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, 
+        photon_map_utils::pmDefaultHeapProps
+    ); 
+
+    m_topLevelASBuffers.pInstanceDesc = photon_map_utils::CreateBuffer(
+        md3dDevice.Get(), 
+        instanceDescsSize, 
+        D3D12_RESOURCE_FLAG_NONE, 
+        D3D12_RESOURCE_STATE_GENERIC_READ, 
+        photon_map_utils::pmUploadHeapProps
+    ); 
+
+    m_topLevelASGenerator.Generate(
+        mCommandList.Get(),
+        m_topLevelASBuffers.pScratch.Get(), 
+        m_topLevelASBuffers.pResult.Get(), 
+        m_topLevelASBuffers.pInstanceDesc.Get()
+    );
+
 }
