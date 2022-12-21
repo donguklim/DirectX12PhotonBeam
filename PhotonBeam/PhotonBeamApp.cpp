@@ -656,10 +656,10 @@ void PhotonBeamApp::LoadScene()
     CopyMemory(geo->VertexBufferCPU->GetBufferPointer(), vertexPositions.data(), vbByteSize);
 
     ThrowIfFailed(D3DCreateBlob(nbByteSize, &geo->NormalBufferCPU));
-    CopyMemory(geo->VertexBufferCPU->GetBufferPointer(), vertexNormals.data(), nbByteSize);
+    CopyMemory(geo->NormalBufferCPU->GetBufferPointer(), vertexNormals.data(), nbByteSize);
 
     ThrowIfFailed(D3DCreateBlob(ubByteSize, &geo->UvBufferCPU));
-    CopyMemory(geo->VertexBufferCPU->GetBufferPointer(), vertexUVs.data(), ubByteSize);
+    CopyMemory(geo->UvBufferCPU->GetBufferPointer(), vertexUVs.data(), ubByteSize);
 
     ThrowIfFailed(D3DCreateBlob(ibByteSize, &geo->IndexBufferCPU));
     CopyMemory(geo->IndexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
