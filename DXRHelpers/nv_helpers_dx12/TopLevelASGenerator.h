@@ -152,10 +152,10 @@ private:
   std::vector<Instance> m_instances;
 
   /// Size of the temporary memory used by the TLAS builder
-  UINT64 m_scratchSizeInBytes;
+  UINT64 m_scratchSizeInBytes{};
   /// Size of the buffer containing the instance descriptors
-  UINT64 m_instanceDescsSizeInBytes;
+  UINT64 m_instanceDescsSizeInBytes{};
   /// Size of the buffer containing the TLAS
-  UINT64 m_resultSizeInBytes;
+  UINT64 m_resultSizeInBytes{};
 };
 } // namespace nv_helpers_dx12

@@ -37,8 +37,17 @@ inline ID3D12Resource* CreateBuffer(ID3D12Device* m_device, uint64_t size,
   bufDesc.Width = size;
 
   ID3D12Resource* pBuffer;
-  ThrowIfFailed(m_device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &bufDesc,
-                                                  initState, nullptr, IID_PPV_ARGS(&pBuffer)));
+  ThrowIfFailed(
+      m_device->CreateCommittedResource(
+          &heapProps, 
+          D3D12_HEAP_FLAG_NONE, 
+          &bufDesc,
+                                                  
+          initState, 
+          nullptr, 
+          IID_PPV_ARGS(&pBuffer)
+      )
+  );
   return pBuffer;
 }
 

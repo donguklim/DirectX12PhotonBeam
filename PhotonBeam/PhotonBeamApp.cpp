@@ -18,6 +18,7 @@
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx12.h"
 #include "imgui_helper.h"
+#include "PhotonMapUtils.h"
 
 const int gNumFrameResources = 3;
 
@@ -72,6 +73,8 @@ bool PhotonBeamApp::Initialize()
     BuildDescriptorHeaps();
     BuildPSOs();
 
+    CreateBottomLevelAS();
+
     // Execute the initialization commands.
     ThrowIfFailed(mCommandList->Close());
     ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
@@ -79,6 +82,8 @@ bool PhotonBeamApp::Initialize()
 
     // Wait until initialization is complete.
     FlushCommandQueue();
+
+    mGeometries["cornellBox"].get()->DisposeUploaders();
 
     return true;
 }
@@ -1003,4 +1008,55 @@ void PhotonBeamApp::RenderUI()
 
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGuiH::Panel::End();
+}
+
+
+void PhotonBeamApp::CreateBottomLevelAS() {
+
+    nv_helpers_dx12::BottomLevelASGenerator bottomLevelAS{};
+    // Adding all vertex buffers and not transforming their position. 
+
+    auto geo = mGeometries["cornellBox"].get();
+    auto vertexBufferView = geo->VertexBufferView();
+
+    const auto& primMeshes = m_gltfScene.GetPrimMeshes();
+    for (const auto& mesh : primMeshes)
+    {
+        bottomLevelAS.AddVertexBuffer(
+            geo->VertexBufferGPU.Get(), 
+            mesh.vertexOffset,   
+            vertexBufferView.SizeInBytes / vertexBufferView.StrideInBytes, 
+            vertexBufferView.StrideInBytes,
+            geo->IndexBufferGPU.Get(),
+            mesh.firstIndex,
+            mesh.indexCount,
+            nullptr,
+            0
+        );
+    }
+
+    UINT64 scratchSizeInBytes = 0; 
+    UINT64 resultSizeInBytes = 0; 
+    bottomLevelAS.ComputeASBufferSizes(md3dDevice.Get(), false, &scratchSizeInBytes, &resultSizeInBytes);
+    
+    m_bottomLevelASBuffers.pScratch = photon_map_utils::CreateBuffer(
+        md3dDevice.Get(),
+        scratchSizeInBytes, 
+        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, 
+        D3D12_RESOURCE_STATE_COMMON, photon_map_utils::pmDefaultHeapProps
+    );
+    m_bottomLevelASBuffers.pResult = photon_map_utils::CreateBuffer(
+        md3dDevice.Get(),
+        resultSizeInBytes, 
+        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, 
+        D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, photon_map_utils::pmDefaultHeapProps
+    );
+
+    bottomLevelAS.Generate(
+        mCommandList.Get(), 
+        m_bottomLevelASBuffers.pScratch.Get(),
+        m_bottomLevelASBuffers.pResult.Get(),
+        false, 
+        nullptr
+    );
 }

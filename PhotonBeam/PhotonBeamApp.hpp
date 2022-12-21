@@ -11,6 +11,8 @@
 #include "../Common/Camera.h"
 #include "../Common/MathHelper.h"
 #include "../Common/UploadBuffer.h"
+#include "nv_helpers_dx12/TopLevelASGenerator.h"
+#include "nv_helpers_dx12/BottomLevelASGenerator.h"
 #include "FrameResource.h"
 #include "GltfScene.hpp"
 
@@ -61,6 +63,12 @@ struct RenderItem
     int BaseVertexLocation = 0;
 };
 
+struct AccelerationStructureBuffers
+{
+    ComPtr<ID3D12Resource> pScratch; 
+    ComPtr<ID3D12Resource> pResult; 
+};
+
 class PhotonBeamApp : public D3DApp
 {
 public:
@@ -103,6 +111,8 @@ private:
     void LightTrace(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc);
     void RayTrace();
     void drawPost(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc);
+
+    void CreateBottomLevelAS();
 
 private:
 
@@ -165,5 +175,12 @@ private:
     bool m_createBeamPhotonAS;
     float m_camearaFOV;
     float m_prevCameraFOV;
+
+    AccelerationStructureBuffers m_bottomLevelASBuffers{};
+
+    ComPtr<ID3D12Resource> m_bottomLevelAS; // Storage for the bottom Level AS
+    nv_helpers_dx12::TopLevelASGenerator m_topLevelASGenerator;
+    //AccelerationStructureBuffers m_topLevelASBuffers;
+    std::vector<std::pair<ComPtr<ID3D12Resource>, DirectX::XMMATRIX>> m_instances;
 };
 

@@ -167,6 +167,6 @@ private:
 
   /// Flags for the builder, specifying whether to allow iterative updates, or
   /// when to perform an update
-  D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS m_flags;
+  D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS m_flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE;
 };
 } // namespace nv_helpers_dx12
