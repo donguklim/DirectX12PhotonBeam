@@ -121,7 +121,7 @@ void ClosestHit(inout BeamHitPayload prd, Attributes attribs)
         prd.rayDirection, 
         world_normal, 
         material.roughness
-    );
+);
 
     // rays reflected toward inside of the surface are considered to be absorbd
     if (dot(world_normal, rayDirection) <= 0)
@@ -137,7 +137,7 @@ void ClosestHit(inout BeamHitPayload prd, Attributes attribs)
     if (material.pbrBaseColorTexture > -1)
     {
         uint txtId = material.pbrBaseColorTexture;
-        albedo *= g_texturesMap[txtId].Sample(gsamPointWrap, texcoord0).xyz;
+        albedo *= g_texturesMap[txtId].SampleLevel(gsamPointWrap, texcoord0, 0).xyz;
     }
 
     float3 material_f = pdfWeightedGltfBrdf(
