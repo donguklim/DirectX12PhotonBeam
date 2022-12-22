@@ -15,7 +15,6 @@ using uint2 = uint64_t;
 #endif
 
 
-
 // Scene buffer addresses
 
 struct SceneDesc
@@ -63,7 +62,7 @@ struct PushConstantRay
 	uint maxNumSubBeams;
 
 	float3     sourceLight;
-	uint lightType;
+	uint seed;
 
 	uint2 beamBlasAddress;
 	uint2 photonBlasAddress;
@@ -102,7 +101,7 @@ struct PhotonBeam
 	float3  endPos;
 	float radius;
 	float3  lightColor;
-	int   hitInstanceIndex;
+	int   hitInstanceID;
 };
 
 struct PhotonBeamCounter
