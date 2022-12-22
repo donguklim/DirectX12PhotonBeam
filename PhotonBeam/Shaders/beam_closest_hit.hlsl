@@ -16,6 +16,7 @@ StructuredBuffer<float3> g_normals : register(t3, space0);
 StructuredBuffer<float2> g_texcoordinate : register(t4, space0);
 
 StructuredBuffer<GltfShadeMaterial> g_material : register(t5, space0);
+StructuredBuffer<PrimMeshInfo> g_meshInfo : register(t6, space0);
 
 Texture2D g_diffuseMap[] : register(t0, space1);
 
