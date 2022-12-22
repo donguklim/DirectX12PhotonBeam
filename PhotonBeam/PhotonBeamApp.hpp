@@ -6,6 +6,7 @@
 
 #pragma once
 #define NOMINMAX
+#include <DirectXMath.h>
 
 #include "../Common/d3dApp.h"
 #include "../Common/Camera.h"
@@ -17,9 +18,6 @@
 #include "FrameResource.h"
 #include "GltfScene.hpp"
 
-
-using namespace DirectX;
-using namespace DirectX::PackedVector;
 
 struct GltfShadeMaterial
 {
@@ -40,7 +38,7 @@ struct RenderItem
     // World matrix of the shape that describes the object's local space
     // relative to the world space, which defines the position, orientation,
     // and scale of the object in the world.
-    XMFLOAT4X4 World = MathHelper::Identity4x4();
+    DirectX::XMFLOAT4X4 World = MathHelper::Identity4x4();
 
     // Dirty flag indicating the object data has changed and we need to update the constant buffer.
     // Because we have an object cbuffer for each FrameResource, we have to apply the
@@ -153,8 +151,8 @@ private:
 
     bool mIsWireframe = false;
 
-    XMFLOAT3 mEyePos{};
-    XMVECTORF32 m_clearColor;
+    DirectX::XMFLOAT3 mEyePos{};
+    DirectX::XMVECTORF32 m_clearColor;
 
     POINT mLastMousePos;
     Camera mCamera;
@@ -168,12 +166,12 @@ private:
     unsigned int m_maxNumBeamSamples;
     unsigned int m_maxNumPhotonSamples;
     bool m_useRayTracer;
-    XMVECTORF32 m_beamNearColor;
-    XMVECTORF32 m_beamUnitDistantColor;
-    XMVECTORF32 m_airScatterCoff;
-    XMVECTORF32 m_airExtinctCoff;
-    XMVECTORF32 m_sourceLight;
-    XMVECTORF32 m_lightPosition{ 0.0f, 0.0f, 0.0f };
+    DirectX::XMVECTORF32 m_beamNearColor;
+    DirectX::XMVECTORF32 m_beamUnitDistantColor;
+    DirectX::XMVECTORF32 m_airScatterCoff;
+    DirectX::XMVECTORF32 m_airExtinctCoff;
+    DirectX::XMVECTORF32 m_sourceLight;
+    DirectX::XMVECTORF32 m_lightPosition{ 0.0f, 0.0f, 0.0f };
     float m_lightIntensity;
     float         m_beamIntensity;
     bool          m_usePhotonMapping;

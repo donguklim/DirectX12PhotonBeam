@@ -20,11 +20,15 @@
 #include "imgui_helper.h"
 #include "PhotonMapUtils.h"
 
+#include "Shaders/host_device.h"
+
+using Microsoft::WRL::ComPtr;
+using namespace DirectX;
+
 const int gNumFrameResources = 3;
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-using Microsoft::WRL::ComPtr;
 
 PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance)
     : D3DApp(hInstance)
