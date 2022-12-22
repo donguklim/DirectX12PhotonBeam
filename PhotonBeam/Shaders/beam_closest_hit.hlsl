@@ -5,7 +5,6 @@
 
 
 RaytracingAccelerationStructure g_scene : register(t0);
-RWTexture2D< float4 > gOutput : register(u0);
 ConstantBuffer<PushConstantRay> pc_ray : register(b0);
 
 
