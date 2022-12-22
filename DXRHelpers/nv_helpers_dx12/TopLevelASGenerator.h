@@ -147,7 +147,7 @@ private:
   };
 
   /// Construction flags, indicating whether the AS supports iterative updates
-  D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS m_flags;
+  D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS m_flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE;
   /// Instances contained in the top-level AS
   std::vector<Instance> m_instances;
 
