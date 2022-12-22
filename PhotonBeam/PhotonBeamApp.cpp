@@ -1025,7 +1025,7 @@ void PhotonBeamApp::CreateBottomLevelAS() {
     {
         bottomLevelAS.AddVertexBuffer(
             geo->VertexBufferGPU.Get(), 
-            mesh.vertexOffset * vertexBufferView.StrideInBytes,
+            static_cast<UINT64>(mesh.vertexOffset) * vertexBufferView.StrideInBytes,
             vertexBufferView.SizeInBytes / vertexBufferView.StrideInBytes - mesh.vertexOffset,
             vertexBufferView.StrideInBytes,
             geo->IndexBufferGPU.Get(),
