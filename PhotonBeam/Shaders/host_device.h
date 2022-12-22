@@ -105,13 +105,23 @@ struct PhotonBeam
 	int   hitInstanceIndex;
 };
 
-struct ShaderVkAccelerationStructureInstanceKHR
+struct PhotonBeamCounter
+{
+	uint subBeamCount;
+	uint beamCount;
+	uint padding1;
+	uint padding2;
+};
+
+
+struct ShaderRayTracingTopASInstanceDesc
 {
 	float4 transform[3];
 	uint instanceCustomIndexAndmask;
 	uint instanceShaderBindingTableRecordOffsetAndflags;
 	uint2 accelerationStructureReference;
 };
+
 
 struct Aabb
 {
