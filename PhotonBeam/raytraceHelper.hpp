@@ -52,6 +52,7 @@ namespace raytrace_helper
         return resultBuffer;
     }
 
-    IDxcBlob* CompileShaderLibrary(LPCWSTR fileName);
+    
+    Microsoft::WRL::ComPtr<IDxcBlob> CompileShaderLibrary(LPCWSTR fileName);
 
 }

@@ -2,7 +2,7 @@
 #include "raytraceHelper.hpp"
 
 
-IDxcBlob* raytrace_helper::CompileShaderLibrary(LPCWSTR fileName)
+Microsoft::WRL::ComPtr<IDxcBlob> raytrace_helper::CompileShaderLibrary(LPCWSTR fileName)
 {
     static IDxcCompiler* pCompiler = nullptr;
     static IDxcLibrary* pLibrary = nullptr;
@@ -30,21 +30,39 @@ IDxcBlob* raytrace_helper::CompileShaderLibrary(LPCWSTR fileName)
 
     // Create blob from the string
     IDxcBlobEncoding* pTextBlob;
-    ThrowIfFailed(pLibrary->CreateBlobWithEncodingFromPinned(
-        (LPBYTE)sShader.c_str(), (uint32_t)sShader.size(), 0, &pTextBlob));
+    ThrowIfFailed(
+        pLibrary->CreateBlobWithEncodingFromPinned(
+        (LPBYTE)sShader.c_str(), 
+            (uint32_t)sShader.size(), 
+            0, 
+            &pTextBlob
+        )
+    );
 
     // Compile
-    IDxcOperationResult* pResult;
-    ThrowIfFailed(pCompiler->Compile(pTextBlob, fileName, L"", L"lib_6_3", nullptr, 0, nullptr, 0,
-        dxcIncludeHandler, &pResult));
+    Microsoft::WRL::ComPtr<IDxcOperationResult> pResult;
+    ThrowIfFailed(
+        pCompiler->Compile(
+            pTextBlob, 
+            fileName, 
+            L"", 
+            L"lib_6_3", 
+            nullptr, 
+            0, 
+            nullptr, 
+            0,
+            dxcIncludeHandler, 
+            pResult.GetAddressOf()
+        )
+    );
 
     // Verify the result
     HRESULT resultCode;
     ThrowIfFailed(pResult->GetStatus(&resultCode));
     if (FAILED(resultCode))
     {
-        IDxcBlobEncoding* pError;
-        hr = pResult->GetErrorBuffer(&pError);
+        Microsoft::WRL::ComPtr<IDxcBlobEncoding> pError;
+        hr = pResult->GetErrorBuffer(pError.GetAddressOf());
         if (FAILED(hr))
         {
             throw std::logic_error("Failed to get shader compiler error");
@@ -62,7 +80,8 @@ IDxcBlob* raytrace_helper::CompileShaderLibrary(LPCWSTR fileName)
         throw std::logic_error("Failed compile shader");
     }
 
-    IDxcBlob* pBlob = nullptr;
-    ThrowIfFailed(pResult->GetResult(&pBlob));
+    Microsoft::WRL::ComPtr<IDxcBlob> pBlob = nullptr;
+
+    ThrowIfFailed(pResult->GetResult(pBlob.GetAddressOf()));
     return pBlob;
 }
