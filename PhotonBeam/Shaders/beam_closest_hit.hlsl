@@ -4,9 +4,9 @@
 #include "host_device.h"
 
 
-RaytracingAccelerationStructure SceneBVH : register(t0);
+RaytracingAccelerationStructure g_scene : register(t0);
 RWTexture2D< float4 > gOutput : register(u0);
-ConstantBuffer<PushConstantRay> pcRay : register(b0);
+ConstantBuffer<PushConstantRay> pc_ray : register(b0);
 
 
 // Triangle resources
@@ -25,11 +25,11 @@ Texture2D g_diffuseMap[] : register(t0, space1);
 
 
 bool randomScatterOccured(inout BeamHitPayload prd, const in float3 world_position) {
-    float min_extinct = min(min(pcRay.airExtinctCoff.x, pcRay.airExtinctCoff.y), pcRay.airExtinctCoff.z);
+    float min_extinct = min(min(pc_ray.airExtinctCoff.x, pc_ray.airExtinctCoff.y), pc_ray.airExtinctCoff.z);
     if (min_extinct <= 0.001)
         return false;
 
-    float max_extinct = max(max(pcRay.airExtinctCoff.x, pcRay.airExtinctCoff.y), pcRay.airExtinctCoff.z);
+    float max_extinct = max(max(pc_ray.airExtinctCoff.x, pc_ray.airExtinctCoff.y), pc_ray.airExtinctCoff.z);
 
     // random walk within participating media(air) scattering
     float rayLength = length(prd.rayOrigin - world_position);
@@ -42,7 +42,7 @@ bool randomScatterOccured(inout BeamHitPayload prd, const in float3 world_positi
     prd.rayOrigin = prd.rayOrigin + prd.rayDirection * airScatterAt;
     prd.instanceIndex = -1;
 
-    float3 albedo = pcRay.airScatterCoff / pcRay.airExtinctCoff;
+    float3 albedo = pc_ray.airScatterCoff / pc_ray.airExtinctCoff;
     float absorptionProb = 1.0 - max(max(albedo.x, albedo.y), albedo.z);
 
     // use russian roulett to decide whether scatter or absortion occurs
@@ -51,8 +51,8 @@ bool randomScatterOccured(inout BeamHitPayload prd, const in float3 world_positi
         return true;
     }
 
-    prd.weight = exp(-pcRay.airExtinctCoff * airScatterAt);
-    prd.rayDirection = heneyGreenPhaseFuncSampling(prd.seed, prd.rayDirection, pcRay.airHGAssymFactor);
+    prd.weight = exp(-pc_ray.airExtinctCoff * airScatterAt);
+    prd.rayDirection = heneyGreenPhaseFuncSampling(prd.seed, prd.rayDirection, pc_ray.airHGAssymFactor);
 
     return true;
 }
