@@ -617,6 +617,8 @@ void PhotonBeamApp::BuildShadersAndInputLayout()
 
     mShaders["postVS"] = d3dUtil::CompileShader(L"Shaders\\post_color.hlsl", nullptr, "VS", "vs_5_1");
     mShaders["postPS"] = d3dUtil::CompileShader(L"Shaders\\post_color.hlsl", nullptr, "PS", "ps_5_1");
+
+    m_rayTraceShaders["beamMiss"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\beam_miss.hlsl");
 }
 
 void PhotonBeamApp::LoadScene()
