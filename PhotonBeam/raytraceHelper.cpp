@@ -4,18 +4,24 @@
 
 Microsoft::WRL::ComPtr<IDxcBlob> raytrace_helper::CompileShaderLibrary(LPCWSTR fileName)
 {
-    static IDxcCompiler* pCompiler = nullptr;
-    static IDxcLibrary* pLibrary = nullptr;
-    static IDxcIncludeHandler* dxcIncludeHandler;
+    static  Microsoft::WRL::ComPtr<IDxcCompiler> pCompiler = nullptr;
+    static  Microsoft::WRL::ComPtr<IDxcLibrary> pLibrary = nullptr;
+    static  Microsoft::WRL::ComPtr<IDxcIncludeHandler> dxcIncludeHandler = nullptr;
 
     HRESULT hr;
 
     // Initialize the DXC compiler and compiler helper
     if (!pCompiler)
     {
-        ThrowIfFailed(DxcCreateInstance(CLSID_DxcCompiler, __uuidof(IDxcCompiler), (void**)&pCompiler));
-        ThrowIfFailed(DxcCreateInstance(CLSID_DxcLibrary, __uuidof(IDxcLibrary), (void**)&pLibrary));
-        ThrowIfFailed(pLibrary->CreateIncludeHandler(&dxcIncludeHandler));
+        ThrowIfFailed(
+            DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(pCompiler.GetAddressOf()))
+        );
+        ThrowIfFailed(
+            DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(pLibrary.GetAddressOf()))
+        );
+        ThrowIfFailed(
+            pLibrary->CreateIncludeHandler(dxcIncludeHandler.GetAddressOf())
+        );
     }
 
     // Open and read the file
@@ -29,13 +35,13 @@ Microsoft::WRL::ComPtr<IDxcBlob> raytrace_helper::CompileShaderLibrary(LPCWSTR f
     std::string sShader = strStream.str();
 
     // Create blob from the string
-    IDxcBlobEncoding* pTextBlob;
+    Microsoft::WRL::ComPtr<IDxcBlobEncoding> pTextBlob;
     ThrowIfFailed(
         pLibrary->CreateBlobWithEncodingFromPinned(
-        (LPBYTE)sShader.c_str(), 
-            (uint32_t)sShader.size(), 
-            0, 
-            &pTextBlob
+            (LPBYTE)sShader.c_str(),
+            (uint32_t)sShader.size(),
+            0,
+            pTextBlob.GetAddressOf()
         )
     );
 
@@ -43,7 +49,7 @@ Microsoft::WRL::ComPtr<IDxcBlob> raytrace_helper::CompileShaderLibrary(LPCWSTR f
     Microsoft::WRL::ComPtr<IDxcOperationResult> pResult;
     ThrowIfFailed(
         pCompiler->Compile(
-            pTextBlob, 
+            pTextBlob.Get(),
             fileName, 
             L"", 
             L"lib_6_3", 
@@ -51,7 +57,7 @@ Microsoft::WRL::ComPtr<IDxcBlob> raytrace_helper::CompileShaderLibrary(LPCWSTR f
             0, 
             nullptr, 
             0,
-            dxcIncludeHandler, 
+            dxcIncludeHandler.Get(),
             pResult.GetAddressOf()
         )
     );
