@@ -11,3 +11,9 @@ struct BeamHitPayload
 	float3 hitNormal;
 	uint padding2;
 };
+
+
+struct Attributes
+{
+	float2 bary;
+};
