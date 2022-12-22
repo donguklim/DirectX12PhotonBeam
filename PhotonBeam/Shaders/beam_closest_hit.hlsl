@@ -4,7 +4,25 @@
 #include "host_device.h"
 
 
-ConstantBuffer<PushConstantRay> pcRay : register(b1, space0);
+RaytracingAccelerationStructure SceneBVH : register(t0);
+RWTexture2D< float4 > gOutput : register(u0);
+ConstantBuffer<PushConstantRay> pcRay : register(b0);
+
+
+// Triangle resources
+StructuredBuffer<uint3> g_indices : register(t1, space0);
+StructuredBuffer<float3> g_vertices : register(t2, space0);
+StructuredBuffer<float3> g_normals : register(t3, space0);
+StructuredBuffer<float2> g_texcoordinate : register(t4, space0);
+
+StructuredBuffer<GltfShadeMaterial> g_material : register(t5, space0);
+
+Texture2D g_diffuseMap[] : register(t0, space1);
+
+
+
+
+
 
 bool randomScatterOccured(inout BeamHitPayload prd, const in float3 world_position) {
     float min_extinct = min(min(pcRay.airExtinctCoff.x, pcRay.airExtinctCoff.y), pcRay.airExtinctCoff.z);
