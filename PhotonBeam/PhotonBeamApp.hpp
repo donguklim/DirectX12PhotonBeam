@@ -6,6 +6,8 @@
 
 #pragma once
 #define NOMINMAX
+#include "d3d12.h"
+#include <dxcapi.h>
 #include <DirectXMath.h>
 
 #include "../Common/d3dApp.h"
@@ -125,6 +127,7 @@ private:
 
     std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> mGeometries;
     std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3DBlob>> mShaders;
+    std::unordered_map<std::string, Microsoft::WRL::ComPtr<IDxcBlob>> m_rtShaders;
     std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D12PipelineState>> mPSOs;
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
