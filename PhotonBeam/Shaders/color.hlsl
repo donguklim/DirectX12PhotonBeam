@@ -2,7 +2,7 @@
 #include "gltf.hlsl"
 
 
-StructuredBuffer<GltfShadeMaterial> gMaterialData : register(t0, space1);
+StructuredBuffer<GltfShadeMaterial> g_material : register(t0, space1);
 
 
 cbuffer cbPerObject : register(b0)
@@ -70,15 +70,15 @@ VertexOut VS(VertexIn vin)
 
 float4 PS(VertexOut pin) : SV_Target
 {
-    GltfShadeMaterial matData = gMaterialData[materialIndex];
+    GltfShadeMaterial material = g_material[materialIndex];
     float3 normal = normalize(pin.NormalW);
     float3 lDir = gLightPos - pin.PosW;
     float d = length(lDir);
     float3 L = normalize(lDir);
     float lightIntensity = gLightIntensity / (d * d);
 
-    float3 diffuse = computeDiffuse(matData, L, normal);
-    float3 specular = computeSpecular(matData, pin.ViewDir, L, normal);
+    float3 diffuse = computeDiffuse(material, L, normal);
+    float3 specular = computeSpecular(material, pin.ViewDir, L, normal);
 
     const static float gamma = 1. / 2.2;
     const static float4 gammaVec = float4(gamma, gamma, gamma, gamma);
