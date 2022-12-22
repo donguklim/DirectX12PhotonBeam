@@ -103,7 +103,7 @@ public:
                         UINT registerSpace = 0, UINT numRootConstants = 1);
 
   /// Create the root signature from the set of parameters, in the order of the addition calls
-  ID3D12RootSignature* Generate(ID3D12Device* device, bool isLocal);
+  void Generate(ID3D12Device* device, bool isLocal, ID3D12RootSignature** ppRootSig);
 
 private:
   /// Heap range descriptors
