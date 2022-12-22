@@ -2,8 +2,8 @@
 
 
 #include <d3d12.h>
+#include <dxcapi.h>
 #include "../Common/d3dUtil.h"
-//#include <dxcapi.h>
 
 
 namespace raytrace_helper
@@ -49,5 +49,7 @@ namespace raytrace_helper
 
         return resultBuffer;
     }
+
+    IDxcBlob* CompileShaderLibrary(LPCWSTR fileName);
 
 }

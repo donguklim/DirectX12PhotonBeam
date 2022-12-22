@@ -164,7 +164,7 @@
     <ClInclude Include="FrameResource.h" />
     <ClInclude Include="GltfScene.hpp" />
     <ClInclude Include="PhotonBeamApp.hpp" />
-    <ClInclude Include="raytraceHelper.h" />
+    <ClInclude Include="raytraceHelper.hpp" />
     <ClInclude Include="Shaders\host_device.h" />
   </ItemGroup>
   <ItemGroup>
@@ -191,6 +191,7 @@
     <ClCompile Include="GltfScene.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PhotonBeamApp.cpp" />
+    <ClCompile Include="raytraceHelper.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -87,7 +87,7 @@
     <ClInclude Include="..\DXRHelpers\nv_helpers_dx12\TopLevelASGenerator.h">
       <Filter>DXR helpers</Filter>
     </ClInclude>
-    <ClInclude Include="raytraceHelper.h">
+    <ClInclude Include="raytraceHelper.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Shaders\host_device.h">
@@ -163,6 +163,9 @@
     </ClCompile>
     <ClCompile Include="..\DXRHelpers\nv_helpers_dx12\TopLevelASGenerator.cpp">
       <Filter>DXR helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="raytraceHelper.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
