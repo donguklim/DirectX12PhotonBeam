@@ -87,7 +87,7 @@
     <ClInclude Include="..\DXRHelpers\nv_helpers_dx12\TopLevelASGenerator.h">
       <Filter>DXR helpers</Filter>
     </ClInclude>
-    <ClInclude Include="PhotonMapUtils.h">
+    <ClInclude Include="raytraceHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Shaders\host_device.h">

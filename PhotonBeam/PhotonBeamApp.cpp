@@ -18,7 +18,7 @@
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx12.h"
 #include "imgui_helper.h"
-#include "PhotonMapUtils.h"
+#include "raytraceHelper.h"
 
 #include "Shaders/host_device.h"
 
@@ -1044,19 +1044,19 @@ void PhotonBeamApp::CreateBottomLevelAS() {
     UINT64 resultSizeInBytes = 0; 
     bottomLevelAS.ComputeASBufferSizes(md3dDevice.Get(), false, &scratchSizeInBytes, &resultSizeInBytes);
     
-    m_bottomLevelASBuffers.pScratch = photon_map_utils::CreateBuffer(
+    m_bottomLevelASBuffers.pScratch = raytrace_helper::CreateBuffer(
         md3dDevice.Get(),
         scratchSizeInBytes, 
         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, 
         D3D12_RESOURCE_STATE_COMMON, 
-        photon_map_utils::pmDefaultHeapProps
+        raytrace_helper::pmDefaultHeapProps
     );
-    m_bottomLevelASBuffers.pResult = photon_map_utils::CreateBuffer(
+    m_bottomLevelASBuffers.pResult = raytrace_helper::CreateBuffer(
         md3dDevice.Get(),
         resultSizeInBytes, 
         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, 
         D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, 
-        photon_map_utils::pmDefaultHeapProps
+        raytrace_helper::pmDefaultHeapProps
     );
 
     bottomLevelAS.Generate(
@@ -1090,28 +1090,28 @@ void PhotonBeamApp::CreateTopLevelAS() {
         &instanceDescsSize
     ); 
     
-    m_topLevelASBuffers.pScratch = photon_map_utils::CreateBuffer(
+    m_topLevelASBuffers.pScratch = raytrace_helper::CreateBuffer(
         md3dDevice.Get(), 
         scratchSize, 
         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, 
         D3D12_RESOURCE_STATE_COMMON,
-        photon_map_utils::pmDefaultHeapProps
+        raytrace_helper::pmDefaultHeapProps
     ); 
 
-    m_topLevelASBuffers.pResult = photon_map_utils::CreateBuffer(
+    m_topLevelASBuffers.pResult = raytrace_helper::CreateBuffer(
         md3dDevice.Get(), 
         resultSize, 
         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, 
         D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, 
-        photon_map_utils::pmDefaultHeapProps
+        raytrace_helper::pmDefaultHeapProps
     ); 
 
-    m_topLevelASBuffers.pInstanceDesc = photon_map_utils::CreateBuffer(
+    m_topLevelASBuffers.pInstanceDesc = raytrace_helper::CreateBuffer(
         md3dDevice.Get(), 
         instanceDescsSize, 
         D3D12_RESOURCE_FLAG_NONE, 
         D3D12_RESOURCE_STATE_GENERIC_READ, 
-        photon_map_utils::pmUploadHeapProps
+        raytrace_helper::pmUploadHeapProps
     ); 
 
 

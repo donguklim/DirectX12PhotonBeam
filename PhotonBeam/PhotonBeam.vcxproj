@@ -164,7 +164,7 @@
     <ClInclude Include="FrameResource.h" />
     <ClInclude Include="GltfScene.hpp" />
     <ClInclude Include="PhotonBeamApp.hpp" />
-    <ClInclude Include="PhotonMapUtils.h" />
+    <ClInclude Include="raytraceHelper.h" />
     <ClInclude Include="Shaders\host_device.h" />
   </ItemGroup>
   <ItemGroup>

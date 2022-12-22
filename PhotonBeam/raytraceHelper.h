@@ -6,7 +6,7 @@
 //#include <dxcapi.h>
 
 
-namespace photon_map_utils
+namespace raytrace_helper
 {
     static const D3D12_HEAP_PROPERTIES pmUploadHeapProps = {
     D3D12_HEAP_TYPE_UPLOAD, D3D12_CPU_PAGE_PROPERTY_UNKNOWN, D3D12_MEMORY_POOL_UNKNOWN, 0, 0 };
