@@ -48,7 +48,7 @@ float3 samplingHemisphere(inout uint seed, in float3 x, in float3 y, in float3 z
     float r2 = rnd(seed);
     float sq = sqrt(1.0 - r2);
 
-    float3 direction = vec3(cos(2 * M_PI * r1) * sq, sin(2 * M_PI * r1) * sq, sqrt(r2));
+    float3 direction = float3(cos(2 * M_PI * r1) * sq, sin(2 * M_PI * r1) * sq, sqrt(r2));
     direction = direction.x * x + direction.y * y + direction.z * z;
 
     return direction;
@@ -61,13 +61,13 @@ float3 uniformSamplingSphere(inout uint seed)
     float r2 = rnd(seed) * 2 - 1;
     float sq = sqrt(1.0 - r2 * r2);
 
-    float3 direction = vec3(cos(2 * M_PI * r1) * sq, sin(2 * M_PI * r1) * sq, r2);
+    float3 direction = float3(cos(2 * M_PI * r1) * sq, sin(2 * M_PI * r1) * sq, r2);
 
     return direction;
 }
 
 // Return the tangent and binormal from the incoming normal
-void createCoordinateSystem(in vec3 N, out float3 Nt, out float3 Nb)
+void createCoordinateSystem(in float3 N, out float3 Nt, out float3 Nb)
 {
     if (abs(N.x) > abs(N.y))
         Nt = float3(N.z, 0, -N.x) / sqrt(N.x * N.x + N.z * N.z);
@@ -93,7 +93,7 @@ float heneyGreenPhaseFunc(float cosTheta, float g)
 }
 
 // normal is incoming ray direction start from the light source 
-float3 heneyGreenPhaseFuncSampling(inout uint seed, in vec3 normal, float g)
+float3 heneyGreenPhaseFuncSampling(inout uint seed, in float3 normal, float g)
 {
     float r1 = rnd(seed);
     float r2 = rnd(seed);
@@ -114,7 +114,7 @@ float3 heneyGreenPhaseFuncSampling(inout uint seed, in vec3 normal, float g)
     float sin_theta = sqrt(1.0 - cos_theta * cos_theta);
     float phi = 2.0f * M_PI * r2;
 
-    float3 ret = vec3(sin_theta * cos(phi), cos_theta, sin_theta * sin(phi));
+    float3 ret = float3(sin_theta * cos(phi), cos_theta, sin_theta * sin(phi));
 
     float3 tangent, bitangent;
     createCoordinateSystem(normal, tangent, bitangent);
@@ -166,7 +166,7 @@ float3 microfacetReflectedLightSampling(
     float theta = atan(a * sqrt(r1 / (1 - r1)));
     float phi = 2 * M_PI * r2;
 
-    float3 halfVec = vec3(sin(theta) * cos(phi), cos(theta), sin(theta) * sin(phi));
+    float3 halfVec = float3(sin(theta) * cos(phi), cos(theta), sin(theta) * sin(phi));
 
     float3 tangent, bitangent;
     createCoordinateSystem(normal, tangent, bitangent);
@@ -240,17 +240,17 @@ float3 pdfWeightedGltfBrdf(
 )
 {
     float a2 = pow(roughness, 4.0);
-    vec3  halfVec = normalize(incomingLightDir + reflectedLightDir);
+    float3  halfVec = normalize(incomingLightDir + reflectedLightDir);
     float nDotH = dot(normal, halfVec);
     float nDotL = dot(normal, incomingLightDir);
     float vDotH = dot(reflectedLightDir, halfVec);
     float hDotL = dot(incomingLightDir, halfVec);
     float vDotN = dot(reflectedLightDir, normal);
 
-    vec3 c_diff = (1.0 - metallic) * baseColor;
-    vec3 f0 = 0.04 * (1 - metallic) + baseColor * metallic;
-    vec3 frsnel = f0 + (1 - f0) * pow(1 - abs(vDotH), 5);
-    vec3 f_diffuse = vec3(0.0);
+    float3 c_diff = (1.0 - metallic) * baseColor;
+    float3 f0 = 0.04 * (1 - metallic) + baseColor * metallic;
+    float3 frsnel = f0 + (1 - f0) * pow(1 - abs(vDotH), 5);
+    float3 f_diffuse = float3(0.0, 0.0, 0.0);
 
     // hDotL = 0 ->  microfacetLightPDF = inf -> f_diffuse = 0
     // roughness = 0.0, nDotH = 1.0 -> microfacetPDF = inf -> microfacetLightPDF = inf -> f_diffuse = 0
@@ -271,6 +271,6 @@ float3 pdfWeightedGltfBrdf(
         gVal = 1.0 / (denom1 * denom2);
     }
 
-    vec3 f_specular = frsnel * gVal * (4 * hDotL);
+    float3 f_specular = frsnel * gVal * (4 * hDotL);
     return f_specular + f_diffuse;
 }
