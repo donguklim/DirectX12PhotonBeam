@@ -1,22 +1,14 @@
 
-struct MaterialData
-{
-    float4 pbrBaseColorFactor;
-    float3 emissiveFactor;
-    int  pbrBaseColorTexture;
-    float metallic;
-    float roughness;
-    uint   padding[2];
-};
+#include "host_device.h"
 
-float3 computeDiffuse(MaterialData mat, float3 lightDir, float3 normal)
+float3 computeDiffuse(GltfShadeMaterial mat, float3 lightDir, float3 normal)
 {
     // Lambertian
     float dotNL = max(dot(normal, lightDir), 0.0);
     return mat.pbrBaseColorFactor.xyz * dotNL;
 }
 
-float3 computeSpecular(MaterialData mat, float3 viewDir, float3 lightDir, float3 normal)
+float3 computeSpecular(GltfShadeMaterial mat, float3 viewDir, float3 lightDir, float3 normal)
 {
     // Compute specular only if not in shadow
     const float kPi = 3.14159265;

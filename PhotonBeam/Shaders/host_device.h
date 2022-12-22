@@ -11,7 +11,7 @@ using float3 = DirectX::XMFLOAT3;
 using float4 = DirectX::XMFLOAT4;
 using float4x4 = DirectX::XMFLOAT4X4;
 using uint = unsigned int;
-
+using uint2 = uint64_t;
 #endif
 
 
@@ -20,12 +20,12 @@ using uint = unsigned int;
 
 struct SceneDesc
 {
-	uint64_t vertexAddress;    // Address of the Vertex buffer
-	uint64_t normalAddress;    // Address of the Normal buffer
-	uint64_t uvAddress;        // Address of the texture coordinates buffer
-	uint64_t indexAddress;     // Address of the triangle indices buffer
-	uint64_t materialAddress;  // Address of the Materials buffer (GltfShadeMaterial)
-	uint64_t primInfoAddress;  // Address of the mesh primitives buffer (PrimMeshInfo)
+	uint2 vertexAddress;    // Address of the Vertex buffer
+	uint2 normalAddress;    // Address of the Normal buffer
+	uint2 uvAddress;        // Address of the texture coordinates buffer
+	uint2 indexAddress;     // Address of the triangle indices buffer
+	uint2 materialAddress;  // Address of the Materials buffer (GltfShadeMaterial)
+	uint2 primInfoAddress;  // Address of the mesh primitives buffer (PrimMeshInfo)
 };
 
 // Uniform buffer set at each frame
@@ -65,8 +65,8 @@ struct PushConstantRay
 	float3     sourceLight;
 	uint lightType;
 
-	uint64_t beamBlasAddress;
-	uint64_t photonBlasAddress;
+	uint2 beamBlasAddress;
+	uint2 photonBlasAddress;
 	float    airHGAssymFactor;
 	float    photonRadius;
 
@@ -91,7 +91,7 @@ struct GltfShadeMaterial
 	int  pbrBaseColorTexture;
 	float metallic;
 	float roughness;
-	uint   padding[2];
+	uint2   padding;
 };
 
 
@@ -107,10 +107,10 @@ struct PhotonBeam
 
 struct ShaderVkAccelerationStructureInstanceKHR
 {
-	float                      matrix[3][4];
-	uint                   instanceCustomIndexAndmask;
-	uint                   instanceShaderBindingTableRecordOffsetAndflags;
-	uint64_t                   accelerationStructureReference;
+	float4 transform[3];
+	uint instanceCustomIndexAndmask;
+	uint instanceShaderBindingTableRecordOffsetAndflags;
+	uint2 accelerationStructureReference;
 };
 
 struct Aabb

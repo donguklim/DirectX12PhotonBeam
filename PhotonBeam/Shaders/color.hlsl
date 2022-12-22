@@ -2,7 +2,7 @@
 #include "gltf.hlsl"
 
 
-StructuredBuffer<MaterialData> gMaterialData : register(t0, space1);
+StructuredBuffer<GltfShadeMaterial> gMaterialData : register(t0, space1);
 
 
 cbuffer cbPerObject : register(b0)
@@ -70,7 +70,7 @@ VertexOut VS(VertexIn vin)
 
 float4 PS(VertexOut pin) : SV_Target
 {
-    MaterialData matData = gMaterialData[materialIndex];
+    GltfShadeMaterial matData = gMaterialData[materialIndex];
     float3 normal = normalize(pin.NormalW);
     float3 lDir = gLightPos - pin.PosW;
     float d = length(lDir);
