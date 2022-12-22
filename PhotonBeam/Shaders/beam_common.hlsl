@@ -7,7 +7,7 @@ struct BeamHitPayload
 	float3 rayDirection;
 	uint  instanceID;
 	float3 weight;
-	uint scatterIndex; // index of the material whre beam scatter has occured. 0 means no scattering 1 means air scattering
+	uint isHit;
 	float3 hitNormal;
 	uint padding2;
 };

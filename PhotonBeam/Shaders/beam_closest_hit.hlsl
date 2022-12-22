@@ -13,17 +13,17 @@ ConstantBuffer<PushConstantRay> pc_ray : register(b0);
 StructuredBuffer<uint3> g_indices : register(t1, space0);
 StructuredBuffer<float3> g_vertices : register(t2, space0);
 StructuredBuffer<float3> g_normals : register(t3, space0);
-StructuredBuffer<float2> g_texcoordinate : register(t4, space0);
+StructuredBuffer<float2> g_texCoords : register(t4, space0);
 
 StructuredBuffer<GltfShadeMaterial> g_materials : register(t5, space0);
 StructuredBuffer<PrimMeshInfo> g_meshInfos : register(t6, space0);
 
 Texture2D g_texturesMap[] : register(t0, space1);
-
+SamplerState gsamPointWrap  : register(s0);
 
 bool randomScatterOccured(inout BeamHitPayload prd, const in float3 world_position) {
     
-    prd.scatterIndex = 0;
+    prd.isHit = 0;
     float min_extinct = min(min(pc_ray.airExtinctCoff.x, pc_ray.airExtinctCoff.y), pc_ray.airExtinctCoff.z);
     
     if (min_extinct <= 0.001)
@@ -40,7 +40,7 @@ bool randomScatterOccured(inout BeamHitPayload prd, const in float3 world_positi
     }
 
     prd.rayOrigin = prd.rayOrigin + prd.rayDirection * airScatterAt;
-    prd.scatterIndex = 1;
+    prd.isHit = 1;
 
     float3 albedo = pc_ray.airScatterCoff / pc_ray.airExtinctCoff;
     float absorptionProb = 1.0 - max(max(albedo.x, albedo.y), albedo.z);
@@ -65,39 +65,32 @@ void ClosestHit(inout BeamHitPayload prd, Attributes attribs)
     prd.instanceID = InstanceID();
 
     // Getting the 'first index' for this mesh (offset of the mesh + offset of the triangle)
-    uint indexOffset = (pinfo.indexOffset / 3) + PrimitiveIndex();
-    uint vertexOffset = pinfo.vertexOffset;           // Vertex offset as defined in glTF
-    uint materialIndex = max(0, pinfo.materialIndex);  // material of primitive mesh
-
-    float3  vertices = Vertices(sceneDesc.vertexAddress);
-    uint3   indices = Indices(sceneDesc.indexAddress);
-    float3   normals = Normals(sceneDesc.normalAddress);
-    float2 texCoords = TexCoords(sceneDesc.uvAddress);
-    Materials materials = Materials(sceneDesc.materialAddress);
+    uint indexOffset = (meshInfo.indexOffset / 3) + PrimitiveIndex();
+    uint vertexOffset = meshInfo.vertexOffset;           // Vertex offset as defined in glTF
+    uint materialIndex = max(0, meshInfo.materialIndex);  // material of primitive mesh
 
     // Getting the 3 indices of the triangle (local)
     uint3 triangleIndex = g_indices[indexOffset];
     triangleIndex += uint3(vertexOffset, vertexOffset, vertexOffset);  // (global)
 
-    const float3 barycentrics = float3(1.0 - attribs.bary.x - attribs.bary.y, attribs.bary.x, attribss.bary.y);
+    const float3 barycentrics = float3(1.0 - attribs.bary.x - attribs.bary.y, attribs.bary.x, attribs.bary.y);
 
     // Vertex of the triangle
-    const float3 pos0 = g_vertices.v[triangleIndex.x];
-    const float3 pos1 = g_vertices.v[triangleIndex.y];
-    const float3 pos2 = g_vertices.v[triangleIndex.z];
+    const float3 pos0 = g_vertices[triangleIndex.x];
+    const float3 pos1 = g_vertices[triangleIndex.y];
+    const float3 pos2 = g_vertices[triangleIndex.z];
     const float3 position = pos0 * barycentrics.x + pos1 * barycentrics.y + pos2 * barycentrics.z;
-    const float3 world_position = float3(gl_ObjectToWorldEXT * float3(position, 1.0));
 
     float3 world_position = mul(ObjectToWorld3x4(), float4(position, 1.0f));
 
     // if random scatter occured in media before hitting a surface, return
-    if (randomScatterOccured(world_position))
+    if (randomScatterOccured(prd, world_position))
         return;
 
     // Normal
-    const float3 nrm0 = normals.n[triangleIndex.x];
-    const float3 nrm1 = normals.n[triangleIndex.y];
-    const float3 nrm2 = normals.n[triangleIndex.z];
+    const float3 nrm0 = g_normals[triangleIndex.x];
+    const float3 nrm1 = g_normals[triangleIndex.y];
+    const float3 nrm2 = g_normals[triangleIndex.z];
     float3       normal = normalize(nrm0 * barycentrics.x + nrm1 * barycentrics.y + nrm2 * barycentrics.z);
 
     const float3 world_normal = normalize(mul((float3x3) ObjectToWorld3x4(), normal));
@@ -105,14 +98,13 @@ void ClosestHit(inout BeamHitPayload prd, Attributes attribs)
 
 
     // TexCoord
-    const float2 uv0 = texCoords.t[triangleIndex.x];
-    const float2 uv1 = texCoords.t[triangleIndex.y];
-    const float2 uv2 = texCoords.t[triangleIndex.z];
+    const float2 uv0 = g_texCoords[triangleIndex.x];
+    const float2 uv1 = g_texCoords[triangleIndex.y];
+    const float2 uv2 = g_texCoords[triangleIndex.z];
     const float2 texcoord0 = uv0 * barycentrics.x + uv1 * barycentrics.y + uv2 * barycentrics.z;
 
-    // https://en.wikipedia.org/wiki/Path_tracing
     // Material of the object
-    GltfShadeMaterial material = g_materials[matIndex];
+    GltfShadeMaterial material = g_materials[materialIndex];
     float3 rayOrigin = world_position;
     prd.hitNormal = world_normal;
 
@@ -120,18 +112,23 @@ void ClosestHit(inout BeamHitPayload prd, Attributes attribs)
     if (cos_theta <= 0)
     {
         prd.rayOrigin = rayOrigin;
-        prd.weight = float3(0.0);
+        prd.weight = float3(0.0, 0.0, 0.0);
         return;
     }
 
-    float3 rayDirection = microfacetReflectedLightSampling(prd.seed, prd.rayDirection, world_normal, mat.roughness);
+    float3 rayDirection = microfacetReflectedLightSampling(
+        prd.seed, 
+        prd.rayDirection, 
+        world_normal, 
+        material.roughness
+    );
 
     // rays reflected toward inside of the surface are considered to be absorbd
     if (dot(world_normal, rayDirection) <= 0)
     {
         prd.rayOrigin = rayOrigin;
         prd.rayDirection = rayDirection;
-        prd.weight = float3(0.0);
+        prd.weight = float3(0.0, 0.0, 0.0);
         return;
     }
 
@@ -140,15 +137,22 @@ void ClosestHit(inout BeamHitPayload prd, Attributes attribs)
     if (material.pbrBaseColorTexture > -1)
     {
         uint txtId = material.pbrBaseColorTexture;
-        albedo *= texture(texturesMap[nonuniformEXT(txtId)], texcoord0).xyz;
+        albedo *= g_texturesMap[txtId].Sample(gsamPointWrap, texcoord0).xyz;
     }
 
-    float3 material_f = pdfWeightedGltfBrdf(-prd.rayDirection, rayDirection, world_normal, albedo, mat.roughness, mat.metallic);
+    float3 material_f = pdfWeightedGltfBrdf(
+        -prd.rayDirection, 
+        rayDirection, 
+        world_normal, 
+        albedo, 
+        material.roughness, 
+        material.metallic
+    );
     float rayLength = length(prd.rayOrigin - world_position);
 
     prd.rayOrigin = rayOrigin;
     prd.rayDirection = rayDirection;
-    prd.weight = material_f * cos_theta * exp(-pcRay.airExtinctCoff * rayLength);
+    prd.weight = material_f * cos_theta * exp(-pc_ray.airExtinctCoff * rayLength);
 
     return;
 }
