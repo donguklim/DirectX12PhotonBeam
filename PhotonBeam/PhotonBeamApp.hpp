@@ -115,6 +115,7 @@ private:
 
     void CreateBottomLevelAS();
     void CreateTopLevelAS();
+    void BuildBeamSignatures();
 
 private:
 
@@ -124,6 +125,10 @@ private:
 
     ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
     ComPtr<ID3D12RootSignature> mPostRootSignature = nullptr;
+
+    ComPtr<ID3D12RootSignature> m_beamGenSignature = nullptr;
+    ComPtr<ID3D12RootSignature> m_beamHitSignature = nullptr;
+    ComPtr<ID3D12RootSignature> m_beamMissSignature = nullptr;
 
     ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
 

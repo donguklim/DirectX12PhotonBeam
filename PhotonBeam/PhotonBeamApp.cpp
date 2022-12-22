@@ -1120,3 +1120,8 @@ void PhotonBeamApp::CreateTopLevelAS() {
 
     return;
 }
+
+void PhotonBeamApp::BuildBeamSignatures()
+{
+
+}
