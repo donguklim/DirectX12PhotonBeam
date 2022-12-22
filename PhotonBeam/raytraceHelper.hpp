@@ -5,6 +5,8 @@
 #include <dxcapi.h>
 #include "../Common/d3dUtil.h"
 
+#pragma comment(lib,"dxcompiler.lib")
+
 
 namespace raytrace_helper
 {

@@ -11,6 +11,12 @@ IDxcBlob* raytrace_helper::CompileShaderLibrary(LPCWSTR fileName)
     HRESULT hr;
 
     // Initialize the DXC compiler and compiler helper
+    if (!pCompiler)
+    {
+        ThrowIfFailed(DxcCreateInstance(CLSID_DxcCompiler, __uuidof(IDxcCompiler), (void**)&pCompiler));
+        ThrowIfFailed(DxcCreateInstance(CLSID_DxcLibrary, __uuidof(IDxcLibrary), (void**)&pLibrary));
+        ThrowIfFailed(pLibrary->CreateIncludeHandler(&dxcIncludeHandler));
+    }
 
     // Open and read the file
     std::ifstream shaderFile(fileName);
