@@ -8,11 +8,11 @@
 #define NOMINMAX
 #include "d3d12.h"
 #include <dxcapi.h>
-#include <DirectXMath.h>
 
 #include "../Common/d3dApp.h"
 #include "../Common/Camera.h"
 #include "../Common/MathHelper.h"
+#include <DirectXMath.h>
 #include "../Common/UploadBuffer.h"
 #include "nv_helpers_dx12/TopLevelASGenerator.h"
 #include "nv_helpers_dx12/BottomLevelASGenerator.h"
