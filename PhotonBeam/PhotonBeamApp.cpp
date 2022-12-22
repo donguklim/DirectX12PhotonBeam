@@ -24,7 +24,7 @@ const int gNumFrameResources = 3;
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-
+using Microsoft::WRL::ComPtr;
 
 PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance)
     : D3DApp(hInstance)

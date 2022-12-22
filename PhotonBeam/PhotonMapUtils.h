@@ -34,7 +34,7 @@ namespace photon_map_utils
         bufDesc.SampleDesc.Quality = 0;
         bufDesc.Width = size;
 
-        ComPtr<ID3D12Resource> resultBuffer;
+        Microsoft::WRL::ComPtr<ID3D12Resource> resultBuffer;
 
         ThrowIfFailed(
             m_device->CreateCommittedResource(

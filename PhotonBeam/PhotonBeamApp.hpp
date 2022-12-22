@@ -17,7 +17,7 @@
 #include "FrameResource.h"
 #include "GltfScene.hpp"
 
-using Microsoft::WRL::ComPtr;
+
 using namespace DirectX;
 using namespace DirectX::PackedVector;
 
@@ -66,9 +66,9 @@ struct RenderItem
 
 struct AccelerationStructureBuffers
 {
-    ComPtr<ID3D12Resource> pScratch; 
-    ComPtr<ID3D12Resource> pResult;
-    ComPtr<ID3D12Resource> pInstanceDesc;
+    Microsoft::WRL::ComPtr<ID3D12Resource> pScratch;
+    Microsoft::WRL::ComPtr<ID3D12Resource> pResult;
+    Microsoft::WRL::ComPtr<ID3D12Resource> pInstanceDesc;
 };
 
 class PhotonBeamApp : public D3DApp
@@ -124,20 +124,20 @@ private:
     FrameResource* mCurrFrameResource = nullptr;
     int mCurrFrameResourceIndex = 0;
 
-    ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
-    ComPtr<ID3D12RootSignature> mPostRootSignature = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> mPostRootSignature = nullptr;
 
-    ComPtr<ID3D12RootSignature> m_beamGenSignature = nullptr;
-    ComPtr<ID3D12RootSignature> m_beamHitSignature = nullptr;
-    ComPtr<ID3D12RootSignature> m_beamMissSignature = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_beamGenSignature = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_beamHitSignature = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_beamMissSignature = nullptr;
 
-    ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
 
-    ComPtr<ID3D12DescriptorHeap> mGuiDescriptorHeap = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mGuiDescriptorHeap = nullptr;
 
     std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> mGeometries;
-    std::unordered_map<std::string, ComPtr<ID3DBlob>> mShaders;
-    std::unordered_map<std::string, ComPtr<ID3D12PipelineState>> mPSOs;
+    std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3DBlob>> mShaders;
+    std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D12PipelineState>> mPSOs;
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
 
@@ -187,9 +187,8 @@ private:
     AccelerationStructureBuffers m_bottomLevelASBuffers{};
     AccelerationStructureBuffers m_topLevelASBuffers{};
 
-    ComPtr<ID3D12Resource> m_bottomLevelAS; // Storage for the bottom Level AS
+    Microsoft::WRL::ComPtr<ID3D12Resource> m_bottomLevelAS; // Storage for the bottom Level AS
     nv_helpers_dx12::TopLevelASGenerator m_topLevelASGenerator;
-    //AccelerationStructureBuffers m_topLevelASBuffers;
-    std::vector<std::pair<ComPtr<ID3D12Resource>, DirectX::XMMATRIX>> m_instances;
+
 };
 
