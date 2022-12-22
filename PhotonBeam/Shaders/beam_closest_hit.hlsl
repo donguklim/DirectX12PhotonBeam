@@ -1,11 +1,12 @@
-#include "gltf.glsl"
+#include "gltf.hlsl"
 #include "beam_common.hlsl"
 #include "sampling.hlsl"
 #include "host_device.h"
 
 
+ConstantBuffer<PushConstantRay> pcRay : register(b1, space0);
 
-bool randomScatterOccured(inout HitInfo payload, const in float3 world_position) {
+bool randomScatterOccured(inout BeamHitPayload prd, const in float3 world_position) {
     float min_extinct = min(min(pcRay.airExtinctCoff.x, pcRay.airExtinctCoff.y), pcRay.airExtinctCoff.z);
     if (min_extinct <= 0.001)
         return false;
@@ -28,7 +29,7 @@ bool randomScatterOccured(inout HitInfo payload, const in float3 world_position)
 
     // use russian roulett to decide whether scatter or absortion occurs
     if (rnd(prd.seed) <= absorptionProb) {
-        prd.weight = float3(0.0);
+        prd.weight = float3(0.0, 0.0, 0.0);
         return true;
     }
 
@@ -40,7 +41,7 @@ bool randomScatterOccured(inout HitInfo payload, const in float3 world_position)
 
 
 [shader("closesthit")] 
-void ClosestHit(inout HitInfo payload, Attributes attrib) 
+void ClosestHit(inout BeamHitPayload prd, Attributes attrib)
 {
  
 }
