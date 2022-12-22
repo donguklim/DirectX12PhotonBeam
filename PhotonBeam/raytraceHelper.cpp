@@ -14,13 +14,21 @@ Microsoft::WRL::ComPtr<IDxcBlob> raytrace_helper::CompileShaderLibrary(LPCWSTR f
     if (!pCompiler)
     {
         ThrowIfFailed(
-            DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(pCompiler.GetAddressOf()))
+            DxcCreateInstance(
+                CLSID_DxcCompiler, 
+                IID_PPV_ARGS(pCompiler.GetAddressOf())
+            )
         );
         ThrowIfFailed(
-            DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(pLibrary.GetAddressOf()))
+            DxcCreateInstance(
+                CLSID_DxcLibrary, 
+                IID_PPV_ARGS(pLibrary.GetAddressOf())
+            )
         );
         ThrowIfFailed(
-            pLibrary->CreateIncludeHandler(dxcIncludeHandler.GetAddressOf())
+            pLibrary->CreateIncludeHandler(
+               dxcIncludeHandler.GetAddressOf()
+            )
         );
     }
 
