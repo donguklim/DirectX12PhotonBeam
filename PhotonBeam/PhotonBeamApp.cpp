@@ -710,53 +710,30 @@ void PhotonBeamApp::LoadScene()
 }
 void PhotonBeamApp::CreateTextures()
 {
-    const CD3DX12_STATIC_SAMPLER_DESC linearWrap(
-        2, // shaderRegister
-        D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
-        D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
-        D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
-        D3D12_TEXTURE_ADDRESS_MODE_WRAP // addressW
-    ); 
-
+    const static std::array<uint8_t, 4> whiteTexture = { 255, 255, 255, 255 };
     const auto& textureImages = m_gltfScene.GetTextureImages();
-    
-    /*
-    VkSamplerCreateInfo samplerCreateInfo{ VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
-    samplerCreateInfo.minFilter = VK_FILTER_LINEAR;
-    samplerCreateInfo.magFilter = VK_FILTER_LINEAR;
-    samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-    samplerCreateInfo.maxLod = FLT_MAX;
 
-    VkFormat format = VK_FORMAT_R8G8B8A8_SRGB;
-    
-    
-    auto addDefaultTexture = [this]() {
-        // Make dummy image(1,1), needed as we cannot have an empty array
-        nvvk::ScopeCommandBuffer cmdBuf(m_device, m_graphicsQueueIndex);
-        std::array<uint8_t, 4>   white = { 255, 255, 255, 255 };
+    size_t num_textures = textureImages.size();
+    if (num_textures < 1)
+        num_textures = 1;
 
-        VkSamplerCreateInfo sampler{ VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
-        m_textures.emplace_back(m_alloc.createTexture(cmdBuf, 4, white.data(), nvvk::makeImage2DCreateInfo(VkExtent2D{ 1, 1 }), sampler));
-        m_debug.setObjectName(m_textures.back().image, "dummy");
-    };
-    */
-    if (textureImages.empty())
-    {
-        //addDefaultTexture();
-        return;
-    }
-
-    m_textures.reserve(textureImages.size());
-    for (size_t i = 0; i < textureImages.size(); i++)
+    m_textures.reserve(num_textures);
+    for (size_t i = 0; i <num_textures; i++)
     {
         auto texture = std::make_unique<Texture>();
         
-        auto& gltfimage = textureImages[i];
+        const uint8_t* imageData = whiteTexture.data();
+        size_t imageDataSize = whiteTexture.size();
+        uint64_t imageWidht = 1;
+        uint32_t imageHeight = 1;
 
-        if (gltfimage.image.size() == 0 || gltfimage.width == -1 || gltfimage.height == -1)
+        if (!textureImages.empty() && textureImages[i].image.size() != 0 && textureImages[i].width > 0 && textureImages[i].height > 0)
         {
-            //addDefaultTexture();
-            continue;
+            auto& gltfImage = textureImages[i];
+            imageData = static_cast<const uint8_t*>(gltfImage.image.data());
+            imageDataSize = gltfImage.image.size();
+            imageWidht = gltfImage.width;
+            imageHeight = gltfImage.height;
         }
 
         D3D12_SUBRESOURCE_DATA subresource{};
@@ -764,8 +741,8 @@ void PhotonBeamApp::CreateTextures()
         ThrowIfFailed(
             LoadWICTextureFromMemory(
                 md3dDevice.Get(),
-                gltfimage.image.data(),
-                gltfimage.image.size(),
+                imageData,
+                imageDataSize,
                 texture->Resource.GetAddressOf(),
                 decodedData,
                 subresource
@@ -776,9 +753,9 @@ void PhotonBeamApp::CreateTextures()
         ZeroMemory(&texDesc, sizeof(D3D12_RESOURCE_DESC));
         texDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
         texDesc.Alignment = 0;
-        texDesc.Width = gltfimage.width;
-        texDesc.Height = (uint32_t)gltfimage.height;
-        texDesc.DepthOrArraySize = gltfimage.image.size(); //(depth > 1) ? (uint16_t)depth : (uint16_t)arraySize;
+        texDesc.Width = imageWidht;
+        texDesc.Height = imageHeight;
+        texDesc.DepthOrArraySize = imageDataSize; //(depth > 1) ? (uint16_t)depth : (uint16_t)arraySize;
         texDesc.MipLevels = 1; //(uint16_t)mipCount;
         texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
         texDesc.SampleDesc.Count = 1;
@@ -844,6 +821,8 @@ void PhotonBeamApp::CreateTextures()
         );
 
         mCommandList->ResourceBarrier(1, &resourceBarrierShader);
+
+        m_textures[i] = std::move(texture);
 
     }
     
