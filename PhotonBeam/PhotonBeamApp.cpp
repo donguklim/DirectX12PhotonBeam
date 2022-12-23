@@ -717,6 +717,121 @@ void PhotonBeamApp::CreateTextures()
         D3D12_TEXTURE_ADDRESS_MODE_WRAP // addressW
     ); 
 
+    const auto& textureImages = m_gltfScene.GetTextureImages();
+    
+    /*
+    VkSamplerCreateInfo samplerCreateInfo{ VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
+    samplerCreateInfo.minFilter = VK_FILTER_LINEAR;
+    samplerCreateInfo.magFilter = VK_FILTER_LINEAR;
+    samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerCreateInfo.maxLod = FLT_MAX;
+
+    VkFormat format = VK_FORMAT_R8G8B8A8_SRGB;
+    
+    
+    auto addDefaultTexture = [this]() {
+        // Make dummy image(1,1), needed as we cannot have an empty array
+        nvvk::ScopeCommandBuffer cmdBuf(m_device, m_graphicsQueueIndex);
+        std::array<uint8_t, 4>   white = { 255, 255, 255, 255 };
+
+        VkSamplerCreateInfo sampler{ VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
+        m_textures.emplace_back(m_alloc.createTexture(cmdBuf, 4, white.data(), nvvk::makeImage2DCreateInfo(VkExtent2D{ 1, 1 }), sampler));
+        m_debug.setObjectName(m_textures.back().image, "dummy");
+    };
+    */
+    if (textureImages.empty())
+    {
+        //addDefaultTexture();
+        return;
+    }
+
+    m_textures.reserve(textureImages.size());
+    for (size_t i = 0; i < textureImages.size(); i++)
+    {
+        auto texture = std::make_unique<Texture>();
+        
+        auto& gltfimage = textureImages[i];
+
+        if (gltfimage.image.size() == 0 || gltfimage.width == -1 || gltfimage.height == -1)
+        {
+            //addDefaultTexture();
+            continue;
+        }
+
+        D3D12_SUBRESOURCE_DATA subresource{};
+        std::unique_ptr<uint8_t[]> decodedData;
+        ThrowIfFailed(
+            LoadWICTextureFromMemory(
+                md3dDevice.Get(),
+                gltfimage.image.data(),
+                gltfimage.image.size(),
+                texture->Resource.GetAddressOf(),
+                decodedData,
+                subresource
+            )
+        );
+
+        D3D12_RESOURCE_DESC texDesc;
+        ZeroMemory(&texDesc, sizeof(D3D12_RESOURCE_DESC));
+        texDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+        texDesc.Alignment = 0;
+        texDesc.Width = gltfimage.width;
+        texDesc.Height = (uint32_t)gltfimage.height;
+        texDesc.DepthOrArraySize = gltfimage.image.size(); //(depth > 1) ? (uint16_t)depth : (uint16_t)arraySize;
+        texDesc.MipLevels = 1; //(uint16_t)mipCount;
+        texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+        texDesc.SampleDesc.Count = 1;
+        texDesc.SampleDesc.Quality = 0;
+        texDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+        texDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+        auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+        ThrowIfFailed(
+            md3dDevice->CreateCommittedResource(
+                &heapProp,
+                D3D12_HEAP_FLAG_NONE,
+                &texDesc,
+                D3D12_RESOURCE_STATE_COMMON,
+                nullptr,
+                IID_PPV_ARGS(texture->Resource.GetAddressOf())
+            )
+        );
+
+        const UINT num2DSubresources = texDesc.DepthOrArraySize * texDesc.MipLevels;
+        const UINT64 uploadBufferSize = GetRequiredIntermediateSize(
+            texture->Resource.Get(), 
+            0, 
+            num2DSubresources
+        );
+
+        auto uploadheapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+        auto uploadResourceDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+        ThrowIfFailed(
+            md3dDevice->CreateCommittedResource(
+                &uploadheapProp,
+                D3D12_HEAP_FLAG_NONE,
+                &uploadResourceDesc,
+                D3D12_RESOURCE_STATE_GENERIC_READ,
+                nullptr,
+                IID_PPV_ARGS(texture->UploadHeap.GetAddressOf())
+            )
+        );
+
+
+        //ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&mPSOs["opaque"])));
+
+        /*
+        VkImageCreateInfo imageCreateInfo = nvvk::makeImage2DCreateInfo(imgSize, format, VK_IMAGE_USAGE_SAMPLED_BIT, true);
+
+        nvvk::Image image = m_alloc.createImage(cmdBuf, bufferSize, buffer, imageCreateInfo);
+        nvvk::cmdGenerateMipmaps(cmdBuf, image.image, format, imgSize, imageCreateInfo.mipLevels);
+        VkImageViewCreateInfo ivInfo = nvvk::makeImageViewCreateInfo(image.image, imageCreateInfo);
+        m_textures.emplace_back(m_alloc.createTexture(image, ivInfo, samplerCreateInfo));
+
+        m_debug.setObjectName(m_textures[i].image, std::string("Txt" + std::to_string(i)));
+        */
+    }
+    
 }
 
 void PhotonBeamApp::BuildRenderItems()
