@@ -89,6 +89,7 @@ bool PhotonBeamApp::Initialize()
     FlushCommandQueue();
 
     mGeometries["cornellBox"].get()->DisposeUploaders();
+    m_gltfScene.destroy();
 
     return true;
 }
