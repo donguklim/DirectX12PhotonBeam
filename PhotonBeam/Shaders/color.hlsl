@@ -2,8 +2,11 @@
 #include "gltf.hlsl"
 
 
+Texture2D gDiffuseMap[] : register(t0);
+
 StructuredBuffer<GltfShadeMaterial> g_material : register(t0, space1);
 
+SamplerState gsamLinearWrap : register(s0);
 
 cbuffer cbPerObject : register(b0)
 {

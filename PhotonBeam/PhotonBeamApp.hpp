@@ -113,6 +113,7 @@ private:
     std::vector<std::unique_ptr<FrameResource>> mFrameResources;
     FrameResource* mCurrFrameResource = nullptr;
     int mCurrFrameResourceIndex = 0;
+    UINT mCbvSrvDescriptorSize = 0;
 
     Microsoft::WRL::ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> mPostRootSignature = nullptr;
