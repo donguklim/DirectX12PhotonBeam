@@ -14,6 +14,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include "PhotonBeamApp.hpp"
+#include "d3dx12.h"
 
 #include "imgui.h"
 #include "imgui_impl_win32.h"
@@ -817,19 +818,33 @@ void PhotonBeamApp::CreateTextures()
             )
         );
 
+        auto resourceBarrierCopy = CD3DX12_RESOURCE_BARRIER::Transition(
+            texture->Resource.Get(),
+            D3D12_RESOURCE_STATE_COMMON,
+            D3D12_RESOURCE_STATE_COPY_DEST
+        );
 
-        //ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&mPSOs["opaque"])));
+        mCommandList->ResourceBarrier(1, &resourceBarrierCopy);
 
-        /*
-        VkImageCreateInfo imageCreateInfo = nvvk::makeImage2DCreateInfo(imgSize, format, VK_IMAGE_USAGE_SAMPLED_BIT, true);
+        // Use Heap-allocating UpdateSubresources implementation for variable number of subresources (which is the case for textures).
+        UpdateSubresources(
+            mCommandList.Get(),
+            texture->Resource.Get(), 
+            texture->UploadHeap.Get(), 
+            0, 
+            0, 
+            num2DSubresources, 
+            &subresource
+        );
 
-        nvvk::Image image = m_alloc.createImage(cmdBuf, bufferSize, buffer, imageCreateInfo);
-        nvvk::cmdGenerateMipmaps(cmdBuf, image.image, format, imgSize, imageCreateInfo.mipLevels);
-        VkImageViewCreateInfo ivInfo = nvvk::makeImageViewCreateInfo(image.image, imageCreateInfo);
-        m_textures.emplace_back(m_alloc.createTexture(image, ivInfo, samplerCreateInfo));
+        auto resourceBarrierShader = CD3DX12_RESOURCE_BARRIER::Transition(
+            texture->Resource.Get(),
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+        );
 
-        m_debug.setObjectName(m_textures[i].image, std::string("Txt" + std::to_string(i)));
-        */
+        mCommandList->ResourceBarrier(1, &resourceBarrierShader);
+
     }
     
 }
