@@ -537,18 +537,19 @@ void PhotonBeamApp::BuildDescriptorHeaps()
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MostDetailedMip = 0;
+    srvDesc.Texture2D.MostDetailedMip = 1;
     srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
-    //CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+    CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
     for (auto& textureResource : m_textures)
     {
         srvDesc.Format = textureResource->Resource->GetDesc().Format;
         srvDesc.Texture2D.MipLevels = textureResource->Resource->GetDesc().MipLevels;
-        //md3dDevice->CreateShaderResourceView(textureResource->Resource.Get(), &srvDesc, hDescriptor);
-        //hDescriptor.Offset(1, mCbvSrvDescriptorSize);
+        md3dDevice->CreateShaderResourceView(textureResource->Resource.Get(), &srvDesc, hDescriptor);
+        hDescriptor.Offset(1, mCbvSrvDescriptorSize);
     }
+
 }
 
 void PhotonBeamApp::BuildRootSignature()
@@ -571,11 +572,11 @@ void PhotonBeamApp::BuildRootSignature()
     slotRootParameter[0].InitAsConstantBufferView(0);
     slotRootParameter[1].InitAsConstantBufferView(1);
     slotRootParameter[2].InitAsShaderResourceView(0, 1);
-    //slotRootParameter[3].InitAsDescriptorTable(1, &texTable, D3D12_SHADER_VISIBILITY_PIXEL);
+    slotRootParameter[3].InitAsDescriptorTable(1, &texTable, D3D12_SHADER_VISIBILITY_PIXEL);
 
 	// A root signature is an array of root parameters.
 	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(
-        3, 
+        4, 
         slotRootParameter, 
         1, 
         &linearWrap,
@@ -750,14 +751,104 @@ void PhotonBeamApp::CreateTextures()
     const static std::array<uint8_t, 4> whiteTexture = { 255, 255, 255, 255 };
     const auto& textureImages = m_gltfScene.GetTextureImages();
 
+    D3D12_SUBRESOURCE_FOOTPRINT pitchedDesc = {};
+    pitchedDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    
+    size_t numTextures = textureImages.size();
+    if (textureImages.empty())
+        numTextures = 1;
 
-    m_textures.reserve(textureImages.size());
-    for (size_t i = 0; i < textureImages.size(); i++)
+    m_textures.reserve(numTextures);
+    for (size_t i = 0; i < numTextures; i++)
     {
         auto texture = std::make_unique<Texture>();
         
+        const void* imageData = whiteTexture.data();
+        size_t imageDataSize = whiteTexture.size();
+        uint64_t imageWidth = 1;
+        uint32_t imageHeight = 1;
 
-        m_textures[i] = std::move(texture);
+        if (!textureImages.empty() && textureImages[i].image.size() != 0 && textureImages[i].width > 0 && textureImages[i].height > 0)
+        {
+            auto& gltfImage = textureImages[i];
+            imageData = gltfImage.image.data();
+            imageDataSize = gltfImage.image.size();
+            imageWidth = gltfImage.width;
+            imageHeight = gltfImage.height;
+        }
+
+
+        D3D12_RESOURCE_DESC textureDesc = {};
+        textureDesc.MipLevels = 1;
+        textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        textureDesc.Width = imageWidth;
+        textureDesc.Height = imageHeight;
+        textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+        textureDesc.DepthOrArraySize = 1;
+        textureDesc.SampleDesc.Count = 1;
+        textureDesc.SampleDesc.Quality = 0;
+        textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+
+        auto defaultHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+
+        ThrowIfFailed(
+            md3dDevice->CreateCommittedResource(
+                &defaultHeapProp,
+                D3D12_HEAP_FLAG_NONE,
+                &textureDesc,
+                D3D12_RESOURCE_STATE_COPY_DEST,
+                nullptr,
+                IID_PPV_ARGS(texture->Resource.GetAddressOf())
+            )
+        );
+
+        const UINT64 uploadBufferSize = GetRequiredIntermediateSize(
+            texture->Resource.Get(), 0, 1
+        );
+
+        auto uploadHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+        auto bufferResourceDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+
+        // Create the GPU upload buffer.
+        ThrowIfFailed(
+            md3dDevice->CreateCommittedResource(
+                &uploadHeapProp,
+                D3D12_HEAP_FLAG_NONE,
+                &bufferResourceDesc,
+                D3D12_RESOURCE_STATE_GENERIC_READ,
+                nullptr,
+                IID_PPV_ARGS(texture->UploadHeap.GetAddressOf())
+            )
+        );
+
+
+        D3D12_SUBRESOURCE_DATA textureData = {};
+        textureData.pData = imageData;
+        textureData.RowPitch = imageHeight * 4;
+        textureData.SlicePitch = textureData.RowPitch * imageHeight;
+
+        UpdateSubresources(
+            mCommandList.Get(), 
+            texture->Resource.Get(), 
+            texture->UploadHeap.Get(), 
+            0, 
+            0, 
+            1, 
+            &textureData
+        );
+
+        auto transition = CD3DX12_RESOURCE_BARRIER::Transition(
+            texture->Resource.Get(),
+            D3D12_RESOURCE_STATE_COPY_DEST, 
+            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+        );
+
+        mCommandList->ResourceBarrier(
+            1,
+            &transition
+        );
+
+        m_textures.push_back(std::move(texture));
 
     }
     
