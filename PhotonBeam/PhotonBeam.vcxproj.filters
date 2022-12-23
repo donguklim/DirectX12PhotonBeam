@@ -22,9 +22,6 @@
     <Filter Include="DXR helpers">
       <UniqueIdentifier>{0798450c-dd14-42b2-8d9f-0ba0aa28145d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="WIC Texture Loader">
-      <UniqueIdentifier>{88d65715-d14f-45d5-ba19-d0e155864180}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\DDSTextureLoader.h">
@@ -95,9 +92,6 @@
     </ClInclude>
     <ClInclude Include="Shaders\host_device.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\WICTextureLoader\WICTextureLoader12.h">
-      <Filter>WIC Texture Loader</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -172,9 +166,6 @@
     </ClCompile>
     <ClCompile Include="raytraceHelper.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\WICTextureLoader\WICTextureLoader12.cpp">
-      <Filter>WIC Texture Loader</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

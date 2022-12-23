@@ -161,7 +161,6 @@
     <ClInclude Include="..\imgui\imgui_impl_dx12.h" />
     <ClInclude Include="..\imgui\imgui_impl_win32.h" />
     <ClInclude Include="..\imgui\imgui_internal.h" />
-    <ClInclude Include="..\WICTextureLoader\WICTextureLoader12.h" />
     <ClInclude Include="FrameResource.h" />
     <ClInclude Include="GltfScene.hpp" />
     <ClInclude Include="PhotonBeamApp.hpp" />
@@ -188,7 +187,6 @@
     <ClCompile Include="..\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="..\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="..\WICTextureLoader\WICTextureLoader12.cpp" />
     <ClCompile Include="FrameResource.cpp" />
     <ClCompile Include="GltfScene.cpp" />
     <ClCompile Include="main.cpp" />

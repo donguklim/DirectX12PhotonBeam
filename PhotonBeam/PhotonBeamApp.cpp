@@ -22,7 +22,6 @@
 #include "imgui_helper.h"
 
 #include "raytraceHelper.hpp"
-#include "WICTextureLoader12.h"
 #include "Shaders/host_device.h"
 
 
@@ -541,14 +540,14 @@ void PhotonBeamApp::BuildDescriptorHeaps()
     srvDesc.Texture2D.MostDetailedMip = 0;
     srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
-    CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+    //CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
     for (auto& textureResource : m_textures)
     {
         srvDesc.Format = textureResource->Resource->GetDesc().Format;
         srvDesc.Texture2D.MipLevels = textureResource->Resource->GetDesc().MipLevels;
-        md3dDevice->CreateShaderResourceView(textureResource->Resource.Get(), &srvDesc, hDescriptor);
-        hDescriptor.Offset(1, mCbvSrvDescriptorSize);
+        //md3dDevice->CreateShaderResourceView(textureResource->Resource.Get(), &srvDesc, hDescriptor);
+        //hDescriptor.Offset(1, mCbvSrvDescriptorSize);
     }
 }
 
@@ -572,11 +571,11 @@ void PhotonBeamApp::BuildRootSignature()
     slotRootParameter[0].InitAsConstantBufferView(0);
     slotRootParameter[1].InitAsConstantBufferView(1);
     slotRootParameter[2].InitAsShaderResourceView(0, 1);
-    slotRootParameter[3].InitAsDescriptorTable(1, &texTable, D3D12_SHADER_VISIBILITY_PIXEL);
+    //slotRootParameter[3].InitAsDescriptorTable(1, &texTable, D3D12_SHADER_VISIBILITY_PIXEL);
 
 	// A root signature is an array of root parameters.
 	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(
-        4, 
+        3, 
         slotRootParameter, 
         1, 
         &linearWrap,
@@ -751,114 +750,12 @@ void PhotonBeamApp::CreateTextures()
     const static std::array<uint8_t, 4> whiteTexture = { 255, 255, 255, 255 };
     const auto& textureImages = m_gltfScene.GetTextureImages();
 
-    size_t num_textures = textureImages.size();
-    if (num_textures < 1)
-        num_textures = 1;
 
-    m_textures.reserve(num_textures);
-    for (size_t i = 0; i <num_textures; i++)
+    m_textures.reserve(textureImages.size());
+    for (size_t i = 0; i < textureImages.size(); i++)
     {
         auto texture = std::make_unique<Texture>();
         
-        const uint8_t* imageData = whiteTexture.data();
-        size_t imageDataSize = whiteTexture.size();
-        uint64_t imageWidht = 1;
-        uint32_t imageHeight = 1;
-
-        if (!textureImages.empty() && textureImages[i].image.size() != 0 && textureImages[i].width > 0 && textureImages[i].height > 0)
-        {
-            auto& gltfImage = textureImages[i];
-            imageData = static_cast<const uint8_t*>(gltfImage.image.data());
-            imageDataSize = gltfImage.image.size();
-            imageWidht = gltfImage.width;
-            imageHeight = gltfImage.height;
-        }
-
-        D3D12_SUBRESOURCE_DATA subresource{};
-        std::unique_ptr<uint8_t[]> decodedData;
-        ThrowIfFailed(
-            LoadWICTextureFromMemory(
-                md3dDevice.Get(),
-                imageData,
-                imageDataSize,
-                texture->Resource.GetAddressOf(),
-                decodedData,
-                subresource
-            )
-        );
-
-        D3D12_RESOURCE_DESC texDesc;
-        ZeroMemory(&texDesc, sizeof(D3D12_RESOURCE_DESC));
-        texDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-        texDesc.Alignment = 0;
-        texDesc.Width = imageWidht;
-        texDesc.Height = imageHeight;
-        texDesc.DepthOrArraySize = imageDataSize; //(depth > 1) ? (uint16_t)depth : (uint16_t)arraySize;
-        texDesc.MipLevels = 1; //(uint16_t)mipCount;
-        texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-        texDesc.SampleDesc.Count = 1;
-        texDesc.SampleDesc.Quality = 0;
-        texDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-        texDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
-        auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-        ThrowIfFailed(
-            md3dDevice->CreateCommittedResource(
-                &heapProp,
-                D3D12_HEAP_FLAG_NONE,
-                &texDesc,
-                D3D12_RESOURCE_STATE_COMMON,
-                nullptr,
-                IID_PPV_ARGS(texture->Resource.GetAddressOf())
-            )
-        );
-
-        const UINT num2DSubresources = texDesc.DepthOrArraySize * texDesc.MipLevels;
-        const UINT64 uploadBufferSize = GetRequiredIntermediateSize(
-            texture->Resource.Get(), 
-            0, 
-            num2DSubresources
-        );
-
-        auto uploadheapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-        auto uploadResourceDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
-        ThrowIfFailed(
-            md3dDevice->CreateCommittedResource(
-                &uploadheapProp,
-                D3D12_HEAP_FLAG_NONE,
-                &uploadResourceDesc,
-                D3D12_RESOURCE_STATE_GENERIC_READ,
-                nullptr,
-                IID_PPV_ARGS(texture->UploadHeap.GetAddressOf())
-            )
-        );
-
-        auto resourceBarrierCopy = CD3DX12_RESOURCE_BARRIER::Transition(
-            texture->Resource.Get(),
-            D3D12_RESOURCE_STATE_COMMON,
-            D3D12_RESOURCE_STATE_COPY_DEST
-        );
-
-        mCommandList->ResourceBarrier(1, &resourceBarrierCopy);
-
-        // Use Heap-allocating UpdateSubresources implementation for variable number of subresources (which is the case for textures).
-        UpdateSubresources(
-            mCommandList.Get(),
-            texture->Resource.Get(), 
-            texture->UploadHeap.Get(), 
-            0, 
-            0, 
-            num2DSubresources, 
-            &subresource
-        );
-
-        auto resourceBarrierShader = CD3DX12_RESOURCE_BARRIER::Transition(
-            texture->Resource.Get(),
-            D3D12_RESOURCE_STATE_COPY_DEST,
-            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
-        );
-
-        mCommandList->ResourceBarrier(1, &resourceBarrierShader);
 
         m_textures[i] = std::move(texture);
 
