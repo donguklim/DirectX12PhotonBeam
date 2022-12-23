@@ -63,16 +63,21 @@ const std::vector<DirectX::XMFLOAT4>& GltfScene::GetVertexColors()
     return m_colors0;
 }
 
+const std::vector<tinygltf::Image>& GltfScene::GetTextureImages()
+{
+    return m_pTmodel->images;
+}
+
 void GltfScene::LoadFile(const std::string& filepath)
 {
-	tinygltf::Model    tmodel;
+    m_pTmodel = std::make_unique<tinygltf::Model>();
 	tinygltf::TinyGLTF tcontext;
 	std::string        warn, error;
 
 	std::string loadingMsg = "Loading file: " + filepath + " ";
 	
 	OutputDebugStringA(loadingMsg.c_str());
-	if (!tcontext.LoadASCIIFromFile(&tmodel, &error, &warn, filepath))
+	if (!tcontext.LoadASCIIFromFile(m_pTmodel.get(), &error, &warn, filepath))
 	{
 		assert(!"Error while loading scene");
 	}
@@ -83,11 +88,11 @@ void GltfScene::LoadFile(const std::string& filepath)
 	if (!error.empty())
 		OutputDebugStringA(error.c_str());
 
-	importMaterials(tmodel);
-    importDrawableNodes(tmodel, GltfAttributes::Normal | GltfAttributes::Texcoord_0);
+	importMaterials();
+    importDrawableNodes(GltfAttributes::Normal | GltfAttributes::Texcoord_0);
 }
 
-void GltfScene::checkRequiredExtensions(const tinygltf::Model& tmodel)
+void GltfScene::checkRequiredExtensions()
 {
     std::set<std::string> supportedExtensions{
         KHR_LIGHTS_PUNCTUAL_EXTENSION_NAME,
@@ -101,7 +106,7 @@ void GltfScene::checkRequiredExtensions(const tinygltf::Model& tmodel)
         KHR_TEXTURE_BASISU_NAME,
     };
 
-    for (auto& e : tmodel.extensionsRequired)
+    for (auto& e : m_pTmodel->extensionsRequired)
     {
         if (supportedExtensions.find(e) == supportedExtensions.end())
         {
@@ -114,11 +119,11 @@ void GltfScene::checkRequiredExtensions(const tinygltf::Model& tmodel)
 //--------------------------------------------------------------------------------------------------
 // Collect the value of all materials
 //
-void GltfScene::importMaterials(const tinygltf::Model& tmodel)
+void GltfScene::importMaterials()
 {
-    m_materials.reserve(tmodel.materials.size());
+    m_materials.reserve(m_pTmodel->materials.size());
 
-    for (auto& tmat : tmodel.materials)
+    for (auto& tmat : m_pTmodel->materials)
     {
         GltfMaterial gmat;
         gmat.tmaterial = &tmat;  // Reference
@@ -273,18 +278,18 @@ void GltfScene::importMaterials(const tinygltf::Model& tmodel)
     }
 }
 
-void GltfScene::importDrawableNodes(const tinygltf::Model& tmodel, GltfAttributes requestedAttributes, GltfAttributes forceRequested /*= GltfAttributes::All*/)
+void GltfScene::importDrawableNodes(GltfAttributes requestedAttributes, GltfAttributes forceRequested /*= GltfAttributes::All*/)
 {
-    checkRequiredExtensions(tmodel);
+    checkRequiredExtensions();
 
-    int         defaultScene = tmodel.defaultScene > -1 ? tmodel.defaultScene : 0;
-    const auto& tscene = tmodel.scenes[defaultScene];
+    int         defaultScene = m_pTmodel->defaultScene > -1 ? m_pTmodel->defaultScene : 0;
+    const auto& tscene = m_pTmodel->scenes[defaultScene];
 
     // Finding only the mesh that are used in the scene
     std::set<uint32_t> usedMeshes;
     for (auto nodeIdx : tscene.nodes)
     {
-        findUsedMeshes(tmodel, usedMeshes, nodeIdx);
+        findUsedMeshes(usedMeshes, nodeIdx);
     }
 
     // Find the number of vertex(attributes) and index
@@ -293,17 +298,17 @@ void GltfScene::importDrawableNodes(const tinygltf::Model& tmodel, GltfAttribute
     uint32_t primCnt{ 0 };  //  "   "  "  "
     for (const auto& m : usedMeshes)
     {
-        auto& tmesh = tmodel.meshes[m];
+        auto& tmesh = m_pTmodel->meshes[m];
         std::vector<uint32_t> vprim;
         for (const auto& primitive : tmesh.primitives)
         {
             if (primitive.mode != 4)  // Triangle
                 continue;
-            const auto& posAccessor = tmodel.accessors[primitive.attributes.find("POSITION")->second];
+            const auto& posAccessor = m_pTmodel->accessors[primitive.attributes.find("POSITION")->second];
             //nbVert += static_cast<uint32_t>(posAccessor.count);
             if (primitive.indices > -1)
             {
-                const auto& indexAccessor = tmodel.accessors[primitive.indices];
+                const auto& indexAccessor = m_pTmodel->accessors[primitive.indices];
                 nbIndex += static_cast<uint32_t>(indexAccessor.count);
             }
             else
@@ -321,10 +326,10 @@ void GltfScene::importDrawableNodes(const tinygltf::Model& tmodel, GltfAttribute
     // Convert all mesh/primitives+ to a single primitive per mesh
     for (const auto& m : usedMeshes)
     {
-        auto& tmesh = tmodel.meshes[m];
+        auto& tmesh = m_pTmodel->meshes[m];
         for (const auto& tprimitive : tmesh.primitives)
         {
-            processMesh(tmodel, tprimitive, requestedAttributes, forceRequested, tmesh.name);
+            processMesh(tprimitive, requestedAttributes, forceRequested, tmesh.name);
             m_primMeshes.back().tmesh = &tmesh;
             m_primMeshes.back().tprim = &tprimitive;
         }
@@ -333,7 +338,7 @@ void GltfScene::importDrawableNodes(const tinygltf::Model& tmodel, GltfAttribute
     // Transforming the scene hierarchy to a flat list
     for (auto nodeIdx : tscene.nodes)
     {
-        processNode(tmodel, nodeIdx, MathHelper::Identity4x4());
+        processNode(nodeIdx, MathHelper::Identity4x4());
     }
 
     m_meshToPrimMeshes.clear();
@@ -342,9 +347,9 @@ void GltfScene::importDrawableNodes(const tinygltf::Model& tmodel, GltfAttribute
     primitiveIndices8u.clear();
 }
 
-void GltfScene::processNode(const tinygltf::Model& tmodel, int& nodeIdx, const XMFLOAT4X4& parentMatrix)
+void GltfScene::processNode(int& nodeIdx, const XMFLOAT4X4& parentMatrix)
 {
-    const auto& tnode = tmodel.nodes[nodeIdx];
+    const auto& tnode = m_pTmodel->nodes[nodeIdx];
 
     XMMATRIX mtranslation = XMMatrixIdentity();
     XMMATRIX mscale = XMMatrixIdentity();
@@ -412,11 +417,11 @@ void GltfScene::processNode(const tinygltf::Model& tmodel, int& nodeIdx, const X
     // Recursion for all children
     for (auto child : tnode.children)
     {
-        processNode(tmodel, child, worldMatrix);
+        processNode(child, worldMatrix);
     }
 }
 
-void GltfScene::processMesh(const tinygltf::Model& tmodel,
+void GltfScene::processMesh(
     const tinygltf::Primitive& tmesh,
     GltfAttributes             requestedAttributes,
     GltfAttributes             forceRequested,
@@ -459,26 +464,26 @@ void GltfScene::processMesh(const tinygltf::Model& tmodel,
     // INDICES
     if (tmesh.indices > -1)
     {
-        const tinygltf::Accessor& indexAccessor = tmodel.accessors[tmesh.indices];
+        const tinygltf::Accessor& indexAccessor = m_pTmodel->accessors[tmesh.indices];
         resultMesh.indexCount = static_cast<uint32_t>(indexAccessor.count);
 
         switch (indexAccessor.componentType)
         {
         case TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT: {
             primitiveIndices32u.resize(indexAccessor.count);
-            copyAccessorData(primitiveIndices32u, 0, tmodel, indexAccessor, 0, indexAccessor.count);
+            copyAccessorData(primitiveIndices32u, 0, *m_pTmodel, indexAccessor, 0, indexAccessor.count);
             m_indices.insert(m_indices.end(), primitiveIndices32u.begin(), primitiveIndices32u.end());
             break;
         }
         case TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT: {
             primitiveIndices16u.resize(indexAccessor.count);
-            copyAccessorData(primitiveIndices16u, 0, tmodel, indexAccessor, 0, indexAccessor.count);
+            copyAccessorData(primitiveIndices16u, 0, *m_pTmodel, indexAccessor, 0, indexAccessor.count);
             m_indices.insert(m_indices.end(), primitiveIndices16u.begin(), primitiveIndices16u.end());
             break;
         }
         case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE: {
             primitiveIndices8u.resize(indexAccessor.count);
-            copyAccessorData(primitiveIndices8u, 0, tmodel, indexAccessor, 0, indexAccessor.count);
+            copyAccessorData(primitiveIndices8u, 0, *m_pTmodel, indexAccessor, 0, indexAccessor.count);
             m_indices.insert(m_indices.end(), primitiveIndices8u.begin(), primitiveIndices8u.end());
             break;
         }
@@ -490,7 +495,7 @@ void GltfScene::processMesh(const tinygltf::Model& tmodel,
     else
     {
         // Primitive without indices, creating them
-        const auto& accessor = tmodel.accessors[tmesh.attributes.find("POSITION")->second];
+        const auto& accessor = m_pTmodel->accessors[tmesh.attributes.find("POSITION")->second];
         for (auto i = 0; i < accessor.count; i++)
             m_indices.push_back(i);
         resultMesh.indexCount = static_cast<uint32_t>(accessor.count);
@@ -501,10 +506,10 @@ void GltfScene::processMesh(const tinygltf::Model& tmodel,
 
         // POSITION
         {
-            bool result = getAttribute<XMFLOAT3>(tmodel, tmesh, m_positions, "POSITION");
+            bool result = getAttribute<XMFLOAT3>(*m_pTmodel, tmesh, m_positions, "POSITION");
 
             // Keeping the size of this primitive (Spec says this is required information)
-            const auto& accessor = tmodel.accessors[tmesh.attributes.find("POSITION")->second];
+            const auto& accessor = m_pTmodel->accessors[tmesh.attributes.find("POSITION")->second];
             resultMesh.vertexCount = static_cast<uint32_t>(accessor.count);
             if (!accessor.minValues.empty())
             {
@@ -565,7 +570,7 @@ void GltfScene::processMesh(const tinygltf::Model& tmodel,
         // NORMAL
         if (hasFlag(requestedAttributes, GltfAttributes::Normal))
         {
-            bool normalCreated = getAttribute<XMFLOAT3>(tmodel, tmesh, m_normals, "NORMAL");
+            bool normalCreated = getAttribute<XMFLOAT3>(*m_pTmodel, tmesh, m_normals, "NORMAL");
 
             if (!normalCreated && hasFlag(forceRequested, GltfAttributes::Normal))
                 createNormals(resultMesh);
@@ -574,9 +579,9 @@ void GltfScene::processMesh(const tinygltf::Model& tmodel,
         // TEXCOORD_0
         if (hasFlag(requestedAttributes, GltfAttributes::Texcoord_0))
         {
-            bool texcoordCreated = getAttribute<XMFLOAT2>(tmodel, tmesh, m_texcoords0, "TEXCOORD_0");
+            bool texcoordCreated = getAttribute<XMFLOAT2>(*m_pTmodel, tmesh, m_texcoords0, "TEXCOORD_0");
             if (!texcoordCreated)
-                texcoordCreated = getAttribute<XMFLOAT2>(tmodel, tmesh, m_texcoords0, "TEXCOORD");
+                texcoordCreated = getAttribute<XMFLOAT2>(*m_pTmodel, tmesh, m_texcoords0, "TEXCOORD");
             if (!texcoordCreated && hasFlag(forceRequested, GltfAttributes::Texcoord_0))
                 createTexcoords(resultMesh);
         }
@@ -585,7 +590,7 @@ void GltfScene::processMesh(const tinygltf::Model& tmodel,
         // TANGENT
         if (hasFlag(requestedAttributes, GltfAttributes::Tangent))
         {
-            bool tangentCreated = getAttribute<XMFLOAT4>(tmodel, tmesh, m_tangents, "TANGENT");
+            bool tangentCreated = getAttribute<XMFLOAT4>(*m_pTmodel, tmesh, m_tangents, "TANGENT");
 
             if (!tangentCreated && hasFlag(forceRequested, GltfAttributes::Tangent))
                 createTangents(resultMesh);
@@ -594,7 +599,7 @@ void GltfScene::processMesh(const tinygltf::Model& tmodel,
         // COLOR_0
         if (hasFlag(requestedAttributes, GltfAttributes::Color_0))
         {
-            bool colorCreated = getAttribute<XMFLOAT4>(tmodel, tmesh, m_colors0, "COLOR_0");
+            bool colorCreated = getAttribute<XMFLOAT4>(*m_pTmodel, tmesh, m_colors0, "COLOR_0");
             if (!colorCreated && hasFlag(forceRequested, GltfAttributes::Color_0))
                 createColors(resultMesh);
         }
@@ -847,15 +852,16 @@ void GltfScene::destroy()
     primitiveIndices16u.clear();
     primitiveIndices8u.clear();
     m_cachePrimMesh.clear();
+    m_pTmodel.reset();
 }
 
-void GltfScene::findUsedMeshes(const tinygltf::Model& tmodel, std::set<uint32_t>& usedMeshes, int nodeIdx)
+void GltfScene::findUsedMeshes(std::set<uint32_t>& usedMeshes, int nodeIdx)
 {
-    const auto& node = tmodel.nodes[nodeIdx];
+    const auto& node = m_pTmodel->nodes[nodeIdx];
     if (node.mesh >= 0)
         usedMeshes.insert(node.mesh);
     for (const auto& c : node.children)
-        findUsedMeshes(tmodel, usedMeshes, c);
+        findUsedMeshes(usedMeshes, c);
 }
 
 template <typename T>

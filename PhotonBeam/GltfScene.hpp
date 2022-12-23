@@ -3,6 +3,7 @@
 #define NOMINMAX
 
 #include <algorithm>
+#include <memory>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -225,6 +226,7 @@ public:
     const std::vector<DirectX::XMFLOAT2>& GetVertextexcoords0();
     const std::vector<DirectX::XMFLOAT2>& GetVertextexcoords1();
     const std::vector<DirectX::XMFLOAT4>& GetVertexColors();
+    const std::vector<tinygltf::Image>& GetTextureImages();
 
 private:
     // Scene data
@@ -240,19 +242,20 @@ private:
     std::vector<DirectX::XMFLOAT2> m_texcoords0;
     std::vector<DirectX::XMFLOAT2> m_texcoords1;
     std::vector<DirectX::XMFLOAT4> m_colors0;
+    std::unique_ptr<tinygltf::Model> m_pTmodel;
 
     // Importing all materials in a vector of GltfMaterial structure
-    void importMaterials(const tinygltf::Model& tmodel);
+    void importMaterials();
 
     // Import all Mesh and primitives in a vector of GltfPrimMesh,
     // - Reads all requested GltfAttributes and create them if `forceRequested` contains it.
     // - Create a vector of GltfNode, GltfLight and GltfCamera
-    void importDrawableNodes(const tinygltf::Model& tmodel,
+    void importDrawableNodes(
         GltfAttributes         requestedAttributes,
         GltfAttributes         forceRequested = GltfAttributes::All);
 
-    void processNode(const tinygltf::Model& tmodel, int& nodeIdx, const DirectX::XMFLOAT4X4& parentMatrix);
-    void processMesh(const tinygltf::Model& tmodel,
+    void processNode(int& nodeIdx, const DirectX::XMFLOAT4X4& parentMatrix);
+    void processMesh(
         const tinygltf::Primitive& tmesh,
         GltfAttributes             requestedAttributes,
         GltfAttributes             forceRequested,
@@ -271,8 +274,8 @@ private:
 
     std::unordered_map<std::string, GltfPrimMesh> m_cachePrimMesh;
 
-    void checkRequiredExtensions(const tinygltf::Model& tmodel);
-    void findUsedMeshes(const tinygltf::Model& tmodel, std::set<uint32_t>& usedMeshes, int nodeIdx);
+    void checkRequiredExtensions();
+    void findUsedMeshes(std::set<uint32_t>& usedMeshes, int nodeIdx);
 };
 
 // Return a vector of data for a tinygltf::Value
