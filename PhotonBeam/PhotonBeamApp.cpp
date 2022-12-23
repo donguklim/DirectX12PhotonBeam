@@ -14,16 +14,13 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include "PhotonBeamApp.hpp"
-#include "d3dx12.h"
-
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx12.h"
 #include "imgui_helper.h"
-
 #include "raytraceHelper.hpp"
-#include "Shaders/host_device.h"
 
+#include "Shaders/host_device.h"
 
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
@@ -47,7 +44,7 @@ PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance)
 
 PhotonBeamApp::~PhotonBeamApp()
 {
-    if(md3dDevice != nullptr)
+    if (md3dDevice != nullptr)
         FlushCommandQueue();
 
     if (ImGui::GetCurrentContext() != nullptr)
@@ -61,12 +58,11 @@ PhotonBeamApp::~PhotonBeamApp()
 
 bool PhotonBeamApp::Initialize()
 {
-    if(!D3DApp::Initialize())
+    if (!D3DApp::Initialize())
         return false;
 
     // Reset the command list to prep for initialization commands.
     ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
-
     mCbvSrvDescriptorSize = md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     mCamera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
@@ -102,9 +98,9 @@ bool PhotonBeamApp::Initialize()
 }
 
 void PhotonBeamApp::CheckRaytracingSupport() {
-    D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5 = {}; 
+    D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5 = {};
     ThrowIfFailed(md3dDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &options5, sizeof(options5)));
-    if (options5.RaytracingTier < D3D12_RAYTRACING_TIER_1_0) 
+    if (options5.RaytracingTier < D3D12_RAYTRACING_TIER_1_0)
         throw std::runtime_error("Raytracing not supported on device");
 }
 
@@ -129,17 +125,17 @@ void PhotonBeamApp::InitGui()
 
     // Setup Platform/Renderer backends
     ImGui_ImplWin32_Init(mhMainWnd);
-    
+
     ImGui_ImplDX12_Init(
-        md3dDevice.Get(), 
+        md3dDevice.Get(),
         gNumFrameResources,
-        DXGI_FORMAT_R8G8B8A8_UNORM, 
+        DXGI_FORMAT_R8G8B8A8_UNORM,
         mGuiDescriptorHeap.Get(),
         mGuiDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
         mGuiDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
     );
-   
-        
+
+
 }
 
 LRESULT PhotonBeamApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -149,7 +145,7 @@ LRESULT PhotonBeamApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
     return D3DApp::MsgProc(hwnd, msg, wParam, lParam);
 }
- 
+
 void PhotonBeamApp::OnResize()
 {
     D3DApp::OnResize();
@@ -168,20 +164,20 @@ void PhotonBeamApp::Update(const GameTimer& gt)
 
     // Has the GPU finished processing the commands of the current frame resource?
     // If not, wait until the GPU has completed commands up to this fence point.
-    if(mCurrFrameResource->Fence != 0 && mFence->GetCompletedValue() < mCurrFrameResource->Fence)
+    if (mCurrFrameResource->Fence != 0 && mFence->GetCompletedValue() < mCurrFrameResource->Fence)
     {
         HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
         ThrowIfFailed(mFence->SetEventOnCompletion(mCurrFrameResource->Fence, eventHandle));
 
-        if(eventHandle != 0)
+        if (eventHandle != 0)
         {
             WaitForSingleObject(eventHandle, INFINITE);
             CloseHandle(eventHandle);
         }
     }
 
-	UpdateObjectCBs(gt);
-	UpdateMainPassCB(gt);
+    UpdateObjectCBs(gt);
+    UpdateMainPassCB(gt);
 }
 
 void PhotonBeamApp::drawPost(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc)
@@ -210,7 +206,7 @@ void PhotonBeamApp::drawPost(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdL
     static const CD3DX12_CLEAR_VALUE depthStencilClearValue{ DXGI_FORMAT_D32_FLOAT_S8X24_UINT, 1.0f, 0 };
     static const D3D12_RENDER_PASS_ENDING_ACCESS endingNoAccess{ D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_NO_ACCESS, {} };
 
-    static const D3D12_RENDER_PASS_BEGINNING_ACCESS beginningNoAccess{D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_NO_ACCESS, {} };
+    static const D3D12_RENDER_PASS_BEGINNING_ACCESS beginningNoAccess{ D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_NO_ACCESS, {} };
 
     static const D3D12_RENDER_PASS_DEPTH_STENCIL_DESC renderPassDepthStencilDesc{
         D3D12_CPU_DESCRIPTOR_HANDLE{0},
@@ -246,7 +242,7 @@ void PhotonBeamApp::drawPost(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdL
 
 void PhotonBeamApp::Rasterize(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc)
 {
-    
+
     // A command list can be reset after it has been added to the command queue via ExecuteCommandList.
     // Reusing the command list reuses memory.
     if (mIsWireframe)
@@ -270,10 +266,10 @@ void PhotonBeamApp::Rasterize(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmd
 
     D3D12_RENDER_PASS_BEGINNING_ACCESS renderPassBeginningAccessClear{ D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR, { clearValue } };
     static const D3D12_RENDER_PASS_ENDING_ACCESS renderPassEndingAccessPreserve{ D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE, {} };
-    D3D12_RENDER_PASS_RENDER_TARGET_DESC renderPassRenderTargetDesc{ 
-        CurrentBackBufferView(), 
-        renderPassBeginningAccessClear, 
-        renderPassEndingAccessPreserve 
+    D3D12_RENDER_PASS_RENDER_TARGET_DESC renderPassRenderTargetDesc{
+        CurrentBackBufferView(),
+        renderPassBeginningAccessClear,
+        renderPassEndingAccessPreserve
     };
 
     static const CD3DX12_CLEAR_VALUE depthStencilClearValue{ DXGI_FORMAT_D32_FLOAT_S8X24_UINT, 1.0f, 0 };
@@ -283,8 +279,8 @@ void PhotonBeamApp::Rasterize(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmd
         D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR, {depthStencilClearValue}
     };
 
-    D3D12_RENDER_PASS_DEPTH_STENCIL_DESC renderPassDepthStencilDesc{ 
-        DepthStencilView(), 
+    D3D12_RENDER_PASS_DEPTH_STENCIL_DESC renderPassDepthStencilDesc{
+        DepthStencilView(),
         renderPassBeginningAccessClearDS,
         renderPassBeginningAccessClearDS,
         renderPassEndingAccessDiscard,
@@ -292,13 +288,16 @@ void PhotonBeamApp::Rasterize(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmd
     };
 
     mCommandList->BeginRenderPass(
-        1, 
-        &renderPassRenderTargetDesc, 
-        &renderPassDepthStencilDesc, 
+        1,
+        &renderPassRenderTargetDesc,
+        &renderPassDepthStencilDesc,
         D3D12_RENDER_PASS_FLAG_NONE
     );
     mCommandList->RSSetViewports(1, &mScreenViewport);
     mCommandList->RSSetScissorRects(1, &mScissorRect);
+
+    ID3D12DescriptorHeap* descriptorHeaps[] = { mSrvDescriptorHeap.Get() };
+    mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
     mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
 
@@ -347,10 +346,10 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
     // Indicate a state transition on the resource usage.
     auto presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
         CurrentBackBuffer(),
-        D3D12_RESOURCE_STATE_RENDER_TARGET, 
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
         D3D12_RESOURCE_STATE_PRESENT
     );
-	mCommandList->ResourceBarrier(1, &presentBarrier);
+    mCommandList->ResourceBarrier(1, &presentBarrier);
 
     // Done recording commands.
     ThrowIfFailed(mCommandList->Close());
@@ -361,11 +360,11 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
 
     // Swap the back and front buffers
     ThrowIfFailed(mSwapChain->Present(0, 0));
-	mCurrBackBuffer = (mCurrBackBuffer + 1) % SwapChainBufferCount;
+    mCurrBackBuffer = (mCurrBackBuffer + 1) % SwapChainBufferCount;
 
     // Advance the fence value to mark commands up to this fence point.
     mCurrFrameResource->Fence = ++mCurrentFence;
-    
+
     // Add an instruction to the command queue to set a new fence point. 
     // Because we are on the GPU timeline, the new fence point won't be 
     // set until the GPU finishes processing all the commands prior to this Signal().
@@ -392,7 +391,7 @@ void PhotonBeamApp::OnMouseMove(WPARAM btnState, int x, int y)
 {
     if (ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureMouse)
         return;
-   
+
     if ((btnState & MK_LBUTTON) != 0)
     {
         // Make each pixel correspond to a quarter of a degree.
@@ -431,14 +430,14 @@ void PhotonBeamApp::OnMouseWheel(WPARAM btnState, int delta)
     if (delta != 0)
         mCamera.Walk(0.01f * delta);
 }
- 
+
 void PhotonBeamApp::OnKeyboardInput(const GameTimer& gt)
 {
     // Bellow will cause error 
     //if (ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureKeyboard)
         //return;
 
-    if(GetAsyncKeyState('1') & 0x8000)
+    if (GetAsyncKeyState('1') & 0x8000)
         mIsWireframe = true;
     else
         mIsWireframe = false;
@@ -465,29 +464,29 @@ void PhotonBeamApp::OnKeyboardInput(const GameTimer& gt)
 
     mCamera.UpdateViewMatrix();
 }
- 
+
 
 void PhotonBeamApp::UpdateObjectCBs(const GameTimer& gt)
 {
-	auto currObjectCB = mCurrFrameResource->ObjectCB.get();
-	for(auto& e : mAllRitems)
-	{
-		// Only update the cbuffer data if the constants have changed.  
-		// This needs to be tracked per frame resource.
-		if(e->NumFramesDirty > 0)
-		{
-			XMMATRIX world = XMLoadFloat4x4(&e->World);
+    auto currObjectCB = mCurrFrameResource->ObjectCB.get();
+    for (auto& e : mAllRitems)
+    {
+        // Only update the cbuffer data if the constants have changed.  
+        // This needs to be tracked per frame resource.
+        if (e->NumFramesDirty > 0)
+        {
+            XMMATRIX world = XMLoadFloat4x4(&e->World);
 
-			ObjectConstants objConstants;
-			XMStoreFloat4x4(&objConstants.World, XMMatrixTranspose(world));
+            ObjectConstants objConstants;
+            XMStoreFloat4x4(&objConstants.World, XMMatrixTranspose(world));
             objConstants.materialIndex = e->MaterialIndex;
 
-			currObjectCB->CopyData(e->ObjCBIndex, objConstants);
+            currObjectCB->CopyData(e->ObjCBIndex, objConstants);
 
-			// Next FrameResource need to be updated too.
-			e->NumFramesDirty--;
-		}
-	}
+            // Next FrameResource need to be updated too.
+            e->NumFramesDirty--;
+        }
+    }
 }
 
 void PhotonBeamApp::UpdateMainPassCB(const GameTimer& gt)
@@ -495,34 +494,34 @@ void PhotonBeamApp::UpdateMainPassCB(const GameTimer& gt)
     XMMATRIX view = mCamera.GetView();
     XMMATRIX proj = mCamera.GetProj();
 
-	XMMATRIX viewProj = XMMatrixMultiply(view, proj);
+    XMMATRIX viewProj = XMMatrixMultiply(view, proj);
 
     auto viewDeterminant = XMMatrixDeterminant(view);
     auto projDeterminant = XMMatrixDeterminant(proj);
     auto viewProjDeterminant = XMMatrixDeterminant(viewProj);
 
-	XMMATRIX invView = XMMatrixInverse(&viewDeterminant, view);
-	XMMATRIX invProj = XMMatrixInverse(&projDeterminant, proj);
-	XMMATRIX invViewProj = XMMatrixInverse(&viewProjDeterminant, viewProj);
+    XMMATRIX invView = XMMatrixInverse(&viewDeterminant, view);
+    XMMATRIX invProj = XMMatrixInverse(&projDeterminant, proj);
+    XMMATRIX invViewProj = XMMatrixInverse(&viewProjDeterminant, viewProj);
 
-	XMStoreFloat4x4(&mMainPassCB.View, XMMatrixTranspose(view));
-	XMStoreFloat4x4(&mMainPassCB.InvView, XMMatrixTranspose(invView));
-	XMStoreFloat4x4(&mMainPassCB.Proj, XMMatrixTranspose(proj));
-	XMStoreFloat4x4(&mMainPassCB.InvProj, XMMatrixTranspose(invProj));
-	XMStoreFloat4x4(&mMainPassCB.ViewProj, XMMatrixTranspose(viewProj));
-	XMStoreFloat4x4(&mMainPassCB.InvViewProj, XMMatrixTranspose(invViewProj));
-	mMainPassCB.EyePosW = mCamera.GetPosition3f();
+    XMStoreFloat4x4(&mMainPassCB.View, XMMatrixTranspose(view));
+    XMStoreFloat4x4(&mMainPassCB.InvView, XMMatrixTranspose(invView));
+    XMStoreFloat4x4(&mMainPassCB.Proj, XMMatrixTranspose(proj));
+    XMStoreFloat4x4(&mMainPassCB.InvProj, XMMatrixTranspose(invProj));
+    XMStoreFloat4x4(&mMainPassCB.ViewProj, XMMatrixTranspose(viewProj));
+    XMStoreFloat4x4(&mMainPassCB.InvViewProj, XMMatrixTranspose(invViewProj));
+    mMainPassCB.EyePosW = mCamera.GetPosition3f();
     mMainPassCB.LightPos = XMFLOAT3(m_lightPosition[0], m_lightPosition[1], m_lightPosition[2]);
     mMainPassCB.lightIntensity = m_lightIntensity;
-	mMainPassCB.RenderTargetSize = XMFLOAT2((float)mClientWidth, (float)mClientHeight);
-	mMainPassCB.InvRenderTargetSize = XMFLOAT2(1.0f / mClientWidth, 1.0f / mClientHeight);
-	mMainPassCB.NearZ = mCamera.GetNearZ();
-	mMainPassCB.FarZ = mCamera.GetFarZ();
-	mMainPassCB.TotalTime = gt.TotalTime();
-	mMainPassCB.DeltaTime = gt.DeltaTime();
+    mMainPassCB.RenderTargetSize = XMFLOAT2((float)mClientWidth, (float)mClientHeight);
+    mMainPassCB.InvRenderTargetSize = XMFLOAT2(1.0f / mClientWidth, 1.0f / mClientHeight);
+    mMainPassCB.NearZ = mCamera.GetNearZ();
+    mMainPassCB.FarZ = mCamera.GetFarZ();
+    mMainPassCB.TotalTime = gt.TotalTime();
+    mMainPassCB.DeltaTime = gt.DeltaTime();
 
-	auto currPassCB = mCurrFrameResource->PassCB.get();
-	currPassCB->CopyData(0, mMainPassCB);
+    auto currPassCB = mCurrFrameResource->PassCB.get();
+    currPassCB->CopyData(0, mMainPassCB);
 }
 
 void PhotonBeamApp::BuildDescriptorHeaps()
@@ -546,9 +545,8 @@ void PhotonBeamApp::BuildDescriptorHeaps()
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MostDetailedMip = 1;
+    srvDesc.Texture2D.MostDetailedMip = 0;
     srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-
 
     for (auto& textureResource : m_textures)
     {
@@ -557,7 +555,6 @@ void PhotonBeamApp::BuildDescriptorHeaps()
         md3dDevice->CreateShaderResourceView(textureResource->Resource.Get(), &srvDesc, hDescriptor);
         hDescriptor.Offset(1, mCbvSrvDescriptorSize);
     }
-
 }
 
 void PhotonBeamApp::BuildRootSignature()
@@ -574,7 +571,7 @@ void PhotonBeamApp::BuildRootSignature()
     CD3DX12_DESCRIPTOR_RANGE texTable;
     texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, m_textures.size(), 0, 0);
 
-	// Root parameter can be a table, root descriptor or root constants.
+    // Root parameter can be a table, root descriptor or root constants.
     CD3DX12_ROOT_PARAMETER slotRootParameter[4] = {};
 
     slotRootParameter[0].InitAsConstantBufferView(0);
@@ -582,8 +579,8 @@ void PhotonBeamApp::BuildRootSignature()
     slotRootParameter[2].InitAsShaderResourceView(0, 1);
     slotRootParameter[3].InitAsDescriptorTable(1, &texTable, D3D12_SHADER_VISIBILITY_PIXEL);
 
-	// A root signature is an array of root parameters.
-	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(
+    // A root signature is an array of root parameters.
+    CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(
         4, 
         slotRootParameter, 
         1, 
@@ -591,23 +588,23 @@ void PhotonBeamApp::BuildRootSignature()
         D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
     );
 
-	// create a root signature with a single slot which points to a descriptor range consisting of a single constant buffer
-	ComPtr<ID3DBlob> serializedRootSig = nullptr;
-	ComPtr<ID3DBlob> errorBlob = nullptr;
-	HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
-		serializedRootSig.GetAddressOf(), errorBlob.GetAddressOf());
+    // create a root signature with a single slot which points to a descriptor range consisting of a single constant buffer
+    ComPtr<ID3DBlob> serializedRootSig = nullptr;
+    ComPtr<ID3DBlob> errorBlob = nullptr;
+    HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
+        serializedRootSig.GetAddressOf(), errorBlob.GetAddressOf());
 
-	if(errorBlob != nullptr)
-	{
-		::OutputDebugStringA((char*)errorBlob->GetBufferPointer());
-	}
-	ThrowIfFailed(hr);
+    if (errorBlob != nullptr)
+    {
+        ::OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+    }
+    ThrowIfFailed(hr);
 
-	ThrowIfFailed(md3dDevice->CreateRootSignature(
-		0,
-		serializedRootSig->GetBufferPointer(),
-		serializedRootSig->GetBufferSize(),
-		IID_PPV_ARGS(mRootSignature.GetAddressOf())));
+    ThrowIfFailed(md3dDevice->CreateRootSignature(
+        0,
+        serializedRootSig->GetBufferPointer(),
+        serializedRootSig->GetBufferSize(),
+        IID_PPV_ARGS(mRootSignature.GetAddressOf())));
 }
 
 void PhotonBeamApp::BuildPostRootSignature()
@@ -629,8 +626,8 @@ void PhotonBeamApp::BuildPostRootSignature()
 
     // A root signature is an array of root parameters.
     CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(
-        1, 
-        slotRootParameter, 
+        1,
+        slotRootParameter,
         1, 
         &pointWrap,
         D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
@@ -657,9 +654,9 @@ void PhotonBeamApp::BuildPostRootSignature()
 
 void PhotonBeamApp::BuildShadersAndInputLayout()
 {
-	mShaders["standardVS"] = d3dUtil::CompileShader(L"Shaders\\color.hlsl", nullptr, "VS", "vs_5_1");
-	mShaders["opaquePS"] = d3dUtil::CompileShader(L"Shaders\\color.hlsl", nullptr, "PS", "ps_5_1");
-	
+    mShaders["standardVS"] = d3dUtil::CompileShader(L"Shaders\\color.hlsl", nullptr, "VS", "vs_5_1");
+    mShaders["opaquePS"] = d3dUtil::CompileShader(L"Shaders\\color.hlsl", nullptr, "PS", "ps_5_1");
+
     mInputLayout =
     {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -688,7 +685,7 @@ void PhotonBeamApp::LoadScene()
 
     auto& materials = m_gltfScene.GetMaterials();
     std::vector<GltfShadeMaterial> shadeMaterials;
-    
+
     for (const auto& m : materials)
     {
         shadeMaterials.emplace_back(
@@ -752,7 +749,7 @@ void PhotonBeamApp::LoadScene()
     geo->MaterialBufferByteSize = mbByteSize;
 
     mGeometries[geo->Name] = std::move(geo);
-    
+
 }
 void PhotonBeamApp::CreateTextures()
 {
@@ -892,30 +889,30 @@ void PhotonBeamApp::BuildPSOs()
 {
     D3D12_GRAPHICS_PIPELINE_STATE_DESC opaquePsoDesc;
 
-	// PSO for opaque objects.
+    // PSO for opaque objects.
     ZeroMemory(&opaquePsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
-	opaquePsoDesc.InputLayout = { mInputLayout.data(), (UINT)mInputLayout.size() };
-	opaquePsoDesc.pRootSignature = mRootSignature.Get();
-	opaquePsoDesc.VS = 
-	{ 
-		reinterpret_cast<BYTE*>(mShaders["standardVS"]->GetBufferPointer()), 
-		mShaders["standardVS"]->GetBufferSize()
-	};
-	opaquePsoDesc.PS = 
-	{ 
-		reinterpret_cast<BYTE*>(mShaders["opaquePS"]->GetBufferPointer()),
-		mShaders["opaquePS"]->GetBufferSize()
-	};
-	opaquePsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	opaquePsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	opaquePsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-	opaquePsoDesc.SampleMask = UINT_MAX;
-	opaquePsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	opaquePsoDesc.NumRenderTargets = 1;
-	opaquePsoDesc.RTVFormats[0] = mBackBufferFormat;
-	opaquePsoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
-	opaquePsoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
-	opaquePsoDesc.DSVFormat = mDepthStencilFormat;
+    opaquePsoDesc.InputLayout = { mInputLayout.data(), (UINT)mInputLayout.size() };
+    opaquePsoDesc.pRootSignature = mRootSignature.Get();
+    opaquePsoDesc.VS =
+    {
+        reinterpret_cast<BYTE*>(mShaders["standardVS"]->GetBufferPointer()),
+        mShaders["standardVS"]->GetBufferSize()
+    };
+    opaquePsoDesc.PS =
+    {
+        reinterpret_cast<BYTE*>(mShaders["opaquePS"]->GetBufferPointer()),
+        mShaders["opaquePS"]->GetBufferSize()
+    };
+    opaquePsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+    opaquePsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+    opaquePsoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+    opaquePsoDesc.SampleMask = UINT_MAX;
+    opaquePsoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    opaquePsoDesc.NumRenderTargets = 1;
+    opaquePsoDesc.RTVFormats[0] = mBackBufferFormat;
+    opaquePsoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
+    opaquePsoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
+    opaquePsoDesc.DSVFormat = mDepthStencilFormat;
     ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&mPSOs["opaque"])));
 
     // PSO for opaque wireframe objects.
@@ -953,7 +950,7 @@ void PhotonBeamApp::BuildPSOs()
 
 void PhotonBeamApp::BuildFrameResources()
 {
-    for(int i = 0; i < gNumFrameResources; ++i)
+    for (int i = 0; i < gNumFrameResources; ++i)
     {
         mFrameResources.push_back(std::make_unique<FrameResource>(md3dDevice.Get(),
             1, (UINT)mAllRitems.size()));
@@ -963,21 +960,21 @@ void PhotonBeamApp::BuildFrameResources()
 void PhotonBeamApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems)
 {
     UINT objCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
- 
-	auto objectCB = mCurrFrameResource->ObjectCB->Resource();
+
+    auto objectCB = mCurrFrameResource->ObjectCB->Resource();
 
     // For each render item...
-    for(size_t i = 0; i < ritems.size(); ++i)
+    for (size_t i = 0; i < ritems.size(); ++i)
     {
         auto ri = ritems[i];
 
         auto vertexBufferView = ri->Geo->VertexBufferView();
         auto indexBufferView = ri->Geo->IndexBufferView();
 
-        D3D12_VERTEX_BUFFER_VIEW vertexBufferViews[3] = { 
-            ri->Geo->VertexBufferView(), 
-            ri->Geo->NormalBufferView(), 
-            ri->Geo->UvBufferView() 
+        D3D12_VERTEX_BUFFER_VIEW vertexBufferViews[3] = {
+            ri->Geo->VertexBufferView(),
+            ri->Geo->NormalBufferView(),
+            ri->Geo->UvBufferView()
         };
 
         cmdList->IASetVertexBuffers(0, 3, vertexBufferViews);
@@ -1142,20 +1139,20 @@ void PhotonBeamApp::RenderUI()
         ImGui::Checkbox("Show Solid Beam/Surface Color", &m_showDirectColor);
 
         ImGui::SliderScalar(
-            "Sample Beams", 
-            ImGuiDataType_U32, &m_numBeamSamples, 
-            &minValBeam, 
-            &maxValBeam, 
-            nullptr, 
+            "Sample Beams",
+            ImGuiDataType_U32, &m_numBeamSamples,
+            &minValBeam,
+            &maxValBeam,
+            nullptr,
             ImGuiSliderFlags_None
         );
         ImGui::SliderScalar(
-            "Sample Photons", 
-            ImGuiDataType_U32, 
-            &m_numPhotonSamples, 
-            &minValPhoton, 
-            &maxValPhoton, 
-            nullptr, 
+            "Sample Photons",
+            ImGuiDataType_U32,
+            &m_numPhotonSamples,
+            &minValPhoton,
+            &maxValPhoton,
+            nullptr,
             ImGuiSliderFlags_None
         );
 
@@ -1163,9 +1160,9 @@ void PhotonBeamApp::RenderUI()
             m_createBeamPhotonAS = true;
 
         ImGuiH::Control::Info(
-            "", 
-            "", 
-            "Click Refresh Beam to fully reflect changed parameters, some parameters do not get fully reflected before the click", 
+            "",
+            "",
+            "Click Refresh Beam to fully reflect changed parameters, some parameters do not get fully reflected before the click",
             ImGuiH::Control::Flags::Disabled
         );
 
@@ -1191,7 +1188,7 @@ void PhotonBeamApp::CreateBottomLevelAS() {
     for (const auto& mesh : primMeshes)
     {
         bottomLevelAS.AddVertexBuffer(
-            geo->VertexBufferGPU.Get(), 
+            geo->VertexBufferGPU.Get(),
             static_cast<UINT64>(mesh.vertexOffset) * vertexBufferView.StrideInBytes,
             vertexBufferView.SizeInBytes / vertexBufferView.StrideInBytes - mesh.vertexOffset,
             vertexBufferView.StrideInBytes,
@@ -1203,30 +1200,30 @@ void PhotonBeamApp::CreateBottomLevelAS() {
         );
     }
 
-    UINT64 scratchSizeInBytes = 0; 
-    UINT64 resultSizeInBytes = 0; 
+    UINT64 scratchSizeInBytes = 0;
+    UINT64 resultSizeInBytes = 0;
     bottomLevelAS.ComputeASBufferSizes(md3dDevice.Get(), false, &scratchSizeInBytes, &resultSizeInBytes);
-    
+
     m_bottomLevelASBuffers.pScratch = raytrace_helper::CreateBuffer(
         md3dDevice.Get(),
-        scratchSizeInBytes, 
-        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, 
-        D3D12_RESOURCE_STATE_COMMON, 
+        scratchSizeInBytes,
+        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+        D3D12_RESOURCE_STATE_COMMON,
         raytrace_helper::pmDefaultHeapProps
     );
     m_bottomLevelASBuffers.pResult = raytrace_helper::CreateBuffer(
         md3dDevice.Get(),
-        resultSizeInBytes, 
-        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, 
-        D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, 
+        resultSizeInBytes,
+        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+        D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
         raytrace_helper::pmDefaultHeapProps
     );
 
     bottomLevelAS.Generate(
-        mCommandList.Get(), 
+        mCommandList.Get(),
         m_bottomLevelASBuffers.pScratch.Get(),
         m_bottomLevelASBuffers.pResult.Get(),
-        false, 
+        false,
         nullptr
     );
 }
@@ -1244,44 +1241,44 @@ void PhotonBeamApp::CreateTopLevelAS() {
         );
     }
 
-    UINT64 scratchSize, resultSize, instanceDescsSize; 
+    UINT64 scratchSize, resultSize, instanceDescsSize;
     m_topLevelASGenerator.ComputeASBufferSizes(
         md3dDevice.Get(),
-        true, 
-        &scratchSize, 
-        &resultSize, 
+        true,
+        &scratchSize,
+        &resultSize,
         &instanceDescsSize
-    ); 
-    
+    );
+
     m_topLevelASBuffers.pScratch = raytrace_helper::CreateBuffer(
-        md3dDevice.Get(), 
-        scratchSize, 
-        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, 
+        md3dDevice.Get(),
+        scratchSize,
+        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
         D3D12_RESOURCE_STATE_COMMON,
         raytrace_helper::pmDefaultHeapProps
-    ); 
+    );
 
     m_topLevelASBuffers.pResult = raytrace_helper::CreateBuffer(
-        md3dDevice.Get(), 
-        resultSize, 
-        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, 
-        D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, 
+        md3dDevice.Get(),
+        resultSize,
+        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+        D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
         raytrace_helper::pmDefaultHeapProps
-    ); 
+    );
 
     m_topLevelASBuffers.pInstanceDesc = raytrace_helper::CreateBuffer(
-        md3dDevice.Get(), 
-        instanceDescsSize, 
-        D3D12_RESOURCE_FLAG_NONE, 
-        D3D12_RESOURCE_STATE_GENERIC_READ, 
+        md3dDevice.Get(),
+        instanceDescsSize,
+        D3D12_RESOURCE_FLAG_NONE,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
         raytrace_helper::pmUploadHeapProps
-    ); 
+    );
 
 
     m_topLevelASGenerator.Generate(
         mCommandList.Get(),
-        m_topLevelASBuffers.pScratch.Get(), 
-        m_topLevelASBuffers.pResult.Get(), 
+        m_topLevelASBuffers.pScratch.Get(),
+        m_topLevelASBuffers.pResult.Get(),
         m_topLevelASBuffers.pInstanceDesc.Get()
     );
 
@@ -1290,27 +1287,27 @@ void PhotonBeamApp::CreateTopLevelAS() {
 
 void PhotonBeamApp::BuildBeamSignatures()
 {
-    
-    nv_helpers_dx12::RootSignatureGenerator rsc; 
+
+    nv_helpers_dx12::RootSignatureGenerator rsc;
     rsc.AddHeapRangesParameter(
-        { 
+        {
             {
-                0 /*u0*/, 
-                1 /*1 descriptor */, 
-                0 /*use the implicit register space 0*/, 
-                D3D12_DESCRIPTOR_RANGE_TYPE_UAV /* UAV representing the output buffer*/, 
+                0 /*u0*/,
+                1 /*1 descriptor */,
+                0 /*use the implicit register space 0*/,
+                D3D12_DESCRIPTOR_RANGE_TYPE_UAV /* UAV representing the output buffer*/,
                 0 /*heap slot where the UAV is defined*/
-            }, 
+            },
             {
-                0 /*t0*/, 
-                1, 
-                0, 
-                D3D12_DESCRIPTOR_RANGE_TYPE_SRV /*Top-level acceleration structure*/, 
+                0 /*t0*/,
+                1,
+                0,
+                D3D12_DESCRIPTOR_RANGE_TYPE_SRV /*Top-level acceleration structure*/,
                 1
-            } 
+            }
         }
-    ); 
+    );
     rsc.Generate(md3dDevice.Get(), true, m_beamGenSignature.GetAddressOf());
 
- 
+
 }
