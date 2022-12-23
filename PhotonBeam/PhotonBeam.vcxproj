@@ -82,7 +82,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\DXRHelpers;..\imgui;..\imgui-helper;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\WICTextureLoader;..\DXRHelpers;..\imgui;..\imgui-helper;</AdditionalIncludeDirectories>
       <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
@@ -115,7 +115,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\DXRHelpers;..\imgui;..\imgui-helper;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\WICTextureLoader;..\DXRHelpers;..\imgui;..\imgui-helper;</AdditionalIncludeDirectories>
       <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
@@ -161,6 +161,7 @@
     <ClInclude Include="..\imgui\imgui_impl_dx12.h" />
     <ClInclude Include="..\imgui\imgui_impl_win32.h" />
     <ClInclude Include="..\imgui\imgui_internal.h" />
+    <ClInclude Include="..\WICTextureLoader\WICTextureLoader12.h" />
     <ClInclude Include="FrameResource.h" />
     <ClInclude Include="GltfScene.hpp" />
     <ClInclude Include="PhotonBeamApp.hpp" />
@@ -187,6 +188,7 @@
     <ClCompile Include="..\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="..\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="..\WICTextureLoader\WICTextureLoader12.cpp" />
     <ClCompile Include="FrameResource.cpp" />
     <ClCompile Include="GltfScene.cpp" />
     <ClCompile Include="main.cpp" />

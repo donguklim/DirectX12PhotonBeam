@@ -88,6 +88,7 @@ private:
     void UpdateObjectCBs(const GameTimer& gt);
     void UpdateMainPassCB(const GameTimer& gt);
 
+    void CreateTextures();
     void BuildDescriptorHeaps();
     void BuildRootSignature();
     void BuildPostRootSignature();

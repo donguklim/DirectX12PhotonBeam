@@ -14,13 +14,16 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include "PhotonBeamApp.hpp"
+
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx12.h"
 #include "imgui_helper.h"
-#include "raytraceHelper.hpp"
 
+#include "raytraceHelper.hpp"
+#include "WICTextureLoader12.h"
 #include "Shaders/host_device.h"
+
 
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
@@ -72,6 +75,7 @@ bool PhotonBeamApp::Initialize()
     BuildPostRootSignature();
     BuildShadersAndInputLayout();
     LoadScene();
+    CreateTextures();
     BuildRenderItems();
     BuildFrameResources();
     BuildDescriptorHeaps();
@@ -702,6 +706,17 @@ void PhotonBeamApp::LoadScene()
 
     mGeometries[geo->Name] = std::move(geo);
     
+}
+void PhotonBeamApp::CreateTextures()
+{
+    const CD3DX12_STATIC_SAMPLER_DESC linearWrap(
+        2, // shaderRegister
+        D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
+        D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
+        D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
+        D3D12_TEXTURE_ADDRESS_MODE_WRAP // addressW
+    ); 
+
 }
 
 void PhotonBeamApp::BuildRenderItems()
