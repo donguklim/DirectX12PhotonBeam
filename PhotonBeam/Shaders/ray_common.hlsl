@@ -1,5 +1,5 @@
 
-struct rayHitPayload
+struct RayHitPayload
 {
 	float3 hitValue;
 	int instanceIndex;
