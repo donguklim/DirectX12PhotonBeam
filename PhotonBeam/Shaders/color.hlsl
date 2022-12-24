@@ -2,7 +2,7 @@
 #include "gltf.hlsl"
 
 
-Texture2D gTextures : register(t0);
+Texture2D gTextures[1] : register(t0);
 
 StructuredBuffer<GltfShadeMaterial> g_material : register(t0, space1);
 
@@ -85,7 +85,7 @@ float4 PS(VertexOut pin) : SV_Target
     if (material.pbrBaseColorTexture > -1)
     {
         uint txtId = material.pbrBaseColorTexture;
-        float3 diffuseTxt = gTextures.Sample(gSampleLinearWrap, pin.TexC).xyz;
+        float3 diffuseTxt = gTextures[txtId].Sample(gSampleLinearWrap, pin.TexC).xyz;
         diffuse *= diffuseTxt;
     }
 
