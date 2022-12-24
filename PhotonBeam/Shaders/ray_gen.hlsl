@@ -68,7 +68,6 @@ void RayGen() {
         // get the t value to surface
         RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> query;
 
-
         query.TraceRayInline(
             g_surfaceAS,
             RAY_FLAG_NONE, // OR'd with flags above
@@ -107,7 +106,7 @@ void RayGen() {
         PrimMeshInfo meshInfo = g_meshInfos[instanceID];
         prd.instanceID = instanceID;
 
-        uint indexOffset = (meshInfo.indexOffset / 3) + query.CommittedPrimitiveIndex();;
+        uint indexOffset = (meshInfo.indexOffset / 3) + query.CommittedPrimitiveIndex();
         uint vertexOffset = meshInfo.vertexOffset;           // Vertex offset as defined in glTF
         uint materialIndex = max(0, meshInfo.materialIndex);  // material of primitive mesh
 
