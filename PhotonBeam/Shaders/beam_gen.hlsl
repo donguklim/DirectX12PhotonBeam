@@ -46,7 +46,6 @@ void RayGen() {
     uint subBeamIndex;
     float3 beamColor = pc_ray.sourceLight;
     
-    const uint max_iter = uint(-1);
     bool keepTracing = true;
     while(keepTracing)
     {

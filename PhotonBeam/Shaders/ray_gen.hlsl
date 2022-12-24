@@ -45,8 +45,8 @@ void RayGen() {
     RayHitPayload prd;
 
     prd.hitValue = (float3)(0);
-    prd.rayOrigin = origin.xyz;
-    prd.rayDirection = direction.xyz;
+    rayOrigin = origin.xyz;
+    rayDirection = direction.xyz;
     prd.weight = (float3)(1.0);
 
     float3 secondRayDir;
@@ -58,8 +58,8 @@ void RayGen() {
     RayDesc rayDesc;
     rayDesc.TMin = 0.001;
     rayDesc.TMax = tMaxDefault;
-    rayDesc.Direction = prd.rayDirection;
-    rayDesc.Origin = prd.rayOrigin;
+    rayDesc.Direction = rayDirection;
+    rayDesc.Origin = rayOrigin;
 
     uint num_iteration = 2;
     for (int i = 0; i < num_iteration; i++)
@@ -83,7 +83,6 @@ void RayGen() {
         // Was a hit not committed?
         if (query.CommittedStatus() == COMMITTED_NOTHING)
         {
-            prd.instanceIndex = -1;
             TraceRay(
                 g_beamAS,
                 RAY_FLAG_FORCE_NON_OPAQUE,
@@ -101,8 +100,9 @@ void RayGen() {
             break;
         }
 
-        prd.instanceIndex = query.CommittedInstanceID();
-        PrimMeshInfo meshInfo = g_meshInfos[prd.instanceIndex];
+        uint instanceID = query.CommittedInstanceID()
+        PrimMeshInfo meshInfo = g_meshInfos[instanceID];
+        prd.istanceID = instanceID;
 
         uint indexOffset = (meshInfo.indexOffset / 3) + query.CommittedPrimitiveIndex();;
         uint vertexOffset = meshInfo.vertexOffset;           // Vertex offset as defined in glTF
@@ -155,18 +155,18 @@ void RayGen() {
         if (i + 1 >= num_iteration)
             break;
 
-        float3 viewingDirection = -prd.rayDirection;
+        float3 viewingDirection = -rayDirection;
         if (material.roughness > 0.01)
             break;
 
-        prd.rayDirection = microfacetReflectedLightSampling(seed, prd.rayDirection, world_normal, material.roughness);
-        if (dot(world_normal, prd.rayDirection) < 0)
+        rayDirection = microfacetReflectedLightSampling(seed, rayDirection, world_normal, material.roughness);
+        if (dot(world_normal, rayDirection) < 0)
             break;
 
-        prd.rayOrigin = prd.rayOrigin - viewingDirection * rayDesc.TMax;
-        prd.rayOrigin += prd.rayDirection;
+        rayOrigin = rayOrigin - viewingDirection * rayDesc.TMax;
+        rayOrigin += rayDirection;
         prd.weight *= exp(-pc_ray.airExtinctCoff * rayDesc.TMax) * pdfWeightedGltfBrdf(
-            prd.rayDirection, 
+            rayDirection, 
             viewingDirection,
             world_normal, 
             albedo, 
