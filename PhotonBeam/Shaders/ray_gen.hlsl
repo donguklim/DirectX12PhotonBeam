@@ -119,7 +119,7 @@ void RayGen() {
         const float3 nrm1 = g_normals[triangleIndex.y];
         const float3 nrm2 = g_normals[triangleIndex.z];
         float3       normal = normalize(nrm0 * barycentrics.x + nrm1 * barycentrics.y + nrm2 * barycentrics.z);
-        const float3 world_normal = normalize(mul((float3x4)(query.CommittedWorldToObject3x4()), normal));
+        const float3 world_normal = normalize(mul((float3x3)query.CommittedWorldToObject3x4(), normal));
         
         prd.hitNormal = world_normal;
 
