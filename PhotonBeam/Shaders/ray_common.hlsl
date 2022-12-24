@@ -14,3 +14,8 @@ struct RayHitPayload
 	float3  weight;
 	uint padding3;
 };
+
+struct HitAttributes
+{
+	float3 beamHit;
+};
