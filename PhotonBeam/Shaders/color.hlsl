@@ -2,11 +2,11 @@
 #include "gltf.hlsl"
 
 
-Texture2D gDiffuseMap[] : register(t0);
+Texture2D gTextures : register(t0);
 
 StructuredBuffer<GltfShadeMaterial> g_material : register(t0, space1);
 
-SamplerState gsamLinearWrap : register(s0);
+SamplerState gSampleLinearWrap : register(s0);
 
 cbuffer cbPerObject : register(b0)
 {
@@ -81,6 +81,14 @@ float4 PS(VertexOut pin) : SV_Target
     float lightIntensity = gLightIntensity / (d * d);
 
     float3 diffuse = computeDiffuse(material, L, normal);
+
+    if (material.pbrBaseColorTexture > -1)
+    {
+        uint txtId = material.pbrBaseColorTexture;
+        float3 diffuseTxt = gTextures.Sample(gSampleLinearWrap, pin.TexC).xyz;
+        diffuse *= diffuseTxt;
+    }
+
     float3 specular = computeSpecular(material, pin.ViewDir, L, normal);
 
     const static float gamma = 1. / 2.2;

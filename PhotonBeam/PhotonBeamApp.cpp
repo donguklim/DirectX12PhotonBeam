@@ -558,16 +558,7 @@ void PhotonBeamApp::BuildDescriptorHeaps()
 }
 
 void PhotonBeamApp::BuildRootSignature()
-{
-    const CD3DX12_STATIC_SAMPLER_DESC linearWrap(
-        2, // shaderRegister
-        D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
-        D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
-        D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
-        D3D12_TEXTURE_ADDRESS_MODE_WRAP
-    );
-
-    
+{    
     CD3DX12_DESCRIPTOR_RANGE texTable;
     texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, m_textures.size(), 0, 0);
 
@@ -578,6 +569,15 @@ void PhotonBeamApp::BuildRootSignature()
     slotRootParameter[1].InitAsConstantBufferView(1);
     slotRootParameter[2].InitAsShaderResourceView(0, 1);
     slotRootParameter[3].InitAsDescriptorTable(1, &texTable, D3D12_SHADER_VISIBILITY_PIXEL);
+
+
+    const CD3DX12_STATIC_SAMPLER_DESC linearWrap(
+        0, // shaderRegister
+        D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
+        D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
+        D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
+        D3D12_TEXTURE_ADDRESS_MODE_WRAP
+    );
 
     // A root signature is an array of root parameters.
     CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(
