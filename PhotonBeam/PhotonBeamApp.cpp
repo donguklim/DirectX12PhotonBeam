@@ -308,6 +308,7 @@ void PhotonBeamApp::Rasterize(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmd
     auto& matBuffer = mGeometries["cornellBox"].get()->MaterialBufferGPU;
 
     mCommandList->SetGraphicsRootShaderResourceView(2, matBuffer->GetGPUVirtualAddress());
+    mCommandList->SetGraphicsRootDescriptorTable(3, mSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
     DrawRenderItems(mCommandList.Get(), mOpaqueRitems);
 
 }
@@ -751,9 +752,10 @@ void PhotonBeamApp::LoadScene()
     mGeometries[geo->Name] = std::move(geo);
 
 }
+
 void PhotonBeamApp::CreateTextures()
 {
-    const static std::array<uint8_t, 4> whiteTexture = { 255, 255, 255, 255 };
+    const static std::array<uint8_t, 4> whiteTexture = { 225, 255, 255, 255 };
     const auto& textureImages = m_gltfScene.GetTextureImages();
     
     size_t numTextures = textureImages.size();
@@ -766,8 +768,8 @@ void PhotonBeamApp::CreateTextures()
         auto texture = std::make_unique<Texture>();
         
         const void* imageData = whiteTexture.data();
-        uint64_t imageWidth = 256;
-        uint32_t imageHeight = 256;
+        uint64_t imageWidth = 1;
+        uint32_t imageHeight = 1;
 
         if (!textureImages.empty() && textureImages[i].image.size() != 0 && textureImages[i].width > 0 && textureImages[i].height > 0)
         {
@@ -776,7 +778,6 @@ void PhotonBeamApp::CreateTextures()
             imageWidth = gltfImage.width;
             imageHeight = gltfImage.height;
         }
-
 
         D3D12_RESOURCE_DESC textureDesc = {};
         textureDesc.MipLevels = 1;
