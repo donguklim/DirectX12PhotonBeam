@@ -68,11 +68,12 @@ void RayGen() {
         // get the t value to surface
         RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> query;
 
+        RayDesc rayDescInline = rayDesc;
         query.TraceRayInline(
             g_surfaceAS,
             RAY_FLAG_NONE, // OR'd with flags above
             0xFF,
-            rayDesc);
+            rayDescInline);
 
         query.Proceed();
 
@@ -153,7 +154,7 @@ void RayGen() {
             rayDesc,
             prd
         );
-
+        prd.weight = prd.weight * 1.0;
         if (i + 1 >= num_iteration)
             break;
 
