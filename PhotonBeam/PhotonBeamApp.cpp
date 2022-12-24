@@ -61,6 +61,8 @@ bool PhotonBeamApp::Initialize()
     if (!D3DApp::Initialize())
         return false;
 
+    CheckRaytracingSupport();
+
     // Reset the command list to prep for initialization commands.
     ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
     mCbvSrvDescriptorSize = md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -100,8 +102,8 @@ bool PhotonBeamApp::Initialize()
 void PhotonBeamApp::CheckRaytracingSupport() {
     D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5 = {};
     ThrowIfFailed(md3dDevice->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &options5, sizeof(options5)));
-    if (options5.RaytracingTier < D3D12_RAYTRACING_TIER_1_0)
-        throw std::runtime_error("Raytracing not supported on device");
+    if (options5.RaytracingTier < D3D12_RAYTRACING_TIER_1_1)
+        throw std::runtime_error("Raytracing Tier 1_1 not supported on device");
 }
 
 void PhotonBeamApp::InitGui()

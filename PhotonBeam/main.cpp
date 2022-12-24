@@ -17,7 +17,7 @@ int main(int, char**)
             return 0;
 
         theApp.InitGui();
-        theApp.CheckRaytracingSupport();
+
 
         return theApp.Run();
     }
