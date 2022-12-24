@@ -1,5 +1,5 @@
 
-struct RayHitPayload
+struct [raypayload] RayHitPayload
 {
 	float3 hitValue : read(caller, anyhit) : write(caller, anyhit);
 	uint instanceID : read(anyhit) : write(caller);
@@ -9,7 +9,6 @@ struct RayHitPayload
 	float hitRoughness : read(anyhit) : write(caller);
 	float3  weight : read(anyhit, caller) : write(caller);
 	float hitMetallic : read(anyhit) : write(caller);
-
 };
 
 struct HitAttributes
