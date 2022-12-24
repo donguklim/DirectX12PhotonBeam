@@ -34,9 +34,20 @@ void RayGen() {
     // Initialize the random number
     uint seed = tea(launchIndex, pc_ray.seed);
 
-    RayHitPayload prd;
-    prd.hitValue = float3(0, 0, 0);
+    const float2 pixelCenter = float2(dispatchIndex.xy) + (float2)(0.5);
+    float2 inUV = pixelCenter / float2(dispatchDimensionSize.xy) * 2.0 - 1.0;
 
+    float4 origin = mul(g_uni.viewInverse, float4(0, 0, 0, 1));
+    float4 target = mul(g_uni.projInverse, float4(inUV, 1, 1));
+    float4 direction = mul(g_uni.viewInverse, float4(normalize(target.xyz), 0));
+
+    RayHitPayload prd;
+
+    prd.hitValue = (float3)(0);
+    prd.rayOrigin = origin.xyz;
+    prd.rayDirection = direction.xyz;
+
+  
 
     RenderTarget[DispatchRaysIndex().xy] = float4(prd.hitValue, 1.0);
 
