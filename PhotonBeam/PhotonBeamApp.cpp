@@ -561,7 +561,7 @@ void PhotonBeamApp::BuildDescriptorHeaps()
 void PhotonBeamApp::BuildRootSignature()
 {    
     CD3DX12_DESCRIPTOR_RANGE texTable;
-    texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, m_textures.size(), 0, 0);
+    texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, PhotonBeamApp::MAX_NUM_TEXTURES, 0, 0);
 
     // Root parameter can be a table, root descriptor or root constants.
     CD3DX12_ROOT_PARAMETER slotRootParameter[4] = {};
@@ -761,6 +761,16 @@ void PhotonBeamApp::CreateTextures()
     size_t numTextures = textureImages.size();
     if (textureImages.empty())
         numTextures = 1;
+
+    if (numTextures > PhotonBeamApp::MAX_NUM_TEXTURES)
+    { 
+        numTextures = PhotonBeamApp::MAX_NUM_TEXTURES;
+        MessageBox(
+            nullptr, 
+            L"Number of texture exeeds the max number of texturs allowed. Modify source code and shader code to increase the maximum", 
+            L"Texture Loading Incomplete", MB_OK
+        );
+    }
 
     m_textures.reserve(numTextures);
     for (size_t i = 0; i < numTextures; i++)

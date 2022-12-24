@@ -2,7 +2,7 @@
 #include "gltf.hlsl"
 
 
-Texture2D gTextures[1] : register(t0);
+Texture2D gTextures[16] : register(t0);
 
 StructuredBuffer<GltfShadeMaterial> g_material : register(t0, space1);
 
