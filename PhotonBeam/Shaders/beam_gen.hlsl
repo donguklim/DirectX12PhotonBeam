@@ -47,8 +47,8 @@ void RayGen() {
     float3 beamColor = pc_ray.sourceLight;
     
     const uint max_iter = uint(-1);
-
-    for(uint i = 0; i < max_iter; i++)
+    bool keepTracing = true;
+    while(keepTracing)
     {
         rayDesc.Direction = prd.rayDirection;
         rayDesc.Origin = prd.rayOrigin;
