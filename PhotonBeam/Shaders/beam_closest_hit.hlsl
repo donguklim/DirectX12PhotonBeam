@@ -19,7 +19,7 @@ StructuredBuffer<PrimMeshInfo> g_meshInfos : register(t6, space0);
 
 Texture2D g_texturesMap[] : register(t0, space1);
 
-SamplerState gsamPointWrap  : register(s0);
+SamplerState gsamLinearWrap  : register(s0);
 
 bool randomScatterOccured(inout BeamHitPayload prd, const in float3 world_position) {
     
@@ -137,7 +137,7 @@ void ClosestHit(inout BeamHitPayload prd, Attributes attribs)
     if (material.pbrBaseColorTexture > -1)
     {
         uint txtId = material.pbrBaseColorTexture;
-        albedo *= g_texturesMap[txtId].SampleLevel(gsamPointWrap, texcoord0, 0).xyz;
+        albedo *= g_texturesMap[txtId].SampleLevel(gsamLinearWrap, texcoord0, 0).xyz;
     }
 
     float3 material_f = pdfWeightedGltfBrdf(
