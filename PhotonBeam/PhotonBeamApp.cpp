@@ -755,9 +755,6 @@ void PhotonBeamApp::CreateTextures()
 {
     const static std::array<uint8_t, 4> whiteTexture = { 255, 255, 255, 255 };
     const auto& textureImages = m_gltfScene.GetTextureImages();
-
-    D3D12_SUBRESOURCE_FOOTPRINT pitchedDesc = {};
-    pitchedDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
     
     size_t numTextures = textureImages.size();
     if (textureImages.empty())
@@ -769,15 +766,13 @@ void PhotonBeamApp::CreateTextures()
         auto texture = std::make_unique<Texture>();
         
         const void* imageData = whiteTexture.data();
-        size_t imageDataSize = whiteTexture.size();
-        uint64_t imageWidth = 1;
-        uint32_t imageHeight = 1;
+        uint64_t imageWidth = 256;
+        uint32_t imageHeight = 256;
 
         if (!textureImages.empty() && textureImages[i].image.size() != 0 && textureImages[i].width > 0 && textureImages[i].height > 0)
         {
             auto& gltfImage = textureImages[i];
             imageData = gltfImage.image.data();
-            imageDataSize = gltfImage.image.size();
             imageWidth = gltfImage.width;
             imageHeight = gltfImage.height;
         }
@@ -829,7 +824,7 @@ void PhotonBeamApp::CreateTextures()
 
         D3D12_SUBRESOURCE_DATA textureData = {};
         textureData.pData = imageData;
-        textureData.RowPitch = imageHeight * 4;
+        textureData.RowPitch = imageWidth * 4;
         textureData.SlicePitch = textureData.RowPitch * imageHeight;
 
         UpdateSubresources(
