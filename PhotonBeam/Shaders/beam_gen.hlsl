@@ -25,9 +25,11 @@ void RayGen() {
     BeamHitPayload prd;
 
     // Initialize the random number
-    prd.seed = tea(launchIndex, pc_ray.seed);
+    uint seed = tea(launchIndex, pc_ray.seed);
+    prd.rayDirection = uniformSamplingSphere(seed);
+    prd.seed = seed;
     prd.rayOrigin = pc_ray.lightPosition;
-    prd.rayDirection = uniformSamplingSphere(prd.seed);
+   
     prd.weight = float3(0, 0, 0);
 
     float3 rayOrigin = prd.rayOrigin;
@@ -84,7 +86,7 @@ void RayGen() {
             num_split += 1;
 
         // this value must be either 0 or 1
-        uint numSurfacePhoton = (prd.instanceID >= 0) ? 1 : 0;
+        uint numSurfacePhoton = (prd.isHit > 0) ? 1 : 0;
 
         if (launchIndex >= pc_ray.numBeamSources)
             num_split = 0;

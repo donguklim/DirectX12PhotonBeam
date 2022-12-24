@@ -60,7 +60,7 @@ Microsoft::WRL::ComPtr<IDxcBlob> raytrace_helper::CompileShaderLibrary(LPCWSTR f
             pTextBlob.Get(),
             fileName, 
             L"", 
-            L"lib_6_3", 
+            L"lib_6_7", 
             nullptr, 
             0, 
             nullptr, 
