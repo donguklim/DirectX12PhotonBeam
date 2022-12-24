@@ -46,8 +46,9 @@ void RayGen() {
     uint subBeamIndex;
     float3 beamColor = pc_ray.sourceLight;
     
+    const uint max_iter = uint(-1);
 
-    while (true)
+    for(uint i = 0; i < max_iter; i++)
     {
         rayDesc.Direction = prd.rayDirection;
         rayDesc.Origin = prd.rayOrigin;
@@ -74,7 +75,7 @@ void RayGen() {
 
         InterlockedAdd(g_photonBeamCounters[0].beamCount, 1, beamIndex);
         if (beamIndex >= pc_ray.maxNumBeams)
-            break;
+            return;
 
         g_photonBeams[beamIndex] = newBeam;
 
