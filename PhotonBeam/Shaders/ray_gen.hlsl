@@ -45,8 +45,6 @@ void RayGen() {
     RayHitPayload prd;
 
     prd.hitValue = (float3)(0);
-    rayOrigin = origin.xyz;
-    rayDirection = direction.xyz;
     prd.weight = (float3)(1.0);
 
     float3 secondRayDir;
@@ -54,6 +52,9 @@ void RayGen() {
     float halfVecPdfVal;
     float rayPdfVal;
     float tMaxDefault = 10000.0;
+
+    float3 rayOrigin = origin.xyz;
+    float3 rayDirection = direction.xyz;
 
     RayDesc rayDesc;
     rayDesc.TMin = 0.001;
@@ -65,8 +66,7 @@ void RayGen() {
     for (int i = 0; i < num_iteration; i++)
     {
         // get the t value to surface
-        RayQuery<RAY_FLAG_FORCE_OPAQUE |
-            RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> query;
+        RayQuery<RAY_FLAG_CULL_NON_OPAQUE | RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES | RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> query;
 
 
         query.TraceRayInline(
@@ -83,6 +83,7 @@ void RayGen() {
         // Was a hit not committed?
         if (query.CommittedStatus() == COMMITTED_NOTHING)
         {
+            prd.isHit = 0;
             TraceRay(
                 g_beamAS,
                 RAY_FLAG_FORCE_NON_OPAQUE,
@@ -100,9 +101,11 @@ void RayGen() {
             break;
         }
 
-        uint instanceID = query.CommittedInstanceID()
+        prd.isHit = 1;
+
+        uint instanceID = query.CommittedInstanceID();
         PrimMeshInfo meshInfo = g_meshInfos[instanceID];
-        prd.istanceID = instanceID;
+        prd.instanceID = instanceID;
 
         uint indexOffset = (meshInfo.indexOffset / 3) + query.CommittedPrimitiveIndex();;
         uint vertexOffset = meshInfo.vertexOffset;           // Vertex offset as defined in glTF
