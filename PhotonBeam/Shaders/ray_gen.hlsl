@@ -35,7 +35,7 @@ void RayGen() {
     uint seed = tea(launchIndex, pc_ray.seed);
 
     const float2 pixelCenter = float2(dispatchIndex.xy) + (float2)(0.5);
-    float2 inUV = pixelCenter / float2(dispatchDimensionSize.xy) * 2.0 - 1.0;
+    const float2 inUV = pixelCenter / float2(dispatchDimensionSize.xy) * 2.0 - 1.0;
 
     float4 origin = mul(g_uni.viewInverse, float4(0, 0, 0, 1));
     float4 target = mul(g_uni.projInverse, float4(inUV, 1, 1));
@@ -46,8 +46,14 @@ void RayGen() {
     prd.hitValue = (float3)(0);
     prd.rayOrigin = origin.xyz;
     prd.rayDirection = direction.xyz;
+    prd.weight = (float3)(1.0);
 
-  
+    float3 secondRayDir;
+    float       vDotN = 0;
+    float halfVecPdfVal;
+    float rayPdfVal;
+
+   
 
     RenderTarget[DispatchRaysIndex().xy] = float4(prd.hitValue, 1.0);
 
