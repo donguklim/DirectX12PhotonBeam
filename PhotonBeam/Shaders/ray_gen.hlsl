@@ -65,24 +65,23 @@ void RayGen() {
     for (int i = 0; i < num_iteration; i++)
     {
         // get the t value to surface
-        rayQueryEXT rayQuery;
         RayQuery<RAY_FLAG_FORCE_OPAQUE |
-            RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> q;
+            RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH> query;
 
 
-        q.TraceRayInline(
+        query.TraceRayInline(
             g_surfaceAS,
             RAY_FLAG_NONE, // OR'd with flags above
             0xFF,
             rayDesc);
 
-        q.Proceed();
+        query.Proceed();
 
-        rayDesc.TMax = CommittedRayT();
+        rayDesc.TMax = query.CommittedRayT();
 
         // Examine and act on the result of the traversal.
         // Was a hit not committed?
-        if (q.CommittedStatus()) == COMMITTED_NOTHING)
+        if (query.CommittedStatus() == COMMITTED_NOTHING)
         {
             prd.instanceIndex = -1;
             TraceRay(
@@ -102,60 +101,45 @@ void RayGen() {
             break;
         }
 
-        prd.instanceIndex = q.CommittedInstanceID();
-        PrimMeshInfo pinfo = primInfo[prd.instanceIndex];
+        prd.instanceIndex = query.CommittedInstanceID();
+        PrimMeshInfo meshInfo = g_meshInfos[prd.instanceIndex];
 
-        uint indexOffset = (pinfo.indexOffset / 3) + q.CommittedPrimitiveIndex();;
-        uint vertexOffset = pinfo.vertexOffset;           // Vertex offset as defined in glTF
-        uint materialIndex = max(0, pinfo.materialIndex);  // material of primitive mesh
+        uint indexOffset = (meshInfo.indexOffset / 3) + query.CommittedPrimitiveIndex();;
+        uint vertexOffset = meshInfo.vertexOffset;           // Vertex offset as defined in glTF
+        uint materialIndex = max(0, meshInfo.materialIndex);  // material of primitive mesh
 
         // Getting the 3 indices of the triangle (local)
         uint3 triangleIndex = g_indices[indexOffset];
         triangleIndex += (uint3)(vertexOffset);  // (global)
 
-        float3 barycentrics = float3(0.0, q.CandidateTriangleBarycentrics);
+        float3 barycentrics = float3(0.0, query.CandidateTriangleBarycentrics());
 
         // Normal
         const float3 nrm0 = g_normals[triangleIndex.x];
         const float3 nrm1 = g_normals[triangleIndex.y];
         const float3 nrm2 = g_normals[triangleIndex.z];
         float3       normal = normalize(nrm0 * barycentrics.x + nrm1 * barycentrics.y + nrm2 * barycentrics.z);
-        const float3 world_normal = normalize(mul((float3x4)q.CommittedWorldToObject3x4(), normal));
+        const float3 world_normal = normalize(mul((float3x4)(query.CommittedWorldToObject3x4()), normal));
         
         prd.hitNormal = world_normal;
-
-        const float2 uv0 = texCoords.t[triangleIndex.x];
-        const float2 uv1 = texCoords.t[triangleIndex.y];
-        const float2 uv2 = texCoords.t[triangleIndex.z];
-        const float2 texcoord0 = uv0 * barycentrics.x + uv1 * barycentrics.y + uv2 * barycentrics.z;
 
         GltfShadeMaterial material = g_materials[materialIndex];
         float3  albedo = material.pbrBaseColorFactor.xyz;
 
         if (material.pbrBaseColorTexture > -1)
         {
+            const float2 uv0 = g_texCoords[triangleIndex.x];
+            const float2 uv1 = g_texCoords[triangleIndex.y];
+            const float2 uv2 = g_texCoords[triangleIndex.z];
+            const float2 texcoord0 = uv0 * barycentrics.x + uv1 * barycentrics.y + uv2 * barycentrics.z;
+
             uint txtId = material.pbrBaseColorTexture;
-            albedo *= texture(texturesMap[nonuniformEXT(txtId)], texcoord0).xyz;
             albedo *= g_texturesMap[txtId].SampleLevel(gsamLinearWrap, texcoord0, 0).xyz;
         }
 
         prd.hitAlbedo = albedo;
         prd.hitMetallic = material.metallic;
         prd.hitRoughness = material.roughness;
-
-
-        traceRayEXT(beamAS,        // acceleration structure
-            rayFlags,          // rayFlags
-            0xFF,              // cullMask
-            0,                 // sbtRecordOffset
-            0,                 // sbtRecordStride
-            0,                 // missIndex
-            prd.rayOrigin,     // ray origin
-            tMin,              // ray min range
-            prd.rayDirection,  // ray direction
-            tMax,              // ray max range
-            0                  // payload (location = 0)
-        );
 
         TraceRay(
             g_beamAS,
@@ -181,7 +165,7 @@ void RayGen() {
 
         prd.rayOrigin = prd.rayOrigin - viewingDirection * rayDesc.TMax;
         prd.rayOrigin += prd.rayDirection;
-        prd.weight *= exp(-pc_ray.airExtinctCoff * tMax) * pdfWeightedGltfBrdf(
+        prd.weight *= exp(-pc_ray.airExtinctCoff * rayDesc.TMax) * pdfWeightedGltfBrdf(
             prd.rayDirection, 
             viewingDirection,
             world_normal, 
