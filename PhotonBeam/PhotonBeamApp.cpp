@@ -14,10 +14,10 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include "PhotonBeamApp.hpp"
-#include "imgui.h"
-#include "imgui_impl_win32.h"
-#include "imgui_impl_dx12.h"
-#include "imgui_helper.h"
+#include <imgui.h>
+#include <imgui_impl_win32.h>
+#include <imgui_impl_dx12.h>
+#include <imgui_helper.h>
 #include "raytraceHelper.hpp"
 
 #include "Shaders/host_device.h"
@@ -537,7 +537,7 @@ void PhotonBeamApp::BuildDescriptorHeaps()
         IID_PPV_ARGS(&mGuiDescriptorHeap)));
 
     D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-    srvHeapDesc.NumDescriptors = m_textures.size();
+    srvHeapDesc.NumDescriptors = static_cast<UINT>(m_textures.size());
     srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSrvDescriptorHeap)));
@@ -562,7 +562,7 @@ void PhotonBeamApp::BuildDescriptorHeaps()
 
 void PhotonBeamApp::BuildRootSignature()
 {    
-    CD3DX12_DESCRIPTOR_RANGE texTable;
+    CD3DX12_DESCRIPTOR_RANGE texTable{};
     texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, PhotonBeamApp::MAX_NUM_TEXTURES, 0, 0);
 
     // Root parameter can be a table, root descriptor or root constants.
@@ -841,7 +841,7 @@ void PhotonBeamApp::CreateTextures()
         );
 
 
-        D3D12_SUBRESOURCE_DATA textureData = {};
+        D3D12_SUBRESOURCE_DATA textureData{};
         textureData.pData = imageData;
         textureData.RowPitch = imageWidth * 4;
         textureData.SlicePitch = textureData.RowPitch * imageHeight;
