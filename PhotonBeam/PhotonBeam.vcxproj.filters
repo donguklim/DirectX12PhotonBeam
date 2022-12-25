@@ -22,6 +22,21 @@
     <Filter Include="DXR helpers">
       <UniqueIdentifier>{0798450c-dd14-42b2-8d9f-0ba0aa28145d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{4c0115bd-9548-4e35-9742-8330b212b756}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Rasterization">
+      <UniqueIdentifier>{f0780e6b-322b-41ad-a10e-e4c8e5401ea9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Raytracing">
+      <UniqueIdentifier>{e7f0f9f9-69fb-46b0-8285-6da2bf8d321e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Raytracing\Beam Tracing">
+      <UniqueIdentifier>{03af8f29-3538-466b-9efa-249c839e5924}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Raytracing\Camera Ray Tracing">
+      <UniqueIdentifier>{7beb7927-b744-4e5c-b337-16cab8d535cf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\DDSTextureLoader.h">
@@ -167,5 +182,49 @@
     <ClCompile Include="raytraceHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shaders\color.hlsl">
+      <Filter>Shaders\Rasterization</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\beam_closest_hit.hlsl">
+      <Filter>Shaders\Raytracing\Beam Tracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\beam_common.hlsl">
+      <Filter>Shaders\Raytracing\Beam Tracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\beam_gen.hlsl">
+      <Filter>Shaders\Raytracing\Beam Tracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\beam_miss.hlsl">
+      <Filter>Shaders\Raytracing\Beam Tracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\ray_beam_any_hit.hlsl">
+      <Filter>Shaders\Raytracing\Camera Ray Tracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\ray_beam_int.hlsl">
+      <Filter>Shaders\Raytracing\Camera Ray Tracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\ray_common.hlsl">
+      <Filter>Shaders\Raytracing\Camera Ray Tracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\ray_gen.hlsl">
+      <Filter>Shaders\Raytracing\Camera Ray Tracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\ray_surface_any_hit.hlsl">
+      <Filter>Shaders\Raytracing\Camera Ray Tracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\ray_surface_int.hlsl">
+      <Filter>Shaders\Raytracing\Camera Ray Tracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\sampling.hlsl">
+      <Filter>Shaders\Raytracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Gltf.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\post_color.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
