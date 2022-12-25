@@ -677,6 +677,8 @@ void PhotonBeamApp::BuildShadersAndInputLayout()
     m_rayTraceShaders["rayBeamInt"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_beam_int.hlsl");
     m_rayTraceShaders["rayBeamAnyHit"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_beam_any_hit.hlsl");
     m_rayTraceShaders["rayGen"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_gen.hlsl");
+
+    m_rayTraceShaders["raySurfaceInt"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_surface_int.hlsl");
 }
 
 void PhotonBeamApp::LoadScene()
