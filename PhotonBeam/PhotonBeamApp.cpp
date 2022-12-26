@@ -667,8 +667,8 @@ void PhotonBeamApp::BuildShadersAndInputLayout()
         { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 2, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
     };
 
-    mShaders["postVS"] = d3dUtil::CompileShader(L"Shaders\\post_color.hlsl", nullptr, "VS", "vs_5_1");
-    mShaders["postPS"] = d3dUtil::CompileShader(L"Shaders\\post_color.hlsl", nullptr, "PS", "ps_5_1");
+    mShaders["postVS"] = d3dUtil::CompileShader(L"Shaders\\PostColor.hlsl", nullptr, "VS", "vs_5_1");
+    mShaders["postPS"] = d3dUtil::CompileShader(L"Shaders\\PostColor.hlsl", nullptr, "PS", "ps_5_1");
 
     m_rayTraceShaders["beamMiss"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\beam_miss.hlsl");
     m_rayTraceShaders["beamCHit"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\beam_closest_hit.hlsl");
