@@ -3,8 +3,8 @@
 #define PHOTONBEAM_BEAM_GEN
 
 #include "BeamCommon.hlsli"
-#include "RayTracingSampling.hlsli"
-#include "RaytracingHlslCompat.h"
+#include "..\util\RayTracingSampling.hlsli"
+#include "..\RaytracingHlslCompat.h"
 
 RaytracingAccelerationStructure g_scene : register(t0);
 ConstantBuffer<PushConstantRay> pc_ray : register(b0);

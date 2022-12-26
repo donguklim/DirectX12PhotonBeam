@@ -3,8 +3,8 @@
 #define PHOTONBEAM_RAY_GEN
 
 #include "RayCommon.hlsli"
-#include "RayTracingSampling.hlsli"
-#include "RaytracingHlslCompat.h"
+#include "..\util\RayTracingSampling.hlsli"
+#include "..\RaytracingHlslCompat.h"
 
 RaytracingAccelerationStructure g_beamAS : register(t0);
 RaytracingAccelerationStructure g_surfaceAS : register(t1);

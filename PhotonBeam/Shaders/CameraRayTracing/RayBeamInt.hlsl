@@ -3,8 +3,8 @@
 #define PHOTONBEAM_RAY_BEAM_INT
 
 #include "RayCommon.hlsli"
-#include "RayTracingSampling.hlsli"
-#include "RaytracingHlslCompat.h"
+#include "..\util\RayTracingSampling.hlsli"
+#include "..\RaytracingHlslCompat.h"
 
 RWStructuredBuffer<PhotonBeam> g_photonBeams: register(u0, space0);
 

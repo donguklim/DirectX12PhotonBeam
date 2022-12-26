@@ -4,7 +4,7 @@
 #ifndef RASTERIAZTION_WITHOUT_PHOTON_BEAM_HLSL
 #define RASTERIAZTION_WITHOUT_PHOTON_BEAM_HLSL
 
-#include "Gltf.hlsli"
+#include "util\Gltf.hlsli"
 
 
 Texture2D gTextures[16] : register(t0);

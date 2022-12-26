@@ -2,10 +2,11 @@
 #ifndef PHOTONBEAM_BEAM_CLOSE_HIT
 #define PHOTONBEAM_BEAM_CLOSE_HIT
 
-#include "Gltf.hlsli"
 #include "BeamCommon.hlsli"
-#include "RayTracingSampling.hlsli"
-#include "RaytracingHlslCompat.h"
+#include "..\util\Gltf.hlsli"
+#include "..\util\RayTracingSampling.hlsli"
+#include "..\RaytracingHlslCompat.h"
+
 
 
 ConstantBuffer<PushConstantRay> pc_ray : register(b0);

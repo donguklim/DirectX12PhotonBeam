@@ -3,8 +3,8 @@
 #define PHOTONBEAM_RAY_SURFACE_ANY_HIT
 
 #include "RayCommon.hlsli"
-#include "RayTracingSampling.hlsli"
-#include "RaytracingHlslCompat.h"
+#include "..\util\RayTracingSampling.hlsli"
+#include "..\RaytracingHlslCompat.h"
 
 
 ConstantBuffer<PushConstantRay> pc_ray : register(b0);
