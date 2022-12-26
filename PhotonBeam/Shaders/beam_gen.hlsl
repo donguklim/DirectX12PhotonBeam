@@ -1,6 +1,6 @@
 
 #include "beam_common.hlsl"
-#include "Sampling.hlsli"
+#include "RayTracingSampling.hlsli"
 #include "host_device.h"
 
 RaytracingAccelerationStructure g_scene : register(t0);

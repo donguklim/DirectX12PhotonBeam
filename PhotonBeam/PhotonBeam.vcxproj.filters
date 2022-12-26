@@ -223,7 +223,7 @@
     <FxCompile Include="Shaders\Gltf.hlsli">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\Sampling.hlsli">
+    <FxCompile Include="Shaders\RayTracingSampling.hlsli">
       <Filter>Shaders\Util</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\PostColor.hlsl">

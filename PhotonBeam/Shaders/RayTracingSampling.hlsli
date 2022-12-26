@@ -1,5 +1,8 @@
 
 
+#ifndef RAYTRACINGSAMPLING_H
+#define RAYTRACINGSAMPLING_H
+
 uint tea(uint val0, uint val1)
 {
     uint v0 = val0;
@@ -274,3 +277,5 @@ float3 pdfWeightedGltfBrdf(
     float3 f_specular = frsnel * gVal * (4 * hDotL);
     return f_specular + f_diffuse;
 }
+
+#endif // RAYTRACINGSAMPLING_H
