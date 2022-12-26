@@ -139,4 +139,19 @@ struct Aabb
 	XMFLOAT3 minimum;
 	XMFLOAT3 maximum;
 };
+
+namespace RaytracingShaders {
+	enum Enum {
+		BeamGen = 0,
+		BeamCHit,
+		BeamMiss,
+		RayGen,
+		RayBeamInt,
+		RayBeamAnyHit,
+		RaySurfaceInt,
+		RaySurfaceAnyInt,
+		Count
+	};
+}
+
 #endif
