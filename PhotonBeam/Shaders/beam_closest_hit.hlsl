@@ -1,7 +1,7 @@
 #include "Gltf.hlsli"
 #include "beam_common.hlsl"
 #include "RayTracingSampling.hlsli"
-#include "host_device.h"
+#include "RaytracingHlslCompat.h"
 
 
 

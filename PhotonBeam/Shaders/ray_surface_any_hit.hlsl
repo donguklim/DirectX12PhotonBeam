@@ -1,7 +1,7 @@
 
 #include "ray_common.hlsl"
 #include "RayTracingSampling.hlsli"
-#include "host_device.h"
+#include "RaytracingHlslCompat.h"
 
 
 ConstantBuffer<PushConstantRay> pc_ray : register(b0);

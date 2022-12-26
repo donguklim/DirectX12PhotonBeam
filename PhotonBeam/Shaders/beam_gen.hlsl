@@ -1,7 +1,7 @@
 
 #include "beam_common.hlsl"
 #include "RayTracingSampling.hlsli"
-#include "host_device.h"
+#include "RaytracingHlslCompat.h"
 
 RaytracingAccelerationStructure g_scene : register(t0);
 ConstantBuffer<PushConstantRay> pc_ray : register(b0);

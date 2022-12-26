@@ -165,7 +165,7 @@
     <ClInclude Include="GltfScene.hpp" />
     <ClInclude Include="PhotonBeamApp.hpp" />
     <ClInclude Include="raytraceHelper.hpp" />
-    <ClInclude Include="Shaders\host_device.h" />
+    <ClInclude Include="Shaders\RaytracingHlslCompat.h" />
     <ClInclude Include="Shaders\util\HlslCompat.h" />
   </ItemGroup>
   <ItemGroup>

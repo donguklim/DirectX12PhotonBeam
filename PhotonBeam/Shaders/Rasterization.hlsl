@@ -1,8 +1,12 @@
 
-typedef uint uint32_t;
-typedef uint2 uint64_t;
+// typedef statements for compatibility with shader model 6
+
+#ifndef RASTERIAZTION_WITHOUT_PHOTON_BEAM_HLSL
+#define RASTERIAZTION_WITHOUT_PHOTON_BEAM_HLSL
+#define LOWER_THAN_SHADER_MODEL_6
 
 #include "Gltf.hlsli"
+
 
 Texture2D gTextures[16] : register(t0);
 
@@ -98,3 +102,5 @@ float4 PS(VertexOut pin) : SV_Target
 
     return pow(float4(lightIntensity * (diffuse + specular), 1), gammaVec);
 }
+
+#endif

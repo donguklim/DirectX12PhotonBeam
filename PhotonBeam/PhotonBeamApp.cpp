@@ -20,7 +20,7 @@
 #include <imgui_helper.h>
 #include "raytraceHelper.hpp"
 
-#include "Shaders/host_device.h"
+#include "Shaders/RaytracingHlslCompat.h"
 
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;

@@ -1,6 +1,16 @@
+/*
 
-#ifndef COMMON_HOST_DEVICE
-#define COMMON_HOST_DEVICE
+This header file is compatible with HLSL shader model version 6(which have uint32_t, and uint64_t types) and c++.
+For HLSL code that needs to be compiled with shader model version lower than 6, 
+bellow define statement must be made before importing this file
+
+	#define LOWER_THAN_SHADER_MODEL_6
+
+*/
+
+
+#ifndef RAYTRACINGHLSLCOMPAT_H
+#define RAYTRACINGHLSLCOMPAT_H
 
 #ifdef __cplusplus
 #include <DirectXMath.h>
@@ -9,6 +19,11 @@
 using namespace DirectX;
 #else
 #include "util\HlslCompat.h"
+#endif
+
+#ifdef LOWER_THAN_SHADER_MODEL_6
+typedef uint uint32_t;
+typedef uint2 uint64_t;
 #endif
 
 

@@ -1,7 +1,7 @@
 
 #include "ray_common.hlsl"
 #include "RayTracingSampling.hlsli"
-#include "host_device.h"
+#include "RaytracingHlslCompat.h"
 
 RWStructuredBuffer<PhotonBeam> g_photonBeams: register(u0, space0);
 
