@@ -1,5 +1,5 @@
 
-#include "beam_common.hlsl"
+#include "BeamCommon.hlsli"
 #include "RayTracingSampling.hlsli"
 #include "RaytracingHlslCompat.h"
 

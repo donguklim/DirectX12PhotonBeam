@@ -1,4 +1,7 @@
 
+#ifndef PHOTONBEAM_COMMON_H
+#define PHOTONBEAM_COMMON_H
+
 struct[raypayload] BeamHitPayload
 {
 
@@ -16,3 +19,5 @@ struct Attributes
 {
 	float2 bary;
 };
+
+#endif

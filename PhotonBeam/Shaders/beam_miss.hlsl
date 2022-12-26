@@ -1,6 +1,6 @@
 
 
-#include "beam_common.hlsl"
+#include "BeamCommon.hlsli"
 
 [shader("miss")]
 void Miss(inout BeamHitPayload prd : SV_RayPayload)
