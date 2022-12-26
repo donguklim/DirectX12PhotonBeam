@@ -1,6 +1,6 @@
 
 #include "ray_common.hlsl"
-#include "sampling.hlsl"
+#include "Sampling.hlsli"
 #include "host_device.h"
 
 RWStructuredBuffer<PhotonBeam> g_photonBeams: register(u0, space0);

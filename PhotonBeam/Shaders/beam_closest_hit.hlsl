@@ -1,6 +1,6 @@
-#include "gltf.hlsl"
+#include "Gltf.hlsli"
 #include "beam_common.hlsl"
-#include "sampling.hlsl"
+#include "Sampling.hlsli"
 #include "host_device.h"
 
 

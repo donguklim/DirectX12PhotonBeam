@@ -220,14 +220,14 @@
     <FxCompile Include="Shaders\ray_surface_int.hlsl">
       <Filter>Shaders\Raytracing\Camera Ray Tracing</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\Gltf.hlsl">
+    <FxCompile Include="Shaders\Gltf.hlsli">
       <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Sampling.hlsli">
+      <Filter>Shaders\Util</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\PostColor.hlsl">
       <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\sampling.hlsl">
-      <Filter>Shaders\Util</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

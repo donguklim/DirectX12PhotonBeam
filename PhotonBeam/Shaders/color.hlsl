@@ -1,5 +1,5 @@
 
-#include "gltf.hlsl"
+#include "Gltf.hlsli"
 
 
 Texture2D gTextures[16] : register(t0);
