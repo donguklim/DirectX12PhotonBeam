@@ -1,5 +1,5 @@
 
-#include "ray_common.hlsl"
+#include "RayCommon.hlsli"
 #include "RayTracingSampling.hlsli"
 #include "RaytracingHlslCompat.h"
 

@@ -1,4 +1,7 @@
 
+#ifndef PHOTONBEAM_RAY_COMMON_H
+#define PHOTONBEAM_RAY_COMMON_H
+
 struct [raypayload] RayHitPayload
 {
 	float3 hitValue : read(caller, anyhit) : write(caller, anyhit);
@@ -15,3 +18,5 @@ struct HitAttributes
 {
 	float3 beamHit;
 };
+
+#endif
