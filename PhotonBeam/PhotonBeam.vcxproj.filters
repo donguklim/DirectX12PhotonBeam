@@ -187,7 +187,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Shaders\color.hlsl">
+    <FxCompile Include="Shaders\Rasterization.hlsl">
       <Filter>Shaders\Rasterization</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\beam_closest_hit.hlsl">

@@ -657,8 +657,8 @@ void PhotonBeamApp::BuildPostRootSignature()
 
 void PhotonBeamApp::BuildShadersAndInputLayout()
 {
-    mShaders["standardVS"] = d3dUtil::CompileShader(L"Shaders\\color.hlsl", nullptr, "VS", "vs_5_1");
-    mShaders["opaquePS"] = d3dUtil::CompileShader(L"Shaders\\color.hlsl", nullptr, "PS", "ps_5_1");
+    mShaders["standardVS"] = d3dUtil::CompileShader(L"Shaders\\Rasterization.hlsl", nullptr, "VS", "vs_5_1");
+    mShaders["opaquePS"] = d3dUtil::CompileShader(L"Shaders\\Rasterization.hlsl", nullptr, "PS", "ps_5_1");
 
     mInputLayout =
     {
