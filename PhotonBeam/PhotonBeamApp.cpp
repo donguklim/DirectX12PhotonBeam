@@ -75,6 +75,7 @@ bool PhotonBeamApp::Initialize()
     CreateTextures();
     BuildRootSignature();
     BuildPostRootSignature();
+    BuildRayTraceRootSignature();
     BuildShadersAndInputLayout();
 
     BuildRenderItems();
@@ -609,6 +610,11 @@ void PhotonBeamApp::BuildRootSignature()
         serializedRootSig->GetBufferPointer(),
         serializedRootSig->GetBufferSize(),
         IID_PPV_ARGS(mRootSignature.GetAddressOf())));
+}
+
+void PhotonBeamApp::BuildRayTraceRootSignature()
+{
+
 }
 
 void PhotonBeamApp::BuildPostRootSignature()
