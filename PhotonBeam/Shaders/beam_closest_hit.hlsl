@@ -7,7 +7,6 @@
 
 ConstantBuffer<PushConstantRay> pc_ray : register(b0);
 
-RaytracingAccelerationStructure g_scene : register(t0);
 // Triangle resources
 StructuredBuffer<float3> g_vertices : register(t1, space0);
 StructuredBuffer<float3> g_normals : register(t2, space0);

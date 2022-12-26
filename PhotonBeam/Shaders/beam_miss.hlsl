@@ -1,4 +1,5 @@
 
+
 #include "beam_common.hlsl"
 
 [shader("miss")]
