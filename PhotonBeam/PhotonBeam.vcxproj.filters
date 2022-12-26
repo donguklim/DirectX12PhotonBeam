@@ -90,9 +90,6 @@
     <ClInclude Include="raytraceHelper.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Shaders\RaytracingHlslCompat.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Common\d3dApp.cpp">
