@@ -1,4 +1,7 @@
 
+#ifndef PHOTONBEAM_RAY_GEN
+#define PHOTONBEAM_RAY_GEN
+
 #include "RayCommon.hlsli"
 #include "RayTracingSampling.hlsli"
 #include "RaytracingHlslCompat.h"
@@ -183,3 +186,5 @@ void RayGen() {
     RenderTarget[DispatchRaysIndex().xy] = float4(prd.hitValue, 1.0);
 
 }
+
+#endif

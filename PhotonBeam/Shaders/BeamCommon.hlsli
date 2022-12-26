@@ -1,6 +1,6 @@
 
-#ifndef PHOTONBEAM_COMMON_H
-#define PHOTONBEAM_COMMON_H
+#ifndef PHOTONBEAM_BEAM_COMMON_H
+#define PHOTONBEAM_BEAM_COMMON_H
 
 struct[raypayload] BeamHitPayload
 {

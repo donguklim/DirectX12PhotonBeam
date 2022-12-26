@@ -1,4 +1,7 @@
 
+#ifndef PHOTONBEAM_RAY_BEAM_INT
+#define PHOTONBEAM_RAY_BEAM_INT
+
 #include "RayCommon.hlsli"
 #include "RayTracingSampling.hlsli"
 #include "RaytracingHlslCompat.h"
@@ -103,3 +106,5 @@ void RayInt()
     attrs.beamHit = beamPoint;
     ReportHit(length(rayPoint - rayOrigin), 0, attrs);
 }
+
+#endif

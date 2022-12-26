@@ -1,4 +1,7 @@
 
+#ifndef PHOTONBEAM_BEAM_GEN
+#define PHOTONBEAM_BEAM_GEN
+
 #include "BeamCommon.hlsli"
 #include "RayTracingSampling.hlsli"
 #include "RaytracingHlslCompat.h"
@@ -178,3 +181,5 @@ void RayGen() {
 
     }
 }
+
+#endif

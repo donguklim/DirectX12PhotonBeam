@@ -1,4 +1,7 @@
 
+#ifndef PHOTONBEAM_RAY_BEAM_ANY_HIT
+#define PHOTONBEAM_RAY_BEAM_ANY_HIT
+
 #include "RayCommon.hlsli"
 #include "RayTracingSampling.hlsli"
 #include "RaytracingHlslCompat.h"
@@ -46,3 +49,5 @@ void RayAnyHit(inout RayHitPayload prd, HitAttributes attrs) {
     IgnoreHit();
 
 }
+
+#endif

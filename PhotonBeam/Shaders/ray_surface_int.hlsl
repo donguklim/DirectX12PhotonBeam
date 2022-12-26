@@ -1,4 +1,7 @@
 
+#ifndef PHOTONBEAM_RAY_SURFACE_INT
+#define PHOTONBEAM_RAY_SURFACe_INT
+
 #include "RayCommon.hlsli"
 #include "RayTracingSampling.hlsli"
 #include "RaytracingHlslCompat.h"
@@ -23,3 +26,5 @@ void RayInt()
     attrs.beamHit = beam.endPos;
     ReportHit(RayTCurrent(), 0, attrs);
 }
+
+#endif
