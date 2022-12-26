@@ -592,6 +592,7 @@ void PhotonBeamApp::BuildRootSignature()
     );
 
     // create a root signature with a single slot which points to a descriptor range consisting of a single constant buffer
+    //IDxcBlob
     ComPtr<ID3DBlob> serializedRootSig = nullptr;
     ComPtr<ID3DBlob> errorBlob = nullptr;
     HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
@@ -660,6 +661,9 @@ void PhotonBeamApp::BuildShadersAndInputLayout()
     mShaders["standardVS"] = d3dUtil::CompileShader(L"Shaders\\Rasterization.hlsl", nullptr, "VS", "vs_5_1");
     mShaders["opaquePS"] = d3dUtil::CompileShader(L"Shaders\\Rasterization.hlsl", nullptr, "PS", "ps_5_1");
 
+    //m_rayTraceShaders["standardVS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\Rasterization.hlsl", L"vs_6_6", L"VS");
+    //m_rayTraceShaders["opaquePS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\Rasterization.hlsl", L"ps_6_6", L"PS");
+
     mInputLayout =
     {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -670,15 +674,18 @@ void PhotonBeamApp::BuildShadersAndInputLayout()
     mShaders["postVS"] = d3dUtil::CompileShader(L"Shaders\\PostColor.hlsl", nullptr, "VS", "vs_5_1");
     mShaders["postPS"] = d3dUtil::CompileShader(L"Shaders\\PostColor.hlsl", nullptr, "PS", "ps_5_1");
 
-    m_rayTraceShaders["beamMiss"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\beam_miss.hlsl");
-    m_rayTraceShaders["beamCHit"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\beam_closest_hit.hlsl");
-    m_rayTraceShaders["beamGen"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\beam_gen.hlsl");
+    //m_rayTraceShaders["postVS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"vs_6_6", L"VS");
+    //m_rayTraceShaders["postPS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"ps_6_6", L"PS");
 
-    m_rayTraceShaders["rayBeamAnyHit"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_beam_any_hit.hlsl");
-    m_rayTraceShaders["rayBeamInt"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_beam_int.hlsl");
-    m_rayTraceShaders["raySurfaceAnyInt"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_surface_any_hit.hlsl");
-    m_rayTraceShaders["raySurfaceInt"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_surface_int.hlsl");
-    m_rayTraceShaders["rayGen"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_gen.hlsl");
+    m_rayTraceShaders["beamMiss"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\beam_miss.hlsl", L"lib_6_7");
+    m_rayTraceShaders["beamCHit"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\beam_closest_hit.hlsl", L"lib_6_7");
+    m_rayTraceShaders["beamGen"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\beam_gen.hlsl", L"lib_6_7");
+
+    m_rayTraceShaders["rayBeamAnyHit"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_beam_any_hit.hlsl", L"lib_6_7");
+    m_rayTraceShaders["rayBeamInt"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_beam_int.hlsl", L"lib_6_7");
+    m_rayTraceShaders["raySurfaceAnyInt"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_surface_any_hit.hlsl", L"lib_6_7");
+    m_rayTraceShaders["raySurfaceInt"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_surface_int.hlsl", L"lib_6_7");
+    m_rayTraceShaders["rayGen"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_gen.hlsl", L"lib_6_7");
 }
 
 void PhotonBeamApp::LoadScene()
@@ -909,11 +916,15 @@ void PhotonBeamApp::BuildPSOs()
     opaquePsoDesc.pRootSignature = mRootSignature.Get();
     opaquePsoDesc.VS =
     {
+        //reinterpret_cast<BYTE*>(m_rayTraceShaders["standardVS"]->GetBufferPointer()),
+        //m_rayTraceShaders["standardVS"]->GetBufferSize()
         reinterpret_cast<BYTE*>(mShaders["standardVS"]->GetBufferPointer()),
         mShaders["standardVS"]->GetBufferSize()
     };
     opaquePsoDesc.PS =
     {
+        //reinterpret_cast<BYTE*>(m_rayTraceShaders["opaquePS"]->GetBufferPointer()),
+        //m_rayTraceShaders["opaquePS"]->GetBufferSize()
         reinterpret_cast<BYTE*>(mShaders["opaquePS"]->GetBufferPointer()),
         mShaders["opaquePS"]->GetBufferSize()
     };

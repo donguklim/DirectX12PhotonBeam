@@ -133,6 +133,7 @@ private:
     std::unordered_map<std::string, Microsoft::WRL::ComPtr<IDxcBlob>> m_rayTraceShaders;
     std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D12PipelineState>> mPSOs;
 
+
     std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
 
     // List of all the render items.

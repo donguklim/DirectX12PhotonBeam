@@ -4,14 +4,11 @@
 
 #ifdef __cplusplus
 #include <DirectXMath.h>
-#include <stdint.h> /* for uint64_t */
- // HLSL Type
-using float2 = DirectX::XMFLOAT2;
-using float3 = DirectX::XMFLOAT3;
-using float4 = DirectX::XMFLOAT4;
-using float4x4 = DirectX::XMFLOAT4X4;
-using uint = unsigned int;
-using uint2 = uint64_t;
+#include <stdint.h> /* for uint64_t and uint32_t */
+
+using namespace DirectX;
+#else
+#include "util\HlslCompat.h"
 #endif
 
 
@@ -19,28 +16,28 @@ using uint2 = uint64_t;
 
 struct SceneDesc
 {
-	uint2 vertexAddress;    // Address of the Vertex buffer
-	uint2 normalAddress;    // Address of the Normal buffer
-	uint2 uvAddress;        // Address of the texture coordinates buffer
-	uint2 indexAddress;     // Address of the triangle indices buffer
-	uint2 materialAddress;  // Address of the Materials buffer (GltfShadeMaterial)
-	uint2 primInfoAddress;  // Address of the mesh primitives buffer (PrimMeshInfo)
+	uint64_t vertexAddress;    // Address of the Vertex buffer
+	uint64_t normalAddress;    // Address of the Normal buffer
+	uint64_t uvAddress;        // Address of the texture coordinates buffer
+	uint64_t indexAddress;     // Address of the triangle indices buffer
+	uint64_t materialAddress;  // Address of the Materials buffer (GltfShadeMaterial)
+	uint64_t primInfoAddress;  // Address of the mesh primitives buffer (PrimMeshInfo)
 };
 
 // Uniform buffer set at each frame
 struct GlobalUniforms
 {
-	float4x4 viewProj;     // Camera view * projection
-	float4x4 viewInverse;  // Camera inverse view matrix
-	float4x4 projInverse;  // Camera inverse projection matrix
+	XMFLOAT4X4 viewProj;     // Camera view * projection
+	XMFLOAT4X4 viewInverse;  // Camera inverse view matrix
+	XMFLOAT4X4 projInverse;  // Camera inverse projection matrix
 };
 
 // Push constant structure for the raster
 struct PushConstantRaster
 {
-	float4x4  modelMatrix;  // matrix of the instance
-	float3  lightPosition;
-	uint  objIndex;
+	XMFLOAT4X4  modelMatrix;  // matrix of the instance
+	XMFLOAT3  lightPosition;
+	uint32_t  objIndex;
 	float lightIntensity;
 	int   lightType;
 	int   materialId;
@@ -50,81 +47,81 @@ struct PushConstantRaster
 // Push constant structure for the ray tracer
 struct PushConstantRay
 {
-	float4  clearColor;
+	XMFLOAT4  clearColor;
 
-	float3  lightPosition;
-	uint     maxNumBeams;
+	XMFLOAT3  lightPosition;
+	uint32_t    maxNumBeams;
 
-	float3     airScatterCoff;
+	XMFLOAT3     airScatterCoff;
 	float beamRadius;
 
-	float3     airExtinctCoff;
-	uint maxNumSubBeams;
+	XMFLOAT3     airExtinctCoff;
+	uint32_t maxNumSubBeams;
 
-	float3     sourceLight;
-	uint seed;
+	XMFLOAT3     sourceLight;
+	uint32_t seed;
 
-	uint2 beamBlasAddress;
-	uint2 photonBlasAddress;
+	uint64_t beamBlasAddress;
+	uint64_t photonBlasAddress;
 	float    airHGAssymFactor;
 	float    photonRadius;
 
-	uint numBeamSources;
-	uint numPhotonSources;
-	uint showDirectColor;
-	uint padding;
+	uint32_t numBeamSources;
+	uint32_t numPhotonSources;
+	uint32_t showDirectColor;
+	uint32_t padding;
 };
 
 // Structure used for retrieving the primitive information in the closest hit
 struct PrimMeshInfo
 {
-	uint indexOffset;
-	uint vertexOffset;
+	uint32_t indexOffset;
+	uint32_t vertexOffset;
 	int  materialIndex;
 };
 
 struct GltfShadeMaterial
 {
-	float4 pbrBaseColorFactor;
-	float3 emissiveFactor;
+	XMFLOAT4 pbrBaseColorFactor;
+	XMFLOAT3 emissiveFactor;
 	int  pbrBaseColorTexture;
 	float metallic;
 	float roughness;
-	uint2   padding;
+	uint64_t   padding;
 };
 
 
 struct PhotonBeam
 {
-	float3  startPos;
-	uint	mediaIndex;
-	float3  endPos;
+	XMFLOAT3  startPos;
+	uint32_t mediaIndex;
+	XMFLOAT3  endPos;
 	float radius;
-	float3  lightColor;
+	XMFLOAT3  lightColor;
 	int   hitInstanceID;
 };
 
 struct PhotonBeamCounter
 {
-	uint subBeamCount;
-	uint beamCount;
-	uint padding1;
-	uint padding2;
+	uint32_t subBeamCount;
+	uint32_t beamCount;
+	uint32_t padding1;
+	uint32_t padding2;
 };
 
 
 struct ShaderRayTracingTopASInstanceDesc
 {
-	float4 transform[3];
-	uint instanceCustomIndexAndmask;
-	uint instanceShaderBindingTableRecordOffsetAndflags;
-	uint2 accelerationStructureReference;
+	XMFLOAT4 transform[3];
+	uint32_t instanceCustomIndexAndmask;
+	uint32_t instanceShaderBindingTableRecordOffsetAndflags;
+	uint64_t accelerationStructureReference;
 };
 
 
 struct Aabb
 {
-	float3 minimum;
-	float3 maximum;
+	XMFLOAT3 minimum;
+	XMFLOAT3 maximum;
 };
 #endif

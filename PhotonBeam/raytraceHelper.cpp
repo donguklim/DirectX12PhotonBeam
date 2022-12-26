@@ -2,7 +2,7 @@
 #include "raytraceHelper.hpp"
 
 
-Microsoft::WRL::ComPtr<IDxcBlob> raytrace_helper::CompileShaderLibrary(LPCWSTR fileName)
+Microsoft::WRL::ComPtr<IDxcBlob> raytrace_helper::CompileShaderLibrary(LPCWSTR fileName, LPCWSTR targetProfile, LPCWSTR entryPoint)
 {
     static  Microsoft::WRL::ComPtr<IDxcCompiler> pCompiler = nullptr;
     static  Microsoft::WRL::ComPtr<IDxcLibrary> pLibrary = nullptr;
@@ -59,8 +59,8 @@ Microsoft::WRL::ComPtr<IDxcBlob> raytrace_helper::CompileShaderLibrary(LPCWSTR f
         pCompiler->Compile(
             pTextBlob.Get(),
             fileName, 
-            L"", 
-            L"lib_6_7", 
+            entryPoint,
+            targetProfile,
             nullptr, 
             0, 
             nullptr, 

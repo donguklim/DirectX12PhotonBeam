@@ -25,9 +25,6 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{4c0115bd-9548-4e35-9742-8330b212b756}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shaders\Rasterization">
-      <UniqueIdentifier>{f0780e6b-322b-41ad-a10e-e4c8e5401ea9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Shaders\Raytracing">
       <UniqueIdentifier>{e7f0f9f9-69fb-46b0-8285-6da2bf8d321e}</UniqueIdentifier>
     </Filter>
@@ -109,6 +106,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Shaders\host_device.h">
+      <Filter>Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders\util\HlslCompat.h">
       <Filter>Shaders\Util</Filter>
     </ClInclude>
   </ItemGroup>
@@ -187,9 +187,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Shaders\Rasterization.hlsl">
-      <Filter>Shaders\Rasterization</Filter>
-    </FxCompile>
     <FxCompile Include="Shaders\beam_closest_hit.hlsl">
       <Filter>Shaders\Raytracing\Beam Tracing</Filter>
     </FxCompile>
@@ -227,6 +224,9 @@
       <Filter>Shaders\Util</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\PostColor.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\Rasterization.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
