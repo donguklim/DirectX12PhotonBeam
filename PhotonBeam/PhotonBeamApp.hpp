@@ -93,7 +93,7 @@ private:
     void BuildDescriptorHeaps();
     void BuildRootSignature();
     void BuildPostRootSignature();
-    void BuildRayTraceRootSignature();
+    void BuildBeamTraceRootSignature();
     void BuildShadersAndInputLayout();
     void BuildPSOs();
     void BuildFrameResources();
