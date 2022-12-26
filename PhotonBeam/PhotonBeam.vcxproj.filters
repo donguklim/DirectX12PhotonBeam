@@ -34,23 +34,11 @@
     <Filter Include="Shaders\Camera Ray Tracing">
       <UniqueIdentifier>{8c71dea3-a7aa-41f5-806c-ad7f308a2470}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DirectX12 Util Files">
+      <UniqueIdentifier>{1158a41d-4fbd-4ed3-8f0c-14d08e2055ba}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Common\DDSTextureLoader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\GameTimer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\MathHelper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\UploadBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FrameResource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="PhotonBeamApp.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -70,15 +58,6 @@
       <Filter>imgui</Filter>
     </ClInclude>
     <ClInclude Include="GltfScene.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\Camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\d3dApp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\d3dUtil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\imgui-helper\imgui_helper.h">
@@ -108,26 +87,29 @@
     <ClInclude Include="Shaders\RaytracingHlslCompat.h">
       <Filter>Shaders</Filter>
     </ClInclude>
+    <ClInclude Include="..\Common\Camera.h">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\d3dApp.h">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\d3dUtil.h">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\DDSTextureLoader.h">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\GameTimer.h">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\MathHelper.h">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\UploadBuffer.h">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Common\d3dApp.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Common\d3dUtil.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Common\DDSTextureLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Common\GameTimer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Common\MathHelper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="FrameResource.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="PhotonBeamApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -155,9 +137,6 @@
     <ClCompile Include="..\imgui\imgui_impl_win32.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\Camera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GltfScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -181,6 +160,24 @@
     </ClCompile>
     <ClCompile Include="raytraceHelper.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Camera.cpp">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\d3dApp.cpp">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\d3dUtil.cpp">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\DDSTextureLoader.cpp">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\GameTimer.cpp">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\MathHelper.cpp">
+      <Filter>DirectX12 Util Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
