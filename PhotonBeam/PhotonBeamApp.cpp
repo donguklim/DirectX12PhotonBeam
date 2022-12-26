@@ -677,15 +677,15 @@ void PhotonBeamApp::BuildShadersAndInputLayout()
     //m_rayTraceShaders["postVS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"vs_6_6", L"VS");
     //m_rayTraceShaders["postPS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"ps_6_6", L"PS");
 
-    m_rayTraceShaders["beamMiss"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\beam_miss.hlsl", L"lib_6_7");
-    m_rayTraceShaders["beamCHit"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\beam_closest_hit.hlsl", L"lib_6_7");
-    m_rayTraceShaders["beamGen"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\beam_gen.hlsl", L"lib_6_7");
+    m_rayTraceShaders["beamMiss"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamMiss.hlsl", L"lib_6_7");
+    m_rayTraceShaders["beamCHit"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamClosestHit.hlsl", L"lib_6_7");
+    m_rayTraceShaders["beamGen"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamGen.hlsl", L"lib_6_7");
 
-    m_rayTraceShaders["rayBeamAnyHit"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_beam_any_hit.hlsl", L"lib_6_7");
-    m_rayTraceShaders["rayBeamInt"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_beam_int.hlsl", L"lib_6_7");
-    m_rayTraceShaders["raySurfaceAnyInt"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_surface_any_hit.hlsl", L"lib_6_7");
-    m_rayTraceShaders["raySurfaceInt"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_surface_int.hlsl", L"lib_6_7");
-    m_rayTraceShaders["rayGen"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_gen.hlsl", L"lib_6_7");
+    m_rayTraceShaders["rayBeamAnyHit"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayBeamAnyHit.hlsl", L"lib_6_7");
+    m_rayTraceShaders["rayBeamInt"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayBeamInt.hlsl", L"lib_6_7");
+    m_rayTraceShaders["raySurfaceAnyInt"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RaySurfaceAnyHit.hlsl", L"lib_6_7");
+    m_rayTraceShaders["raySurfaceInt"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RaySurfaceInt.hlsl", L"lib_6_7");
+    m_rayTraceShaders["rayGen"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayGen.hlsl", L"lib_6_7");
 }
 
 void PhotonBeamApp::LoadScene()
