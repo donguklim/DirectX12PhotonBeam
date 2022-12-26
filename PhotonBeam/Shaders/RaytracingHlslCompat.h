@@ -21,11 +21,6 @@ using namespace DirectX;
 #include "util\HlslCompat.h"
 #endif
 
-#ifdef LOWER_THAN_SHADER_MODEL_6
-typedef uint uint32_t;
-typedef uint2 uint64_t;
-#endif
-
 
 // Scene buffer addresses
 
