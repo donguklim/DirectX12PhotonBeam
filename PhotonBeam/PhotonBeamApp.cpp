@@ -649,9 +649,9 @@ void PhotonBeamApp::BuildBeamTraceRootSignatures()
             
             rootParameters[to_underlying(EGlobalParams::SceneConstantSlot)].InitAsConstantBufferView(0);
             
-            CD3DX12_ROOT_SIGNATURE_DESC globalRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
+            CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters);
             SerializeAndCreateRootSignature(
-                globalRootSignatureDesc,
+                desc,
                 m_BeamRootSignarues[to_underlying(ERootSignatures::Global)].GetAddressOf()
             );
         }
@@ -665,31 +665,28 @@ void PhotonBeamApp::BuildBeamTraceRootSignatures()
             rootParameters[to_underlying(EGenParams::SurfaceASSlot)].InitAsShaderResourceView(0);
             rootParameters[to_underlying(EGenParams::RWBufferSlot)].InitAsDescriptorTable(1, &rwBufferRange);
             
-            CD3DX12_ROOT_SIGNATURE_DESC globalRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
+            CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters);
             SerializeAndCreateRootSignature(
-                globalRootSignatureDesc,
+                desc,
                 m_BeamRootSignarues[to_underlying(ERootSignatures::Gen)].GetAddressOf()
             );
         }
 
         // Beam trace closest hit
         {
-            CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EGenParams::Count)] = {};
+            CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(ECloseHitParams::Count)] = {};
 
-            CD3DX12_DESCRIPTOR_RANGE buffersRange{};
+            CD3DX12_DESCRIPTOR_RANGE buffersRange{}, textureMapsRange{};
             buffersRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 6, 0);
-
-            CD3DX12_DESCRIPTOR_RANGE textureMapsRange{};
             textureMapsRange.Init(
-                D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 
-                static_cast<uint32_t>(m_textures.size()), 
-                0, 
+                D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
+                static_cast<uint32_t>(m_textures.size()),
+                0,
                 1
             );
 
-
             rootParameters[to_underlying(ECloseHitParams::ReadBuffersSlot)].InitAsDescriptorTable(
-                1, 
+                1,
                 &buffersRange
             );
             rootParameters[to_underlying(ECloseHitParams::TextureMapsSlot)].InitAsDescriptorTable(
@@ -697,13 +694,73 @@ void PhotonBeamApp::BuildBeamTraceRootSignatures()
                 &textureMapsRange
             );
 
-            CD3DX12_ROOT_SIGNATURE_DESC globalRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
+            CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters);
             SerializeAndCreateRootSignature(
-                globalRootSignatureDesc,
+                desc,
                 m_BeamRootSignarues[to_underlying(ERootSignatures::CloseHit)].GetAddressOf()
             );
         }
         
+    }
+
+    {
+        using namespace RootSignatueEnums::CameraRayTrace;
+
+        // Camera ray trace global 
+        {
+            CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EGlobalParams::Count)] = {};
+
+            rootParameters[to_underlying(EGlobalParams::SceneConstantSlot)].InitAsConstantBufferView(0);
+
+            CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters);
+            SerializeAndCreateRootSignature(
+                desc,
+                m_BeamRootSignarues[to_underlying(ERootSignatures::Global)].GetAddressOf()
+            );
+        }
+
+        // Camera ray trace generation
+        {
+            CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EGenParams::Count)] = {};
+
+            CD3DX12_DESCRIPTOR_RANGE outputImageRange{}, buffersRange{}, textureMapsRange{};
+
+            outputImageRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+            buffersRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 6, 2);
+            textureMapsRange.Init(
+                D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
+                static_cast<uint32_t>(m_textures.size()),
+                0,
+                1
+            );
+
+            rootParameters[to_underlying(EGenParams::OutputViewSlot)].InitAsDescriptorTable(1, &outputImageRange);
+            rootParameters[to_underlying(EGenParams::BeamASSlot)].InitAsShaderResourceView(0);
+            rootParameters[to_underlying(EGenParams::SurfaceASSlot)].InitAsShaderResourceView(1);
+            rootParameters[to_underlying(EGenParams::ReadBuffersSlot)].InitAsDescriptorTable(1,&buffersRange);
+            rootParameters[to_underlying(EGenParams::TextureMapsSlot)].InitAsDescriptorTable(1,&textureMapsRange);
+            rootParameters[to_underlying(EGenParams::CameraConstantSlot)].InitAsConstantBufferView(1);
+
+            CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters);
+            SerializeAndCreateRootSignature(
+                desc,
+                m_BeamRootSignarues[to_underlying(ERootSignatures::Gen)].GetAddressOf()
+            );
+        }
+
+        // Camera ray trace any hit nad intersection
+        {
+            CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EAnyHitAndIntParams::Count)] = {};
+
+            rootParameters[to_underlying(EAnyHitAndIntParams::BeamBufferSlot)].InitAsShaderResourceView(0, 1);
+
+            CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters);
+            SerializeAndCreateRootSignature(
+                desc,
+                m_BeamRootSignarues[to_underlying(ERootSignatures::AnyHitAndInt)].GetAddressOf()
+            );
+        }
+
     }
 
 }
