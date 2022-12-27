@@ -157,7 +157,6 @@ struct AccelerationStructureBuffers
     Microsoft::WRL::ComPtr<ID3D12Resource> pInstanceDesc;
 };
 
-RootSignatueEnums::BeamTrace::ERootSignatures a = RootSignatueEnums::BeamTrace::ERootSignatures::Count;
 
 class PhotonBeamApp : public D3DApp
 {
