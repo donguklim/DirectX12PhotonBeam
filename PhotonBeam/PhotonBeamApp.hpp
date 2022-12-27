@@ -22,15 +22,98 @@
 
 
 template <typename E>
-constexpr typename std::underlying_type<E>::type to_underlying(E e) noexcept {
+constexpr typename std::underlying_type<E>::type to_underlying(E e) noexcept 
+{
     return static_cast<typename std::underlying_type<E>::type>(e);
 }
 
+namespace RootSignatueEnums 
+{
 
-enum class EBeamTracingGlobalRootSignatureParams : uint16_t{
-    SceneConstantSlot = 0,
-    Count
-};
+    namespace BeamTrace 
+    {
+
+        enum class ERootSignatures : uint16_t 
+        {
+            Global = 0,
+            Gen,
+            CloseHit,
+            Count
+        };
+
+        enum class EGlobalParams : uint16_t {
+            SceneConstantSlot = 0,
+            Count
+        };
+
+        enum class EGenParams : uint16_t {
+            SurfaceASSlot,
+            BeamBufferSlot,
+            CounterBufferSlot,
+            ASInstantDescBufferSlot,
+            Count
+        };
+
+        enum class ECloseHitParams : uint16_t {
+            IndiceBuffersSlot,
+            VertexBuffersSlot,
+            NormalBuffersSlot,
+            TextCoordBuffersSlot,
+
+            MaterialBuffersSlot,
+            MeshBuffersSlot,
+
+            TextureMapsSlot,
+            SamplerSlot,
+
+            Count
+        };
+    }
+
+    namespace CameraRayTrace 
+    {
+
+        enum class RootSignatures : uint16_t 
+        {
+            Global = 0,
+            Gen,
+            AnyHitAndInt,
+            Count
+        };
+
+        enum class EGlobalParams : uint16_t {
+            SceneConstantSlot = 0,
+            Count
+        };
+
+        enum class EGenParams : uint16_t {
+            OutputViewSlot = 0,
+            BeamASSlot,
+            SurfaceASSlot,
+
+            IndiceBuffersSlot,
+            NormalBuffersSlot,
+            TextCoordBuffersSlot,
+
+            MaterialBuffersSlot,
+            MeshBuffersSlot,
+
+            TextureMapsSlot,
+            SamplerSlot,
+
+            CameraConstantSlot = 0,
+            
+            Count
+        };
+
+        enum class EAnyHitAndIntParams : uint16_t {
+            BeamBufferSlot,
+            Count
+        };
+
+    }
+
+}
 
 
 
@@ -137,7 +220,7 @@ private:
 
     Microsoft::WRL::ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> mPostRootSignature = nullptr;
-
+    
     Microsoft::WRL::ComPtr<ID3D12RootSignature> m_beamGenSignature = nullptr;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> m_beamHitSignature = nullptr;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> m_beamMissSignature = nullptr;

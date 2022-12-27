@@ -6,9 +6,10 @@
 #include "..\util\RayTracingSampling.hlsli"
 #include "..\RaytracingHlslCompat.h"
 
-RWStructuredBuffer<PhotonBeam> g_photonBeams: register(u0, space0);
 
+StructuredBuffer<PhotonBeam> g_photonBeams: register(t0);
 ConstantBuffer<PushConstantRay> pc_ray : register(b0);
+
 
 [shader("intersection")]
 void RayInt()

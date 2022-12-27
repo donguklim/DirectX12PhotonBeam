@@ -630,10 +630,10 @@ void PhotonBeamApp::BuildBeamTraceRootSignature()
     // Global Root Signature
     // This is a root signature that is shared across all raytracing shaders invoked during a DispatchRays() call.
     {
+        using namespace RootSignatueEnums::BeamTrace;
 
-
-        CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EBeamTracingGlobalRootSignatureParams::Count)] = {};
-        rootParameters[to_underlying(EBeamTracingGlobalRootSignatureParams::SceneConstantSlot)].InitAsConstantBufferView(0);
+        CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EGlobalParams::Count)] = {};
+        rootParameters[to_underlying(EGlobalParams::SceneConstantSlot)].InitAsConstantBufferView(0);
         CD3DX12_ROOT_SIGNATURE_DESC globalRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
         //SerializeAndCreateRootSignature(globalRootSignatureDesc, &m_raytracingGlobalRootSignature);
     }
