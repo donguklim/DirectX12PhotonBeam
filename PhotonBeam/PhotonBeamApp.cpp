@@ -1061,6 +1061,13 @@ void PhotonBeamApp::BuildRenderItems()
         mOpaqueRitems.push_back(e.get());
 }
 
+void PhotonBeamApp::BuildRayTracingPSOs()
+{
+    CD3DX12_STATE_OBJECT_DESC raytracingPipeline{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
+
+
+}
+
 void PhotonBeamApp::BuildPSOs()
 {
     D3D12_GRAPHICS_PIPELINE_STATE_DESC opaquePsoDesc;

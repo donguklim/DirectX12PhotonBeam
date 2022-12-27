@@ -2,7 +2,6 @@
 #ifndef PHOTONBEAM_BEAM_GEN
 #define PHOTONBEAM_BEAM_GEN
 
-#include "BeamCommon.hlsli"
 #include "..\util\RayTracingSampling.hlsli"
 #include "..\RaytracingHlslCompat.h"
 

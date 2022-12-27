@@ -17,9 +17,37 @@ bellow define statement must be made before importing this file
 #include <stdint.h> /* for uint64_t and uint32_t */
 
 using namespace DirectX;
+
+#define HLSL_PAYLOAD_STRUCT
+#define HLSL_PAYLOAD_READ(...)  
+#define HLSL_PAYLOAD_WRITE(...)  
+
 #else
 #include "util\HlslCompat.h"
+
+#define HLSL_PAYLOAD_STRUCT [raypayload]
+#define HLSL_PAYLOAD_READ(...) : read(__VA_ARGS__)
+#define HLSL_PAYLOAD_WRITE(...) : write(__VA_ARGS__)
+
 #endif
+
+
+struct HLSL_PAYLOAD_STRUCT BeamHitPayload
+{
+
+	XMFLOAT3 rayOrigin HLSL_PAYLOAD_READ(caller, closesthit, miss) HLSL_PAYLOAD_WRITE(caller, closesthit, miss);
+	uint32_t seed HLSL_PAYLOAD_READ(caller, closesthit) HLSL_PAYLOAD_WRITE(caller, closesthit);
+	XMFLOAT3 rayDirection HLSL_PAYLOAD_READ(caller, closesthit, miss) HLSL_PAYLOAD_WRITE(caller, closesthit);
+	uint32_t  instanceID HLSL_PAYLOAD_READ(caller) HLSL_PAYLOAD_WRITE(closesthit);
+	XMFLOAT3 weight HLSL_PAYLOAD_READ(caller) HLSL_PAYLOAD_WRITE(caller, closesthit, miss);
+	uint32_t isHit HLSL_PAYLOAD_READ(caller) HLSL_PAYLOAD_WRITE(closesthit, miss);
+	XMFLOAT3 hitNormal HLSL_PAYLOAD_READ(caller) HLSL_PAYLOAD_WRITE(closesthit);
+};
+
+struct BeamHitAttributes
+{
+	XMFLOAT2 bary;
+};
 
 
 // Scene buffer addresses

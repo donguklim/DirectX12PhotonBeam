@@ -2,7 +2,6 @@
 #ifndef PHOTONBEAM_BEAM_CLOSE_HIT
 #define PHOTONBEAM_BEAM_CLOSE_HIT
 
-#include "BeamCommon.hlsli"
 #include "..\util\Gltf.hlsli"
 #include "..\util\RayTracingSampling.hlsli"
 #include "..\RaytracingHlslCompat.h"
@@ -63,7 +62,7 @@ bool randomScatterOccured(inout BeamHitPayload prd, const in float3 world_positi
 
 
 [shader("closesthit")] 
-void ClosestHit(inout BeamHitPayload prd, Attributes attribs)
+void ClosestHit(inout BeamHitPayload prd, BeamHitAttributes attribs)
 {
     PrimMeshInfo meshInfo = g_meshInfos[InstanceID()];
     prd.instanceID = InstanceID();

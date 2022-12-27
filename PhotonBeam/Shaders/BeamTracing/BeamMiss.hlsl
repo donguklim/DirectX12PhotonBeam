@@ -2,7 +2,8 @@
 #ifndef PHOTONBEAM_BEAM_MISS
 #define PHOTONBEAM_BEAM_MISS
 
-#include "BeamCommon.hlsli"
+#include "..\RaytracingHlslCompat.h"
+
 
 [shader("miss")]
 void Miss(inout BeamHitPayload prd : SV_RayPayload)

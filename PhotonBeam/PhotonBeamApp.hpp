@@ -178,15 +178,17 @@ private:
         ID3D12RootSignature** ppRootSignature
     );
     void CreateTextures();
+
     void BuildDescriptorHeaps();
     void BuildRasterizeRootSignature();
     void BuildPostRootSignature();
+    void BuildShadersAndInputLayout();
+    void BuildPSOs();
 
     void BuildRayTracingDescriptorHeaps();
     void BuildRayTracingRootSignatures();
-    
-    void BuildShadersAndInputLayout();
-    void BuildPSOs();
+    void BuildRayTracingPSOs();
+
     void BuildFrameResources();
     void BuildRenderItems();
     void DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems);
