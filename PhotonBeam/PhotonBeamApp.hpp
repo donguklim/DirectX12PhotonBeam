@@ -73,7 +73,7 @@ namespace RootSignatueEnums
     namespace CameraRayTrace 
     {
 
-        enum class RootSignatures : uint16_t 
+        enum class ERootSignatures : uint16_t 
         {
             Global = 0,
             Gen,
@@ -157,6 +157,8 @@ struct AccelerationStructureBuffers
     Microsoft::WRL::ComPtr<ID3D12Resource> pInstanceDesc;
 };
 
+RootSignatueEnums::BeamTrace::ERootSignatures a = RootSignatueEnums::BeamTrace::ERootSignatures::Count;
+
 class PhotonBeamApp : public D3DApp
 {
     const static uint32_t MAX_NUM_TEXTURES = 16;
@@ -219,11 +221,12 @@ private:
     UINT mCbvSrvDescriptorSize = 0;
 
     Microsoft::WRL::ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
+
     Microsoft::WRL::ComPtr<ID3D12RootSignature> mPostRootSignature = nullptr;
     
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_beamGenSignature = nullptr;
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_beamHitSignature = nullptr;
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_beamMissSignature = nullptr;
+ 
+    //Microsoft::WRL::ComPtr<ID3D12RootSignature> m_BeamRootSignarues[to_underlying(RootSignatueEnums::BeamTrace::ERootSignatures::Count)];
+    //Microsoft::WRL::ComPtr<ID3D12RootSignature> m_RayRootSignarues[to_underlying(RootSignatueEnums::CameraRayTrace::ERootSignatures::Count)];
 
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
 

@@ -1352,7 +1352,7 @@ void PhotonBeamApp::BuildBeamSignatures()
             }
         }
     );
-    rsc.Generate(md3dDevice.Get(), true, m_beamGenSignature.GetAddressOf());
+    //rsc.Generate(md3dDevice.Get(), true, m_beamGenSignature.GetAddressOf());
 
 
 }
