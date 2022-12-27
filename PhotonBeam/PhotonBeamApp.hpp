@@ -29,10 +29,8 @@ constexpr typename std::underlying_type<E>::type to_underlying(E e) noexcept
 
 namespace RootSignatueEnums 
 {
-
     namespace BeamTrace 
     {
-
         enum class ERootSignatures : uint16_t 
         {
             Global = 0,
@@ -41,11 +39,13 @@ namespace RootSignatueEnums
             Count
         };
 
+
         enum class EGlobalParams : uint16_t 
         {
             SceneConstantSlot = 0,
             Count
         };
+
 
         enum class EGenParams : uint16_t 
         {
@@ -53,6 +53,7 @@ namespace RootSignatueEnums
             RWBufferSlot,
             Count
         };
+
 
         enum class ECloseHitParams : uint16_t 
         {
@@ -62,9 +63,9 @@ namespace RootSignatueEnums
         };
     }
 
+
     namespace CameraRayTrace 
     {
-
         enum class ERootSignatures : uint16_t 
         {
             Global = 0,
@@ -73,11 +74,13 @@ namespace RootSignatueEnums
             Count
         };
 
+
         enum class EGlobalParams : uint16_t 
         {
             SceneConstantSlot = 0,
             Count
         };
+
 
         enum class EGenParams : uint16_t 
         {
@@ -91,15 +94,15 @@ namespace RootSignatueEnums
             Count
         };
 
+
         enum class EAnyHitAndIntParams : uint16_t 
         {
             BeamBufferSlot,
             Count
         };
-
     }
-
 }
+
 
 enum class ECameraRayTracingShaders : uint16_t
 {
@@ -111,6 +114,7 @@ enum class ECameraRayTracingShaders : uint16_t
     Count
 };
 
+
 enum class EBeamTracingShaders : uint16_t
 {
     Gen = 0,
@@ -119,6 +123,19 @@ enum class EBeamTracingShaders : uint16_t
     Count
 };
 
+
+enum class EBeamHitTypes : uint16_t
+{
+    Surface = 0,
+    Count
+};
+
+enum class ERayHitTypes : uint16_t
+{
+    Beam = 0,
+    Surface,
+    Count
+};
 
 
 // Lightweight structure stores parameters to draw a shape.  This will
@@ -229,23 +246,27 @@ private:
     UINT mCbvSrvDescriptorSize = 0;
 
     Microsoft::WRL::ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
-
     Microsoft::WRL::ComPtr<ID3D12RootSignature> mPostRootSignature = nullptr;
-    
- 
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_BeamRootSignarues[to_underlying(RootSignatueEnums::BeamTrace::ERootSignatures::Count)];
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_RayRootSignarues[to_underlying(RootSignatueEnums::CameraRayTrace::ERootSignatures::Count)];
-
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
-
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mGuiDescriptorHeap = nullptr;
 
     std::vector<std::unique_ptr<Texture>> m_textures;
     std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> mGeometries;
     std::unordered_map<std::string, Microsoft::WRL::ComPtr<IDxcBlob>> m_rasterizeShaders;
+    std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D12PipelineState>> mPSOs;
+
+    Microsoft::WRL::ComPtr<ID3D12StateObject> m_beamStateObject = nullptr;
+
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_BeamRootSignarues[to_underlying(RootSignatueEnums::BeamTrace::ERootSignatures::Count)];
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_RayRootSignarues[to_underlying(RootSignatueEnums::CameraRayTrace::ERootSignatures::Count)];
+
     Microsoft::WRL::ComPtr<IDxcBlob> m_rayShaders[to_underlying(ECameraRayTracingShaders::Count)];
     Microsoft::WRL::ComPtr<IDxcBlob> m_beamShaders[to_underlying(EBeamTracingShaders::Count)];
-    std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D12PipelineState>> mPSOs;
+    static const wchar_t* c_rayShadersExportNames[to_underlying(ECameraRayTracingShaders::Count)];
+    static const wchar_t* c_beamShadersExportNames[to_underlying(EBeamTracingShaders::Count)];
+
+    static const wchar_t* c_beamHitGroupNames[to_underlying(EBeamHitTypes::Count)];
+    static const wchar_t* c_rayHitGroupNames[to_underlying(ERayHitTypes::Count)];
 
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;

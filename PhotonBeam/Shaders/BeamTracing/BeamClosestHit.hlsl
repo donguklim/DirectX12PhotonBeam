@@ -17,10 +17,10 @@ StructuredBuffer<float3> g_normals : register(t2, space0);
 StructuredBuffer<float2> g_texCoords : register(t3, space0);
 
 
-StructuredBuffer<GltfShadeMaterial> g_materials : register(t5, space0);
-StructuredBuffer<PrimMeshInfo> g_meshInfos : register(t6, space0);
+StructuredBuffer<GltfShadeMaterial> g_materials : register(t4, space0);
+StructuredBuffer<PrimMeshInfo> g_meshInfos : register(t5, space0);
 
-Texture2D g_texturesMap[MAX_SHADER_MATERIAL_TEXTURES] : register(t0, space1);
+Texture2D g_texturesMap[] : register(t0, space1);
 
 SamplerState gsamLinearWrap  : register(s0);
 
