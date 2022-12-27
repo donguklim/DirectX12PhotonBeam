@@ -179,9 +179,9 @@ private:
     );
     void CreateTextures();
     void BuildDescriptorHeaps();
-    void BuildRootSignature();
+    void BuildRasterizeRootSignature();
     void BuildPostRootSignature();
-    void BuildBeamTraceRootSignatures();
+    void BuildRayTraceRootSignatures();
     void BuildShadersAndInputLayout();
     void BuildPSOs();
     void BuildFrameResources();
