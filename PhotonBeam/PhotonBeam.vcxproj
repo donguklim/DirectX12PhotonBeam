@@ -244,6 +244,7 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\README.md" />
     <None Include="Shaders\CameraRayTracing\RayCommon.hlsli">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>

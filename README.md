@@ -2,8 +2,10 @@
 Photon beam rendering algorithm implemented with DirectX12 and RTX
 
 
-## References
+## Third Party Libraries 
 
- - Using files from https://github.com/d3dcoder/d3d12book/tree/4cfd00afa59210a272f62caf0660478d18b9ffed/Common Files from this link are placed at `Common` directory.
- - Using Microsoft Official DirectX header files https://github.com/microsoft/DirectX-Headers/tree/9ca4839a1b49aeac56c86036212dc035b1cf4a09/include/ Header files are locatd at `directx-headers` dirctory.
- - Using `stb_image.h`, `stb_image_write.h`, `json.hpp` and `tiny_gltf.h` from https://github.com/syoyo/tinygltf/tree/aa613a1f572c8b9c676a4c0a1d6e5445bf5760f5 Files are located at `tiny-gltf` directory.
+ - ["Introduction to 3D Game Programming with DirectX 12" book sample codes in `Common` folder](https://github.com/d3dcoder/d3d12book/tree/4cfd00afa59210a272f62caf0660478d18b9ffed/Common).
+ - [Microsoft Official DirectX header files](https://github.com/microsoft/DirectX-Headers/tree/9ca4839a1b49aeac56c86036212dc035b1cf4a09/include/)
+ - tiny gltf - [`stb_image.h`, `stb_image_write.h`, `json.hpp`, `tiny_gltf.h`](https://github.com/syoyo/tinygltf/tree/aa613a1f572c8b9c676a4c0a1d6e5445bf5760f5)
+ - Microsoft DirectX Samples - [DirectXRaytracingHelper.h](https://github.com/microsoft/DirectX-Graphics-Samples/blob/0aa79bad78992da0b6a8279ddb9002c1753cb849/Samples/Desktop/D3D12Raytracing/src/D3D12RaytracingProceduralGeometry/DirectXRaytracingHelper.h)
+ - [Nvidia DX12 Raytracing tutorial](https://developer.nvidia.com/rtx/raytracing/dxr/dx12-raytracing-tutorial-part-1) - DXR helper files ([Download Link](https://developer.nvidia.com/rtx/raytracing/dxr/tutorial/Files/DXRHelpers.zip))
