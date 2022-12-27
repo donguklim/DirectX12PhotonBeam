@@ -23,7 +23,7 @@ void RayInt()
         return;
     }
 
-    HitAttributes attrs;
+    RayHitAttributes attrs;
     attrs.beamHit = beam.endPos;
     ReportHit(RayTCurrent(), 0, attrs);
 }

@@ -12,7 +12,7 @@ ConstantBuffer<PushConstantRay> pc_ray : register(b0);
 
 
 [shader("anyhit")]
-void RayAnyHit(inout RayHitPayload prd, HitAttributes attrs) {
+void RayAnyHit(inout RayHitPayload prd, RayHitAttributes attrs) {
     
     PhotonBeam beam = g_photonBeams[InstanceID()];
 

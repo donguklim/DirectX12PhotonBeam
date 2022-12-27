@@ -51,7 +51,7 @@ void RayInt()
             return;
         }
 
-        HitAttributes attrs;
+        RayHitAttributes attrs;
         attrs.beamHit = beamPoint;
         ReportHit(length(rayPoint - rayOrigin), 0, attrs);
         return;
@@ -103,7 +103,7 @@ void RayInt()
         return;
     }
 
-    HitAttributes attrs;
+    RayHitAttributes attrs;
     attrs.beamHit = beamPoint;
     ReportHit(length(rayPoint - rayOrigin), 0, attrs);
 }

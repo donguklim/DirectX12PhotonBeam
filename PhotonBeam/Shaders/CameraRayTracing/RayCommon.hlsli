@@ -14,7 +14,7 @@ struct [raypayload] RayHitPayload
 	float hitMetallic : read(anyhit) : write(caller);
 };
 
-struct HitAttributes
+struct RayHitAttributes
 {
 	float3 beamHit;
 };
