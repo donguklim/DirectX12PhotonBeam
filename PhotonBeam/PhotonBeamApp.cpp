@@ -75,7 +75,7 @@ bool PhotonBeamApp::Initialize()
     CreateTextures();
     BuildRootSignature();
     BuildPostRootSignature();
-    BuildBeamTraceRootSignature();
+    BuildBeamTraceRootSignatures();
     BuildShadersAndInputLayout();
 
     BuildRenderItems();
@@ -625,7 +625,7 @@ void PhotonBeamApp::BuildRootSignature()
     SerializeAndCreateRootSignature(rootSigDesc, mRootSignature.GetAddressOf());
 }
 
-void PhotonBeamApp::BuildBeamTraceRootSignature()
+void PhotonBeamApp::BuildBeamTraceRootSignatures()
 {
     // Global Root Signature
     // This is a root signature that is shared across all raytracing shaders invoked during a DispatchRays() call.

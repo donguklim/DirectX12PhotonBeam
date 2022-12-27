@@ -195,7 +195,7 @@ private:
     void BuildDescriptorHeaps();
     void BuildRootSignature();
     void BuildPostRootSignature();
-    void BuildBeamTraceRootSignature();
+    void BuildBeamTraceRootSignatures();
     void BuildShadersAndInputLayout();
     void BuildPSOs();
     void BuildFrameResources();
