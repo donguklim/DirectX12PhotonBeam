@@ -224,8 +224,8 @@ private:
     Microsoft::WRL::ComPtr<ID3D12RootSignature> mPostRootSignature = nullptr;
     
  
-    //Microsoft::WRL::ComPtr<ID3D12RootSignature> m_BeamRootSignarues[to_underlying(RootSignatueEnums::BeamTrace::ERootSignatures::Count)];
-    //Microsoft::WRL::ComPtr<ID3D12RootSignature> m_RayRootSignarues[to_underlying(RootSignatueEnums::CameraRayTrace::ERootSignatures::Count)];
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_BeamRootSignarues[to_underlying(RootSignatueEnums::BeamTrace::ERootSignatures::Count)];
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_RayRootSignarues[to_underlying(RootSignatueEnums::CameraRayTrace::ERootSignatures::Count)];
 
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
 
