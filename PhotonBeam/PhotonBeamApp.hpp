@@ -149,7 +149,7 @@ struct AccelerationStructureBuffers
 
 class PhotonBeamApp : public D3DApp
 {
-    const static uint32_t MAX_NUM_TEXTURES = 16;
+
 public:
     PhotonBeamApp(HINSTANCE hInstance);
     PhotonBeamApp(const PhotonBeamApp& rhs) = delete;

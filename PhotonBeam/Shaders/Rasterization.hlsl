@@ -7,7 +7,7 @@
 #include "util\Gltf.hlsli"
 
 
-Texture2D gTextures[16] : register(t0);
+Texture2D gTextures[MAX_SHADER_MATERIAL_TEXTURES] : register(t0);
 
 StructuredBuffer<GltfShadeMaterial> g_material : register(t0, space1);
 

@@ -24,6 +24,8 @@ using namespace DirectX;
 
 // Scene buffer addresses
 
+const static uint32_t MAX_SHADER_MATERIAL_TEXTURES = 16;
+
 struct SceneDesc
 {
 	uint64_t vertexAddress;    // Address of the Vertex buffer

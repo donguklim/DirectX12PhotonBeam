@@ -605,7 +605,7 @@ void PhotonBeamApp::BuildDescriptorHeaps()
 void PhotonBeamApp::BuildRootSignature()
 {    
     CD3DX12_DESCRIPTOR_RANGE texTable{};
-    texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, PhotonBeamApp::MAX_NUM_TEXTURES, 0, 0);
+    texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, MAX_SHADER_MATERIAL_TEXTURES, 0, 0);
 
     // Root parameter can be a table, root descriptor or root constants.
     CD3DX12_ROOT_PARAMETER slotRootParameter[4] = {};
@@ -656,21 +656,6 @@ void PhotonBeamApp::BuildBeamTraceRootSignatures()
             );
         }
 
-
-        CD3DX12_DESCRIPTOR_RANGE texTable{};
-        texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, PhotonBeamApp::MAX_NUM_TEXTURES, 0, 0);
-
-        // Root parameter can be a table, root descriptor or root constants.
-        CD3DX12_ROOT_PARAMETER slotRootParameter[4] = {};
-
-        slotRootParameter[0].InitAsConstantBufferView(0);
-        slotRootParameter[1].InitAsConstantBufferView(1);
-        slotRootParameter[2].InitAsShaderResourceView(0);
-        slotRootParameter[3].InitAsDescriptorTable(1, &texTable, D3D12_SHADER_VISIBILITY_PIXEL);
-
-        CD3DX12_DESCRIPTOR_RANGE ranges[2]; // Perfomance TIP: Order from most frequent to least frequent.
-        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);  // 1 output texture
-        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 1);  // 2 static index and vertex buffers.
         // Beam trace generation
         {
             CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EGenParams::Count)] = {};
@@ -691,11 +676,16 @@ void PhotonBeamApp::BuildBeamTraceRootSignatures()
         {
             CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EGenParams::Count)] = {};
 
-            CD3DX12_DESCRIPTOR_RANGE buffersRange; 
+            CD3DX12_DESCRIPTOR_RANGE buffersRange{};
             buffersRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 6, 0);
 
-            CD3DX12_DESCRIPTOR_RANGE textureMapsRange;
-            textureMapsRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0, 1);
+            CD3DX12_DESCRIPTOR_RANGE textureMapsRange{};
+            textureMapsRange.Init(
+                D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 
+                static_cast<uint32_t>(m_textures.size()), 
+                0, 
+                1
+            );
 
 
             rootParameters[to_underlying(ECloseHitParams::ReadBuffersSlot)].InitAsDescriptorTable(
@@ -706,7 +696,6 @@ void PhotonBeamApp::BuildBeamTraceRootSignatures()
                 1, 
                 &textureMapsRange
             );
-
 
             CD3DX12_ROOT_SIGNATURE_DESC globalRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
             SerializeAndCreateRootSignature(
@@ -880,9 +869,9 @@ void PhotonBeamApp::CreateTextures()
     if (textureImages.empty())
         numTextures = 1;
 
-    if (numTextures > PhotonBeamApp::MAX_NUM_TEXTURES)
+    if (numTextures > MAX_SHADER_MATERIAL_TEXTURES)
     { 
-        numTextures = PhotonBeamApp::MAX_NUM_TEXTURES;
+        numTextures = MAX_SHADER_MATERIAL_TEXTURES;
         MessageBox(
             nullptr, 
             L"Number of texture exeeds the max number of texturs allowed. Modify source code and shader code to increase the maximum", 
