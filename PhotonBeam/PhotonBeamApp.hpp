@@ -101,6 +101,24 @@ namespace RootSignatueEnums
 
 }
 
+enum class ECameraRayTracingShaders : uint16_t
+{
+    Gen = 0,
+    BeamInt,
+    BeamAnyHit,
+    SurfaceInt,
+    SurfaceAnyHit,
+    Count
+};
+
+enum class EBeamTracingShaders : uint16_t
+{
+    Gen = 0,
+    CloseHit,
+    Miss,
+    Count
+};
+
 
 
 // Lightweight structure stores parameters to draw a shape.  This will
@@ -225,7 +243,8 @@ private:
     std::vector<std::unique_ptr<Texture>> m_textures;
     std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> mGeometries;
     std::unordered_map<std::string, Microsoft::WRL::ComPtr<IDxcBlob>> m_rasterizeShaders;
-    std::unordered_map<std::string, Microsoft::WRL::ComPtr<IDxcBlob>> m_rayTraceShaders;
+    Microsoft::WRL::ComPtr<IDxcBlob> m_rayShaders[to_underlying(ECameraRayTracingShaders::Count)];
+    Microsoft::WRL::ComPtr<IDxcBlob> m_beamShaders[to_underlying(EBeamTracingShaders::Count)];
     std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D12PipelineState>> mPSOs;
 
 

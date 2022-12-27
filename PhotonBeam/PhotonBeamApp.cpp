@@ -832,15 +832,15 @@ void PhotonBeamApp::BuildShadersAndInputLayout()
     m_rasterizeShaders["postVS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"vs_6_6", L"VS");
     m_rasterizeShaders["postPS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"ps_6_6", L"PS");
 
-    m_rayTraceShaders["beamMiss"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamMiss.hlsl", L"lib_6_6");
-    m_rayTraceShaders["beamCHit"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamClosestHit.hlsl", L"lib_6_6");
-    m_rayTraceShaders["beamGen"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamGen.hlsl", L"lib_6_6");
+    m_beamShaders[to_underlying(EBeamTracingShaders::Miss)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamMiss.hlsl", L"lib_6_6");
+    m_beamShaders[to_underlying(EBeamTracingShaders::CloseHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamClosestHit.hlsl", L"lib_6_6");
+    m_beamShaders[to_underlying(EBeamTracingShaders::Gen)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamGen.hlsl", L"lib_6_6");
 
-    m_rayTraceShaders["rayBeamAnyHit"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\CameraRayTracing\\RayBeamAnyHit.hlsl", L"lib_6_6");
-    m_rayTraceShaders["rayBeamInt"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\CameraRayTracing\\RayBeamInt.hlsl", L"lib_6_6");
-    m_rayTraceShaders["raySurfaceAnyInt"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\CameraRayTracing\\RaySurfaceAnyHit.hlsl", L"lib_6_6");
-    m_rayTraceShaders["raySurfaceInt"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\CameraRayTracing\\RaySurfaceInt.hlsl", L"lib_6_6");
-    m_rayTraceShaders["rayGen"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\CameraRayTracing\\RayGen.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ECameraRayTracingShaders::BeamAnyHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\CameraRayTracing\\RayBeamAnyHit.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ECameraRayTracingShaders::BeamInt)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\CameraRayTracing\\RayBeamInt.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ECameraRayTracingShaders::SurfaceAnyHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\CameraRayTracing\\RaySurfaceAnyHit.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ECameraRayTracingShaders::SurfaceInt)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\CameraRayTracing\\RaySurfaceInt.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ECameraRayTracingShaders::Gen)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\CameraRayTracing\\RayGen.hlsl", L"lib_6_6");
 }
 
 void PhotonBeamApp::LoadScene()
@@ -1064,6 +1064,18 @@ void PhotonBeamApp::BuildRenderItems()
 void PhotonBeamApp::BuildRayTracingPSOs()
 {
     CD3DX12_STATE_OBJECT_DESC raytracingPipeline{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
+
+
+    for (auto& shaderBlob : m_beamShaders)
+    {
+        auto lib = raytracingPipeline.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
+        D3D12_SHADER_BYTECODE libdxil{
+            reinterpret_cast<BYTE*>(shaderBlob->GetBufferPointer()),
+            shaderBlob->GetBufferSize()
+        };
+        lib->SetDXILLibrary(&libdxil);
+        
+    }
 
 
 }

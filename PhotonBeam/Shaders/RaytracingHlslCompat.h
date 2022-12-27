@@ -18,7 +18,7 @@ bellow define statement must be made before importing this file
 
 using namespace DirectX;
 
-#define HLSL_PAYLOAD_STRUCT
+#define HLSL_PAYLOAD_STRUCT 
 #define HLSL_PAYLOAD_READ(...)  
 #define HLSL_PAYLOAD_WRITE(...)  
 
