@@ -141,6 +141,36 @@ void PhotonBeamApp::InitGui()
 
 }
 
+void PhotonBeamApp::SerializeAndCreateRootSignature(
+    D3D12_ROOT_SIGNATURE_DESC& desc, 
+    ID3D12RootSignature** ppRootSignature
+)
+{
+    ComPtr<ID3DBlob> serializedRootSig = nullptr;
+    ComPtr<ID3DBlob> errorBlob = nullptr;
+    HRESULT hr = D3D12SerializeRootSignature(
+        &desc,
+        D3D_ROOT_SIGNATURE_VERSION_1,
+        serializedRootSig.GetAddressOf(),
+        errorBlob.GetAddressOf()
+    );
+
+    if (errorBlob != nullptr)
+    {
+        ::OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+    }
+    ThrowIfFailed(hr);
+
+    ThrowIfFailed(
+        md3dDevice->CreateRootSignature(
+            0,
+            serializedRootSig->GetBufferPointer(),
+            serializedRootSig->GetBufferSize(),
+            IID_PPV_ARGS(ppRootSignature)
+        )
+    );
+}
+
 LRESULT PhotonBeamApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wParam, lParam))
@@ -592,29 +622,22 @@ void PhotonBeamApp::BuildRootSignature()
         D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
     );
 
-    // create a root signature with a single slot which points to a descriptor range consisting of a single constant buffer
-    //IDxcBlob
-    ComPtr<ID3DBlob> serializedRootSig = nullptr;
-    ComPtr<ID3DBlob> errorBlob = nullptr;
-    HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
-        serializedRootSig.GetAddressOf(), errorBlob.GetAddressOf());
-
-    if (errorBlob != nullptr)
-    {
-        ::OutputDebugStringA((char*)errorBlob->GetBufferPointer());
-    }
-    ThrowIfFailed(hr);
-
-    ThrowIfFailed(md3dDevice->CreateRootSignature(
-        0,
-        serializedRootSig->GetBufferPointer(),
-        serializedRootSig->GetBufferSize(),
-        IID_PPV_ARGS(mRootSignature.GetAddressOf())));
+    SerializeAndCreateRootSignature(rootSigDesc, mRootSignature.GetAddressOf());
 }
 
 void PhotonBeamApp::BuildBeamTraceRootSignature()
 {
-    
+    // Global Root Signature
+    // This is a root signature that is shared across all raytracing shaders invoked during a DispatchRays() call.
+    {
+
+
+        CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EBeamTracingGlobalRootSignatureParams::Count)] = {};
+        rootParameters[to_underlying(EBeamTracingGlobalRootSignatureParams::SceneConstantSlot)].InitAsConstantBufferView(0);
+        CD3DX12_ROOT_SIGNATURE_DESC globalRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
+        //SerializeAndCreateRootSignature(globalRootSignatureDesc, &m_raytracingGlobalRootSignature);
+    }
+
 }
 
 void PhotonBeamApp::BuildPostRootSignature()

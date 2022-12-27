@@ -20,6 +20,20 @@
 #include "GltfScene.hpp"
 
 
+
+template <typename E>
+constexpr typename std::underlying_type<E>::type to_underlying(E e) noexcept {
+    return static_cast<typename std::underlying_type<E>::type>(e);
+}
+
+
+enum class EBeamTracingGlobalRootSignatureParams : uint16_t{
+    SceneConstantSlot = 0,
+    Count
+};
+
+
+
 // Lightweight structure stores parameters to draw a shape.  This will
 // vary from app-to-app.
 struct RenderItem
@@ -89,6 +103,10 @@ private:
     void UpdateObjectCBs(const GameTimer& gt);
     void UpdateMainPassCB(const GameTimer& gt);
 
+    void SerializeAndCreateRootSignature(
+        D3D12_ROOT_SIGNATURE_DESC& desc,
+        ID3D12RootSignature** ppRootSignature
+    );
     void CreateTextures();
     void BuildDescriptorHeaps();
     void BuildRootSignature();
