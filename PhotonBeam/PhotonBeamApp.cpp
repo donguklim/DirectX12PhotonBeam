@@ -643,13 +643,78 @@ void PhotonBeamApp::BuildBeamTraceRootSignatures()
     {
         using namespace RootSignatueEnums::BeamTrace;
 
-        CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EGlobalParams::Count)] = {};
-        rootParameters[to_underlying(EGlobalParams::SceneConstantSlot)].InitAsConstantBufferView(0);
-        CD3DX12_ROOT_SIGNATURE_DESC globalRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
-        SerializeAndCreateRootSignature(
-            globalRootSignatureDesc, 
-            m_BeamRootSignarues[to_underlying(ERootSignatures::Global)].GetAddressOf()
-        );
+        // Beam trace global 
+        {
+            CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EGlobalParams::Count)] = {};
+            
+            rootParameters[to_underlying(EGlobalParams::SceneConstantSlot)].InitAsConstantBufferView(0);
+            
+            CD3DX12_ROOT_SIGNATURE_DESC globalRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
+            SerializeAndCreateRootSignature(
+                globalRootSignatureDesc,
+                m_BeamRootSignarues[to_underlying(ERootSignatures::Global)].GetAddressOf()
+            );
+        }
+
+
+        CD3DX12_DESCRIPTOR_RANGE texTable{};
+        texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, PhotonBeamApp::MAX_NUM_TEXTURES, 0, 0);
+
+        // Root parameter can be a table, root descriptor or root constants.
+        CD3DX12_ROOT_PARAMETER slotRootParameter[4] = {};
+
+        slotRootParameter[0].InitAsConstantBufferView(0);
+        slotRootParameter[1].InitAsConstantBufferView(1);
+        slotRootParameter[2].InitAsShaderResourceView(0);
+        slotRootParameter[3].InitAsDescriptorTable(1, &texTable, D3D12_SHADER_VISIBILITY_PIXEL);
+
+        CD3DX12_DESCRIPTOR_RANGE ranges[2]; // Perfomance TIP: Order from most frequent to least frequent.
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);  // 1 output texture
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 1);  // 2 static index and vertex buffers.
+        // Beam trace generation
+        {
+            CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EGenParams::Count)] = {};
+            CD3DX12_DESCRIPTOR_RANGE rwBufferRange{};
+            rwBufferRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 3, 0);
+
+            rootParameters[to_underlying(EGenParams::SurfaceASSlot)].InitAsShaderResourceView(0);
+            rootParameters[to_underlying(EGenParams::RWBufferSlot)].InitAsDescriptorTable(1, &rwBufferRange);
+            
+            CD3DX12_ROOT_SIGNATURE_DESC globalRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
+            SerializeAndCreateRootSignature(
+                globalRootSignatureDesc,
+                m_BeamRootSignarues[to_underlying(ERootSignatures::Gen)].GetAddressOf()
+            );
+        }
+
+        // Beam trace closest hit
+        {
+            CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EGenParams::Count)] = {};
+
+            CD3DX12_DESCRIPTOR_RANGE buffersRange; 
+            buffersRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 6, 0);
+
+            CD3DX12_DESCRIPTOR_RANGE textureMapsRange;
+            textureMapsRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0, 1);
+
+
+            rootParameters[to_underlying(ECloseHitParams::ReadBuffersSlot)].InitAsDescriptorTable(
+                1, 
+                &buffersRange
+            );
+            rootParameters[to_underlying(ECloseHitParams::TextureMapsSlot)].InitAsDescriptorTable(
+                1, 
+                &textureMapsRange
+            );
+
+
+            CD3DX12_ROOT_SIGNATURE_DESC globalRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
+            SerializeAndCreateRootSignature(
+                globalRootSignatureDesc,
+                m_BeamRootSignarues[to_underlying(ERootSignatures::CloseHit)].GetAddressOf()
+            );
+        }
+        
     }
 
 }

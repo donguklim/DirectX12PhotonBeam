@@ -48,24 +48,13 @@ namespace RootSignatueEnums
 
         enum class EGenParams : uint16_t {
             SurfaceASSlot,
-            BeamBufferSlot,
-            CounterBufferSlot,
-            ASInstantDescBufferSlot,
+            RWBufferSlot,
             Count
         };
 
         enum class ECloseHitParams : uint16_t {
-            IndiceBuffersSlot,
-            VertexBuffersSlot,
-            NormalBuffersSlot,
-            TextCoordBuffersSlot,
-
-            MaterialBuffersSlot,
-            MeshBuffersSlot,
-
+            ReadBuffersSlot,
             TextureMapsSlot,
-            SamplerSlot,
-
             Count
         };
     }
