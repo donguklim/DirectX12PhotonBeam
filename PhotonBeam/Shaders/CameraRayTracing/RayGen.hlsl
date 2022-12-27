@@ -6,10 +6,10 @@
 #include "..\util\RayTracingSampling.hlsli"
 #include "..\RaytracingHlslCompat.h"
 
+RWTexture2D<float4> RenderTarget : register(u0);
+
 RaytracingAccelerationStructure g_beamAS : register(t0);
 RaytracingAccelerationStructure g_surfaceAS : register(t1);
-
-RWTexture2D<float4> RenderTarget : register(u0);
 
 StructuredBuffer<uint3> g_indices : register(t2, space0);
 StructuredBuffer<float3> g_normals : register(t3, space0);

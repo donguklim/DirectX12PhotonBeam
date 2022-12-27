@@ -41,18 +41,21 @@ namespace RootSignatueEnums
             Count
         };
 
-        enum class EGlobalParams : uint16_t {
+        enum class EGlobalParams : uint16_t 
+        {
             SceneConstantSlot = 0,
             Count
         };
 
-        enum class EGenParams : uint16_t {
+        enum class EGenParams : uint16_t 
+        {
             SurfaceASSlot,
             RWBufferSlot,
             Count
         };
 
-        enum class ECloseHitParams : uint16_t {
+        enum class ECloseHitParams : uint16_t 
+        {
             ReadBuffersSlot,
             TextureMapsSlot,
             Count
@@ -70,32 +73,26 @@ namespace RootSignatueEnums
             Count
         };
 
-        enum class EGlobalParams : uint16_t {
+        enum class EGlobalParams : uint16_t 
+        {
             SceneConstantSlot = 0,
             Count
         };
 
-        enum class EGenParams : uint16_t {
+        enum class EGenParams : uint16_t 
+        {
             OutputViewSlot = 0,
             BeamASSlot,
             SurfaceASSlot,
-
-            IndiceBuffersSlot,
-            NormalBuffersSlot,
-            TextCoordBuffersSlot,
-
-            MaterialBuffersSlot,
-            MeshBuffersSlot,
-
+            ReadBuffersSlot,
             TextureMapsSlot,
-            SamplerSlot,
-
             CameraConstantSlot = 0,
             
             Count
         };
 
-        enum class EAnyHitAndIntParams : uint16_t {
+        enum class EAnyHitAndIntParams : uint16_t 
+        {
             BeamBufferSlot,
             Count
         };
