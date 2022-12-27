@@ -715,7 +715,7 @@ void PhotonBeamApp::BuildRayTraceRootSignatures()
             CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters);
             SerializeAndCreateRootSignature(
                 desc,
-                m_BeamRootSignarues[to_underlying(ERootSignatures::Global)].GetAddressOf()
+                m_RayRootSignarues[to_underlying(ERootSignatures::Global)].GetAddressOf()
             );
         }
 
@@ -744,7 +744,7 @@ void PhotonBeamApp::BuildRayTraceRootSignatures()
             CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters);
             SerializeAndCreateRootSignature(
                 desc,
-                m_BeamRootSignarues[to_underlying(ERootSignatures::Gen)].GetAddressOf()
+                m_RayRootSignarues[to_underlying(ERootSignatures::Gen)].GetAddressOf()
             );
         }
 
@@ -757,7 +757,7 @@ void PhotonBeamApp::BuildRayTraceRootSignatures()
             CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters);
             SerializeAndCreateRootSignature(
                 desc,
-                m_BeamRootSignarues[to_underlying(ERootSignatures::AnyHitAndInt)].GetAddressOf()
+                m_RayRootSignarues[to_underlying(ERootSignatures::AnyHitAndInt)].GetAddressOf()
             );
         }
 
