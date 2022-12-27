@@ -39,7 +39,18 @@ PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance)
     m_airExtinctCoff = XMVECTORF32{};
     m_sourceLight = XMVECTORF32{};
 
+    for (size_t i = 0; i < to_underlying(RootSignatueEnums::BeamTrace::ERootSignatures::Count); i++)
+    {
+        m_BeamRootSignarues[i] = nullptr;
+    }
+    for (size_t i = 0; i < to_underlying(RootSignatueEnums::CameraRayTrace::ERootSignatures::Count); i++)
+    {
+        m_RayRootSignarues[i] = nullptr;
+    }
+
     SetDefaults();
+
+
 }
 
 PhotonBeamApp::~PhotonBeamApp()
@@ -635,7 +646,10 @@ void PhotonBeamApp::BuildBeamTraceRootSignatures()
         CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EGlobalParams::Count)] = {};
         rootParameters[to_underlying(EGlobalParams::SceneConstantSlot)].InitAsConstantBufferView(0);
         CD3DX12_ROOT_SIGNATURE_DESC globalRootSignatureDesc(ARRAYSIZE(rootParameters), rootParameters);
-        //SerializeAndCreateRootSignature(globalRootSignatureDesc, &m_raytracingGlobalRootSignature);
+        SerializeAndCreateRootSignature(
+            globalRootSignatureDesc, 
+            m_BeamRootSignarues[to_underlying(ERootSignatures::Global)].GetAddressOf()
+        );
     }
 
 }
