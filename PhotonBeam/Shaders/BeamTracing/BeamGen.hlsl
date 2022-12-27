@@ -6,8 +6,8 @@
 #include "..\util\RayTracingSampling.hlsli"
 #include "..\RaytracingHlslCompat.h"
 
-RaytracingAccelerationStructure g_scene : register(t0);
 ConstantBuffer<PushConstantRay> pc_ray : register(b0);
+RaytracingAccelerationStructure g_scene : register(t0);
 
 RWStructuredBuffer<PhotonBeam> g_photonBeams: register(u0, space0);
 RWStructuredBuffer<PhotonBeamCounter> g_photonBeamCounters  : register(u1, space0);
