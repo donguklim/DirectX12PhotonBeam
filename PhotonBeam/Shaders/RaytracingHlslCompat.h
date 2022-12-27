@@ -73,13 +73,14 @@ struct PushConstantRay
 
 	uint64_t beamBlasAddress;
 	uint64_t photonBlasAddress;
+	
 	float    airHGAssymFactor;
 	float    photonRadius;
-
 	uint32_t numBeamSources;
 	uint32_t numPhotonSources;
+	
 	uint32_t showDirectColor;
-	uint32_t padding;
+	uint32_t padding[3];
 };
 
 // Structure used for retrieving the primitive information in the closest hit
@@ -134,19 +135,5 @@ struct Aabb
 	XMFLOAT3 minimum;
 	XMFLOAT3 maximum;
 };
-
-namespace RaytracingShaders {
-	enum Enum {
-		BeamGen = 0,
-		BeamCHit,
-		BeamMiss,
-		RayGen,
-		RayBeamInt,
-		RayBeamAnyHit,
-		RaySurfaceInt,
-		RaySurfaceAnyInt,
-		Count
-	};
-}
 
 #endif
