@@ -181,7 +181,10 @@ private:
     void BuildDescriptorHeaps();
     void BuildRasterizeRootSignature();
     void BuildPostRootSignature();
-    void BuildRayTraceRootSignatures();
+
+    void BuildRayTracingDescriptorHeaps();
+    void BuildRayTracingRootSignatures();
+    
     void BuildShadersAndInputLayout();
     void BuildPSOs();
     void BuildFrameResources();

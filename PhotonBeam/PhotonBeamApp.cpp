@@ -86,12 +86,13 @@ bool PhotonBeamApp::Initialize()
     CreateTextures();
     BuildRasterizeRootSignature();
     BuildPostRootSignature();
-    BuildRayTraceRootSignatures();
+    BuildRayTracingRootSignatures();
     BuildShadersAndInputLayout();
 
     BuildRenderItems();
     BuildFrameResources();
     BuildDescriptorHeaps();
+    BuildRayTracingDescriptorHeaps();
     BuildPSOs();
 
     CreateBottomLevelAS();
@@ -602,6 +603,11 @@ void PhotonBeamApp::BuildDescriptorHeaps()
     }
 }
 
+void PhotonBeamApp::BuildRayTracingDescriptorHeaps()
+{
+
+}
+
 void PhotonBeamApp::BuildRasterizeRootSignature()
 {    
     CD3DX12_DESCRIPTOR_RANGE texTable{};
@@ -636,7 +642,7 @@ void PhotonBeamApp::BuildRasterizeRootSignature()
     SerializeAndCreateRootSignature(rootSigDesc, mRootSignature.GetAddressOf());
 }
 
-void PhotonBeamApp::BuildRayTraceRootSignatures()
+void PhotonBeamApp::BuildRayTracingRootSignatures()
 {
     // Global Root Signature
     // This is a root signature that is shared across all raytracing shaders invoked during a DispatchRays() call.
