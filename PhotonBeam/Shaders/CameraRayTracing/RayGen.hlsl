@@ -2,7 +2,6 @@
 #ifndef PHOTONBEAM_RAY_GEN
 #define PHOTONBEAM_RAY_GEN
 
-#include "RayCommon.hlsli"
 #include "..\util\RayTracingSampling.hlsli"
 #include "..\RaytracingHlslCompat.h"
 
@@ -18,7 +17,7 @@ StructuredBuffer<float2> g_texCoords : register(t4, space0);
 StructuredBuffer<GltfShadeMaterial> g_materials : register(t5, space0);
 StructuredBuffer<PrimMeshInfo> g_meshInfos : register(t6, space0);
 
-Texture2D g_texturesMap[MAX_SHADER_MATERIAL_TEXTURES] : register(t0, space1);
+Texture2D g_texturesMap[] : register(t0, space1);
 
 SamplerState gsamLinearWrap  : register(s0);
 

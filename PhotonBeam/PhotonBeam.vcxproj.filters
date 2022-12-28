@@ -108,6 +108,12 @@
     <ClInclude Include="..\Common\UploadBuffer.h">
       <Filter>DirectX12 Util Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\third-party\DirectXRaytracingHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameResource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PhotonBeamApp.cpp">
@@ -179,6 +185,9 @@
     <ClCompile Include="..\Common\MathHelper.cpp">
       <Filter>DirectX12 Util Files</Filter>
     </ClCompile>
+    <ClCompile Include="FrameResource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\PostColor.hlsl">
@@ -219,11 +228,6 @@
     <None Include="Shaders\util\RayTracingSampling.hlsli">
       <Filter>Shaders\Util</Filter>
     </None>
-    <None Include="Shaders\BeamTracing\BeamCommon.hlsli">
-      <Filter>Shaders\Beam Tracing</Filter>
-    </None>
-    <None Include="Shaders\CameraRayTracing\RayCommon.hlsli">
-      <Filter>Shaders\Camera Ray Tracing</Filter>
-    </None>
+    <None Include="..\README.md" />
   </ItemGroup>
 </Project>

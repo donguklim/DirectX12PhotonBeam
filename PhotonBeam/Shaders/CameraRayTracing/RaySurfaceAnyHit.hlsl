@@ -2,7 +2,6 @@
 #ifndef PHOTONBEAM_RAY_SURFACE_ANY_HIT
 #define PHOTONBEAM_RAY_SURFACE_ANY_HIT
 
-#include "RayCommon.hlsli"
 #include "..\util\RayTracingSampling.hlsli"
 #include "..\RaytracingHlslCompat.h"
 
@@ -12,7 +11,7 @@ ConstantBuffer<PushConstantRay> pc_ray : register(b0);
 
 
 [shader("anyhit")]
-void RayAnyHit(inout RayHitPayload prd, RayHitAttributes attrs) {
+void SurfaceAnyHit(inout RayHitPayload prd, RayHitAttributes attrs) {
     
     PhotonBeam beam = g_photonBeams[InstanceID()];
 

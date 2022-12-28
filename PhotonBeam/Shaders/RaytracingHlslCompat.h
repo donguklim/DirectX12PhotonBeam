@@ -50,6 +50,23 @@ struct BeamHitAttributes
 };
 
 
+struct HLSL_PAYLOAD_STRUCT RayHitPayload
+{
+	XMFLOAT3 hitValue HLSL_PAYLOAD_READ(caller, anyhit) HLSL_PAYLOAD_WRITE(caller, anyhit);
+	uint32_t instanceID HLSL_PAYLOAD_READ(anyhit) HLSL_PAYLOAD_WRITE(caller);
+	XMFLOAT3 hitNormal HLSL_PAYLOAD_READ(anyhit) HLSL_PAYLOAD_WRITE(caller);
+	uint32_t isHit HLSL_PAYLOAD_READ(anyhit) HLSL_PAYLOAD_WRITE(caller);
+	XMFLOAT3 hitAlbedo HLSL_PAYLOAD_READ(anyhit) HLSL_PAYLOAD_WRITE(caller);
+	XMFLOAT3 hitRoughness HLSL_PAYLOAD_READ(anyhit) HLSL_PAYLOAD_WRITE(caller);
+	XMFLOAT3  weight HLSL_PAYLOAD_READ(anyhit, caller) HLSL_PAYLOAD_WRITE(caller);
+	XMFLOAT3 hitMetallic HLSL_PAYLOAD_READ(anyhit) HLSL_PAYLOAD_WRITE(caller);
+};
+
+struct RayHitAttributes
+{
+	XMFLOAT2 beamHit;
+};
+
 // Scene buffer addresses
 
 const static uint32_t MAX_SHADER_MATERIAL_TEXTURES = 16;

@@ -2,7 +2,6 @@
 #ifndef PHOTONBEAM_RAY_SURFACE_INT
 #define PHOTONBEAM_RAY_SURFACe_INT
 
-#include "RayCommon.hlsli"
 #include "..\util\RayTracingSampling.hlsli"
 #include "..\RaytracingHlslCompat.h"
 
@@ -12,7 +11,7 @@ ConstantBuffer<PushConstantRay> pc_ray : register(b0);
 
 
 [shader("intersection")]
-void RayInt()
+void SurfaceInt()
 {
     const float3 rayEnd = WorldRayOrigin() + WorldRayDirection() * RayTCurrent();
 

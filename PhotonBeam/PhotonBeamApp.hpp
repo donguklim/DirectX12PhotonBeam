@@ -222,7 +222,8 @@ private:
 
     void BuildRayTracingDescriptorHeaps();
     void BuildRayTracingRootSignatures();
-    void BuildRayTracingPSOs();
+    void BuildBeamTracingPSOs();
+    void BuildCameraRayTracingPSOs();
 
     void BuildFrameResources();
     void BuildRenderItems();
@@ -256,17 +257,17 @@ private:
     std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D12PipelineState>> mPSOs;
 
     Microsoft::WRL::ComPtr<ID3D12StateObject> m_beamStateObject = nullptr;
-
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_BeamRootSignarues[to_underlying(RootSignatueEnums::BeamTrace::ERootSignatures::Count)];
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_RayRootSignarues[to_underlying(RootSignatueEnums::CameraRayTrace::ERootSignatures::Count)];
-
-    Microsoft::WRL::ComPtr<IDxcBlob> m_rayShaders[to_underlying(ECameraRayTracingShaders::Count)];
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_beamRootSignatures[to_underlying(RootSignatueEnums::BeamTrace::ERootSignatures::Count)];
     Microsoft::WRL::ComPtr<IDxcBlob> m_beamShaders[to_underlying(EBeamTracingShaders::Count)];
-    static const wchar_t* c_rayShadersExportNames[to_underlying(ECameraRayTracingShaders::Count)];
     static const wchar_t* c_beamShadersExportNames[to_underlying(EBeamTracingShaders::Count)];
-
-    static const wchar_t* c_beamHitGroupNames[to_underlying(EBeamHitTypes::Count)];
     static const wchar_t* c_rayHitGroupNames[to_underlying(ERayHitTypes::Count)];
+
+    Microsoft::WRL::ComPtr<ID3D12StateObject> m_rayStateObject = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rayRootSignatures[to_underlying(RootSignatueEnums::CameraRayTrace::ERootSignatures::Count)];
+    Microsoft::WRL::ComPtr<IDxcBlob> m_rayShaders[to_underlying(ECameraRayTracingShaders::Count)];
+    static const wchar_t* c_rayShadersExportNames[to_underlying(ECameraRayTracingShaders::Count)];
+    static const wchar_t* c_beamHitGroupNames[to_underlying(EBeamHitTypes::Count)];
+    
 
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
