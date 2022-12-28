@@ -8,7 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <tiny_gltf.h>
+#include <tiny-gltf/tiny_gltf.h>
 #include <DirectXMath.h>
 #include "../Common/MathHelper.h"
 
