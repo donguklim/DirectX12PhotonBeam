@@ -14,9 +14,9 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include "PhotonBeamApp.hpp"
-#include <imgui.h>
-#include <imgui_impl_win32.h>
-#include <imgui_impl_dx12.h>
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_win32.h>
+#include <imgui/imgui_impl_dx12.h>
 #include <imgui_helper.h>
 #include "raytraceHelper.hpp"
 
@@ -1677,31 +1677,4 @@ void PhotonBeamApp::CreateTopLevelAS() {
     );
 
     return;
-}
-
-void PhotonBeamApp::BuildBeamSignatures()
-{
-
-    nv_helpers_dx12::RootSignatureGenerator rsc;
-    rsc.AddHeapRangesParameter(
-        {
-            {
-                0 /*u0*/,
-                1 /*1 descriptor */,
-                0 /*use the implicit register space 0*/,
-                D3D12_DESCRIPTOR_RANGE_TYPE_UAV /* UAV representing the output buffer*/,
-                0 /*heap slot where the UAV is defined*/
-            },
-            {
-                0 /*t0*/,
-                1,
-                0,
-                D3D12_DESCRIPTOR_RANGE_TYPE_SRV /*Top-level acceleration structure*/,
-                1
-            }
-        }
-    );
-    //rsc.Generate(md3dDevice.Get(), true, m_beamGenSignature.GetAddressOf());
-
-
 }

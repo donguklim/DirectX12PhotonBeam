@@ -21,7 +21,6 @@
 #include "imgui_helper.h"
 #include <math.h>
 
-#include "imgui.h"
 #include <fstream>
 
 #include <DirectXMath.h>
