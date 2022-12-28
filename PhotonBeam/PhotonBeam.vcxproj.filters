@@ -13,14 +13,8 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="imgui">
-      <UniqueIdentifier>{5c05676d-1b9b-4941-a927-e2c480ae40fb}</UniqueIdentifier>
-    </Filter>
     <Filter Include="imgui helper">
       <UniqueIdentifier>{48d4b0a2-3dfb-4395-96f0-97866b29598d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="DXR helpers">
-      <UniqueIdentifier>{0798450c-dd14-42b2-8d9f-0ba0aa28145d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Shaders">
       <UniqueIdentifier>{c07e8fca-13de-4b73-ba33-19ee2a73b677}</UniqueIdentifier>
@@ -42,41 +36,11 @@
     <ClInclude Include="PhotonBeamApp.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\imgui\imconfig.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\imgui\imgui.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\imgui\imgui_internal.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\imgui\imgui_impl_dx12.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\imgui\imgui_impl_win32.h">
-      <Filter>imgui</Filter>
-    </ClInclude>
     <ClInclude Include="GltfScene.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\imgui-helper\imgui_helper.h">
       <Filter>imgui helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DXRHelpers\nv_helpers_dx12\BottomLevelASGenerator.h">
-      <Filter>DXR helpers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DXRHelpers\nv_helpers_dx12\RaytracingPipelineGenerator.h">
-      <Filter>DXR helpers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DXRHelpers\nv_helpers_dx12\RootSignatureGenerator.h">
-      <Filter>DXR helpers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DXRHelpers\nv_helpers_dx12\ShaderBindingTableGenerator.h">
-      <Filter>DXR helpers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\DXRHelpers\nv_helpers_dx12\TopLevelASGenerator.h">
-      <Filter>DXR helpers</Filter>
     </ClInclude>
     <ClInclude Include="raytraceHelper.hpp">
       <Filter>Header Files</Filter>
@@ -108,10 +72,10 @@
     <ClInclude Include="..\Common\UploadBuffer.h">
       <Filter>DirectX12 Util Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\third-party\DirectXRaytracingHelper.h">
+    <ClInclude Include="FrameResource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FrameResource.h">
+    <ClInclude Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\RaytracingPipelineGenerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -122,47 +86,11 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\imgui\imgui.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\imgui\imgui_demo.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\imgui\imgui_draw.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\imgui\imgui_tables.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\imgui\imgui_widgets.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\imgui\imgui_impl_dx12.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\imgui\imgui_impl_win32.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
     <ClCompile Include="GltfScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\imgui-helper\imgui_helper.cpp">
       <Filter>imgui helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DXRHelpers\nv_helpers_dx12\BottomLevelASGenerator.cpp">
-      <Filter>DXR helpers</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DXRHelpers\nv_helpers_dx12\RaytracingPipelineGenerator.cpp">
-      <Filter>DXR helpers</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DXRHelpers\nv_helpers_dx12\RootSignatureGenerator.cpp">
-      <Filter>DXR helpers</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DXRHelpers\nv_helpers_dx12\ShaderBindingTableGenerator.cpp">
-      <Filter>DXR helpers</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DXRHelpers\nv_helpers_dx12\TopLevelASGenerator.cpp">
-      <Filter>DXR helpers</Filter>
     </ClCompile>
     <ClCompile Include="raytraceHelper.cpp">
       <Filter>Source Files</Filter>
@@ -186,6 +114,9 @@
       <Filter>DirectX12 Util Files</Filter>
     </ClCompile>
     <ClCompile Include="FrameResource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\RaytracingPipelineGenerator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
