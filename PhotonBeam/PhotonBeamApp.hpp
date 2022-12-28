@@ -13,8 +13,8 @@
 #include "../Common/Camera.h"
 #include "../Common/MathHelper.h"
 #include "../Common/UploadBuffer.h"
-#include "nv_helpers_dx12/TopLevelASGenerator.h"
-#include "nv_helpers_dx12/BottomLevelASGenerator.h"
+#include "Nvidia-DXRHelpers/nv_helpers_dx12/TopLevelASGenerator.h"
+#include <Nvidia-DXRHelpers/nv_helpers_dx12/BottomLevelASGenerator.h>
 #include "FrameResource.h"
 #include "GltfScene.hpp"
 
