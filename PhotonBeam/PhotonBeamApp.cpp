@@ -277,6 +277,9 @@ void PhotonBeamApp::Update(const GameTimer& gt)
         }
     }
 
+    m_raytracingOutput.Reset();
+    BuildRayTracingOutputResource();
+
     UpdateObjectCBs(gt);
     UpdateMainPassCB(gt);
 }
