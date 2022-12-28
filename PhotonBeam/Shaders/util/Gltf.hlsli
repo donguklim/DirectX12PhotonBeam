@@ -1,5 +1,5 @@
 
-#include "host_device.h"
+#include "../RaytracingHlslCompat.h"
 
 float3 computeDiffuse(GltfShadeMaterial mat, float3 lightDir, float3 normal)
 {

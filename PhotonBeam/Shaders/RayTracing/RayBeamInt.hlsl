@@ -1,14 +1,17 @@
 
-#include "ray_common.hlsl"
-#include "sampling.hlsl"
-#include "host_device.h"
+#ifndef PHOTONBEAM_RAY_BEAM_INT
+#define PHOTONBEAM_RAY_BEAM_INT
 
-RWStructuredBuffer<PhotonBeam> g_photonBeams: register(u0, space0);
+#include "..\util\RayTracingSampling.hlsli"
+#include "..\RaytracingHlslCompat.h"
 
+
+StructuredBuffer<PhotonBeam> g_photonBeams: register(t0);
 ConstantBuffer<PushConstantRay> pc_ray : register(b0);
 
+
 [shader("intersection")]
-void RayInt()
+void BeamInt()
 {
     float3 rayOrigin = WorldRayOrigin();
     float3 rayDirection = WorldRayDirection();
@@ -47,7 +50,7 @@ void RayInt()
             return;
         }
 
-        HitAttributes attrs;
+        RayHitAttributes attrs;
         attrs.beamHit = beamPoint;
         ReportHit(length(rayPoint - rayOrigin), 0, attrs);
         return;
@@ -99,7 +102,9 @@ void RayInt()
         return;
     }
 
-    HitAttributes attrs;
+    RayHitAttributes attrs;
     attrs.beamHit = beamPoint;
     ReportHit(length(rayPoint - rayOrigin), 0, attrs);
 }
+
+#endif

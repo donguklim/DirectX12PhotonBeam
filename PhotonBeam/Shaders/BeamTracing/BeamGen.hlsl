@@ -1,17 +1,19 @@
 
-#include "beam_common.hlsl"
-#include "sampling.hlsl"
-#include "host_device.h"
+#ifndef PHOTONBEAM_BEAM_GEN
+#define PHOTONBEAM_BEAM_GEN
 
-RaytracingAccelerationStructure g_scene : register(t0);
+#include "..\util\RayTracingSampling.hlsli"
+#include "..\RaytracingHlslCompat.h"
+
 ConstantBuffer<PushConstantRay> pc_ray : register(b0);
+RaytracingAccelerationStructure g_scene : register(t0);
 
-RWStructuredBuffer<PhotonBeam> g_photonBeams: register(u0, space0);
 RWStructuredBuffer<PhotonBeamCounter> g_photonBeamCounters  : register(u1, space0);
+RWStructuredBuffer<PhotonBeam> g_photonBeams: register(u0, space0);
 RWStructuredBuffer<ShaderRayTracingTopASInstanceDesc> g_photonBeamsTopAsInstanceDescs : register(u2, space0);
 
 [shader("raygeneration")] 
-void RayGen() {
+void BeamGen() {
 
     const uint HitTypeAir = 0;
     const uint HitTypeSolid = 1;
@@ -178,3 +180,5 @@ void RayGen() {
 
     }
 }
+
+#endif

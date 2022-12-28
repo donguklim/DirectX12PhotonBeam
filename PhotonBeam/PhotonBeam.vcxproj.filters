@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
@@ -23,37 +23,22 @@
       <UniqueIdentifier>{0798450c-dd14-42b2-8d9f-0ba0aa28145d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Shaders">
-      <UniqueIdentifier>{4c0115bd-9548-4e35-9742-8330b212b756}</UniqueIdentifier>
+      <UniqueIdentifier>{c07e8fca-13de-4b73-ba33-19ee2a73b677}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shaders\Rasterization">
-      <UniqueIdentifier>{f0780e6b-322b-41ad-a10e-e4c8e5401ea9}</UniqueIdentifier>
+    <Filter Include="Shaders\Util">
+      <UniqueIdentifier>{bb560b54-d307-4d3a-bc41-b304a62e04cf}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shaders\Raytracing">
-      <UniqueIdentifier>{e7f0f9f9-69fb-46b0-8285-6da2bf8d321e}</UniqueIdentifier>
+    <Filter Include="Shaders\Beam Tracing">
+      <UniqueIdentifier>{93e52299-c24c-4caf-b4a7-3cd6f8572bcc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shaders\Raytracing\Beam Tracing">
-      <UniqueIdentifier>{03af8f29-3538-466b-9efa-249c839e5924}</UniqueIdentifier>
+    <Filter Include="DirectX12 Util Files">
+      <UniqueIdentifier>{1158a41d-4fbd-4ed3-8f0c-14d08e2055ba}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shaders\Raytracing\Camera Ray Tracing">
-      <UniqueIdentifier>{7beb7927-b744-4e5c-b337-16cab8d535cf}</UniqueIdentifier>
+    <Filter Include="Shaders\Ray Tracing">
+      <UniqueIdentifier>{0ec05b24-b9af-47c3-84b8-2dcec17acbed}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Common\DDSTextureLoader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\GameTimer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\MathHelper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\UploadBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FrameResource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="PhotonBeamApp.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -73,15 +58,6 @@
       <Filter>imgui</Filter>
     </ClInclude>
     <ClInclude Include="GltfScene.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\Camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\d3dApp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\d3dUtil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\imgui-helper\imgui_helper.h">
@@ -105,29 +81,41 @@
     <ClInclude Include="raytraceHelper.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Shaders\host_device.h">
+    <ClInclude Include="Shaders\util\HlslCompat.h">
+      <Filter>Shaders\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders\RaytracingHlslCompat.h">
+      <Filter>Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Camera.h">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\d3dApp.h">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\d3dUtil.h">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\DDSTextureLoader.h">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\GameTimer.h">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\MathHelper.h">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\UploadBuffer.h">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\third-party\DirectXRaytracingHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameResource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Common\d3dApp.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Common\d3dUtil.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Common\DDSTextureLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Common\GameTimer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Common\MathHelper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="FrameResource.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="PhotonBeamApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -155,9 +143,6 @@
     <ClCompile Include="..\imgui\imgui_impl_win32.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\Camera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GltfScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -182,49 +167,67 @@
     <ClCompile Include="raytraceHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Common\Camera.cpp">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\d3dApp.cpp">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\d3dUtil.cpp">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\DDSTextureLoader.cpp">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\GameTimer.cpp">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\MathHelper.cpp">
+      <Filter>DirectX12 Util Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FrameResource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Shaders\color.hlsl">
-      <Filter>Shaders\Rasterization</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\beam_closest_hit.hlsl">
-      <Filter>Shaders\Raytracing\Beam Tracing</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\beam_common.hlsl">
-      <Filter>Shaders\Raytracing\Beam Tracing</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\beam_gen.hlsl">
-      <Filter>Shaders\Raytracing\Beam Tracing</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\beam_miss.hlsl">
-      <Filter>Shaders\Raytracing\Beam Tracing</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\ray_beam_any_hit.hlsl">
-      <Filter>Shaders\Raytracing\Camera Ray Tracing</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\ray_beam_int.hlsl">
-      <Filter>Shaders\Raytracing\Camera Ray Tracing</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\ray_common.hlsl">
-      <Filter>Shaders\Raytracing\Camera Ray Tracing</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\ray_gen.hlsl">
-      <Filter>Shaders\Raytracing\Camera Ray Tracing</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\ray_surface_any_hit.hlsl">
-      <Filter>Shaders\Raytracing\Camera Ray Tracing</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\ray_surface_int.hlsl">
-      <Filter>Shaders\Raytracing\Camera Ray Tracing</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\sampling.hlsl">
-      <Filter>Shaders\Raytracing</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\Gltf.hlsl">
+    <FxCompile Include="Shaders\PostColor.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\post_color.hlsl">
+    <FxCompile Include="Shaders\Rasterization.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="Shaders\BeamTracing\BeamClosestHit.hlsl">
+      <Filter>Shaders\Beam Tracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\BeamTracing\BeamGen.hlsl">
+      <Filter>Shaders\Beam Tracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\BeamTracing\BeamMiss.hlsl">
+      <Filter>Shaders\Beam Tracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\RayTracing\RayBeamAnyHit.hlsl">
+      <Filter>Shaders\Ray Tracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\RayTracing\RayBeamInt.hlsl">
+      <Filter>Shaders\Ray Tracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\RayTracing\RayGen.hlsl">
+      <Filter>Shaders\Ray Tracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\RayTracing\RaySurfaceAnyHit.hlsl">
+      <Filter>Shaders\Ray Tracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\RayTracing\RaySurfaceInt.hlsl">
+      <Filter>Shaders\Ray Tracing</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\util\Gltf.hlsli">
+      <Filter>Shaders\Util</Filter>
+    </None>
+    <None Include="Shaders\util\RayTracingSampling.hlsli">
+      <Filter>Shaders\Util</Filter>
+    </None>
+    <None Include="..\README.md" />
   </ItemGroup>
 </Project>

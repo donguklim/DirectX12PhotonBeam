@@ -1,7 +1,11 @@
 
-#include "ray_common.hlsl"
-#include "sampling.hlsl"
-#include "host_device.h"
+#ifndef PHOTONBEAM_RAY_GEN
+#define PHOTONBEAM_RAY_GEN
+
+#include "..\util\RayTracingSampling.hlsli"
+#include "..\RaytracingHlslCompat.h"
+
+RWTexture2D<float4> RenderTarget : register(u0);
 
 RaytracingAccelerationStructure g_beamAS : register(t0);
 RaytracingAccelerationStructure g_surfaceAS : register(t1);
@@ -15,12 +19,10 @@ StructuredBuffer<PrimMeshInfo> g_meshInfos : register(t6, space0);
 
 Texture2D g_texturesMap[] : register(t0, space1);
 
+SamplerState gsamLinearWrap  : register(s0);
+
 ConstantBuffer<PushConstantRay> pc_ray : register(b0);
 ConstantBuffer<GlobalUniforms> g_uni : register(b1);
-
-RWTexture2D<float4> RenderTarget : register(u0);
-
-SamplerState gsamLinearWrap  : register(s0);
 
 
 [shader("raygeneration")]
@@ -155,6 +157,8 @@ void RayGen() {
             prd
         );
         prd.weight = prd.weight * 1.0;
+
+        // stop the loop at this point if this is the last iteration
         if (i + 1 >= num_iteration)
             break;
 
@@ -183,3 +187,5 @@ void RayGen() {
     RenderTarget[DispatchRaysIndex().xy] = float4(prd.hitValue, 1.0);
 
 }
+
+#endif

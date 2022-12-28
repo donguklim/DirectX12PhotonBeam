@@ -14,13 +14,14 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include "PhotonBeamApp.hpp"
-#include "imgui.h"
-#include "imgui_impl_win32.h"
-#include "imgui_impl_dx12.h"
-#include "imgui_helper.h"
+#include <imgui.h>
+#include <imgui_impl_win32.h>
+#include <imgui_impl_dx12.h>
+#include <imgui_helper.h>
 #include "raytraceHelper.hpp"
 
-#include "Shaders/host_device.h"
+#include "Shaders/RaytracingHlslCompat.h"
+#include <microsoft-directx-graphics-samples/DirectXRaytracingHelper.h>
 
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
@@ -28,6 +29,41 @@ using namespace DirectX;
 const int gNumFrameResources = 3;
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+
+const wchar_t* PhotonBeamApp::c_beamHitGroupNames[] = {L"HitGroup_Surface"};
+
+const wchar_t* PhotonBeamApp::c_rayHitGroupNames[] = {
+    L"HitGroup_Beam", 
+    L"HitGroup_Surface"
+};
+
+const wchar_t* PhotonBeamApp::c_rayShadersExportNames[to_underlying(ERayTracingShaders::Count)] = {
+    L"RayGen",
+    L"BeamInt",
+    L"BeamAnyHit",
+    L"SurfaceInt",
+    L"SurfaceAnyHit"
+};
+
+const wchar_t* PhotonBeamApp::c_beamShadersExportNames[to_underlying(EBeamTracingShaders::Count)] = {
+    L"BeamGen",
+    L"ClosestHit",
+    L"Miss"
+};
+
+const CD3DX12_STATIC_SAMPLER_DESC& PhotonBeamApp::GetLinearSampler()
+{
+    static const CD3DX12_STATIC_SAMPLER_DESC linearWrap(
+        0, // shaderRegister
+        D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
+        D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
+        D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
+        D3D12_TEXTURE_ADDRESS_MODE_WRAP
+    );
+
+    return linearWrap;
+}
 
 
 PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance)
@@ -39,7 +75,28 @@ PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance)
     m_airExtinctCoff = XMVECTORF32{};
     m_sourceLight = XMVECTORF32{};
 
+    for (size_t i = 0; i < to_underlying(RootSignatueEnums::BeamTrace::ERootSignatures::Count); i++)
+    {
+        m_beamRootSignatures[i] = nullptr;
+    }
+
+    for (size_t i = 0; i < to_underlying(RootSignatueEnums::RayTrace::ERootSignatures::Count); i++)
+    {
+        m_rayRootSignatures[i] = nullptr;
+    }
+
+    for (size_t i = 0; i < to_underlying(ERayTracingShaders::Count); i++)
+    {
+        m_rayShaders[i] = nullptr;
+    }
+
+    for (size_t i = 0; i < to_underlying(EBeamTracingShaders::Count); i++)
+    {
+        m_beamShaders[i] = nullptr;
+    }
+
     SetDefaults();
+
 }
 
 PhotonBeamApp::~PhotonBeamApp()
@@ -73,13 +130,17 @@ bool PhotonBeamApp::Initialize()
 
     LoadScene();
     CreateTextures();
-    BuildRootSignature();
+    BuildRasterizeRootSignature();
     BuildPostRootSignature();
+    BuildRayTracingRootSignatures();
     BuildShadersAndInputLayout();
+    BuildBeamTracingPSOs();
+    BuildRayTracingPSOs();
 
     BuildRenderItems();
     BuildFrameResources();
     BuildDescriptorHeaps();
+    BuildRayTracingDescriptorHeaps();
     BuildPSOs();
 
     CreateBottomLevelAS();
@@ -138,6 +199,36 @@ void PhotonBeamApp::InitGui()
     );
 
 
+}
+
+void PhotonBeamApp::SerializeAndCreateRootSignature(
+    D3D12_ROOT_SIGNATURE_DESC& desc, 
+    ID3D12RootSignature** ppRootSignature
+)
+{
+    ComPtr<ID3DBlob> serializedRootSig = nullptr;
+    ComPtr<ID3DBlob> errorBlob = nullptr;
+    HRESULT hr = D3D12SerializeRootSignature(
+        &desc,
+        D3D_ROOT_SIGNATURE_VERSION_1,
+        serializedRootSig.GetAddressOf(),
+        errorBlob.GetAddressOf()
+    );
+
+    if (errorBlob != nullptr)
+    {
+        ::OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+    }
+    ThrowIfFailed(hr);
+
+    ThrowIfFailed(
+        md3dDevice->CreateRootSignature(
+            0,
+            serializedRootSig->GetBufferPointer(),
+            serializedRootSig->GetBufferSize(),
+            IID_PPV_ARGS(ppRootSignature)
+        )
+    );
 }
 
 LRESULT PhotonBeamApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -537,7 +628,7 @@ void PhotonBeamApp::BuildDescriptorHeaps()
         IID_PPV_ARGS(&mGuiDescriptorHeap)));
 
     D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-    srvHeapDesc.NumDescriptors = m_textures.size();
+    srvHeapDesc.NumDescriptors = static_cast<UINT>(m_textures.size());
     srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSrvDescriptorHeap)));
@@ -560,10 +651,15 @@ void PhotonBeamApp::BuildDescriptorHeaps()
     }
 }
 
-void PhotonBeamApp::BuildRootSignature()
+void PhotonBeamApp::BuildRayTracingDescriptorHeaps()
+{
+
+}
+
+void PhotonBeamApp::BuildRasterizeRootSignature()
 {    
-    CD3DX12_DESCRIPTOR_RANGE texTable;
-    texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, PhotonBeamApp::MAX_NUM_TEXTURES, 0, 0);
+    CD3DX12_DESCRIPTOR_RANGE texTable{};
+    texTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, MAX_SHADER_MATERIAL_TEXTURES, 0, 0);
 
     // Root parameter can be a table, root descriptor or root constants.
     CD3DX12_ROOT_PARAMETER slotRootParameter[4] = {};
@@ -573,41 +669,149 @@ void PhotonBeamApp::BuildRootSignature()
     slotRootParameter[2].InitAsShaderResourceView(0, 1);
     slotRootParameter[3].InitAsDescriptorTable(1, &texTable, D3D12_SHADER_VISIBILITY_PIXEL);
 
-
-    const CD3DX12_STATIC_SAMPLER_DESC linearWrap(
-        0, // shaderRegister
-        D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
-        D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
-        D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
-        D3D12_TEXTURE_ADDRESS_MODE_WRAP
-    );
-
     // A root signature is an array of root parameters.
     CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(
         4, 
         slotRootParameter, 
         1, 
-        &linearWrap,
+        &GetLinearSampler(),
         D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
     );
 
-    // create a root signature with a single slot which points to a descriptor range consisting of a single constant buffer
-    ComPtr<ID3DBlob> serializedRootSig = nullptr;
-    ComPtr<ID3DBlob> errorBlob = nullptr;
-    HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
-        serializedRootSig.GetAddressOf(), errorBlob.GetAddressOf());
+    SerializeAndCreateRootSignature(rootSigDesc, mRootSignature.GetAddressOf());
+}
 
-    if (errorBlob != nullptr)
+void PhotonBeamApp::BuildRayTracingRootSignatures()
+{
+    // Global Root Signature
+    // This is a root signature that is shared across all raytracing shaders invoked during a DispatchRays() call.
     {
-        ::OutputDebugStringA((char*)errorBlob->GetBufferPointer());
-    }
-    ThrowIfFailed(hr);
+        using namespace RootSignatueEnums::BeamTrace;
 
-    ThrowIfFailed(md3dDevice->CreateRootSignature(
-        0,
-        serializedRootSig->GetBufferPointer(),
-        serializedRootSig->GetBufferSize(),
-        IID_PPV_ARGS(mRootSignature.GetAddressOf())));
+        // Beam trace global 
+        {
+            CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EGlobalParams::Count)] = {};
+            
+            rootParameters[to_underlying(EGlobalParams::SceneConstantSlot)].InitAsConstantBufferView(0);
+            
+            CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters);
+            SerializeAndCreateRootSignature(
+                desc,
+                m_beamRootSignatures[to_underlying(ERootSignatures::Global)].GetAddressOf()
+            );
+        }
+
+        // Beam trace generation
+        {
+            CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EGenParams::Count)] = {};
+            CD3DX12_DESCRIPTOR_RANGE rwBufferRange{};
+            rwBufferRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 3, 0);
+
+            rootParameters[to_underlying(EGenParams::SurfaceASSlot)].InitAsShaderResourceView(0);
+            rootParameters[to_underlying(EGenParams::RWBufferSlot)].InitAsDescriptorTable(1, &rwBufferRange);
+            
+            CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters);
+            desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
+            SerializeAndCreateRootSignature(
+                desc,
+                m_beamRootSignatures[to_underlying(ERootSignatures::Gen)].GetAddressOf()
+            );
+        }
+
+        // Beam trace closest hit
+        {
+            CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(ECloseHitParams::Count)] = {};
+
+            CD3DX12_DESCRIPTOR_RANGE buffersRange{}, textureMapsRange{};
+            buffersRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 6, 0);
+            textureMapsRange.Init(
+                D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
+                static_cast<uint32_t>(m_textures.size()),
+                0,
+                1
+            );
+
+            rootParameters[to_underlying(ECloseHitParams::ReadBuffersSlot)].InitAsDescriptorTable(
+                1,
+                &buffersRange
+            );
+            rootParameters[to_underlying(ECloseHitParams::TextureMapsSlot)].InitAsDescriptorTable(
+                1, 
+                &textureMapsRange
+            );
+
+            CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters, 1, &GetLinearSampler());
+            desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
+            SerializeAndCreateRootSignature(
+                desc,
+                m_beamRootSignatures[to_underlying(ERootSignatures::CloseHit)].GetAddressOf()
+            );
+        }
+        
+    }
+
+    {
+        using namespace RootSignatueEnums::RayTrace;
+
+        // Camera ray trace global 
+        {
+            CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EGlobalParams::Count)] = {};
+
+            rootParameters[to_underlying(EGlobalParams::SceneConstantSlot)].InitAsConstantBufferView(0);
+
+            CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters);
+            SerializeAndCreateRootSignature(
+                desc,
+                m_rayRootSignatures[to_underlying(ERootSignatures::Global)].GetAddressOf()
+            );
+        }
+
+        // Camera ray trace generation
+        {
+            CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EGenParams::Count)] = {};
+
+            CD3DX12_DESCRIPTOR_RANGE outputImageRange{}, buffersRange{}, textureMapsRange{};
+
+            outputImageRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
+            buffersRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 6, 2);
+            textureMapsRange.Init(
+                D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
+                static_cast<uint32_t>(m_textures.size()),
+                0,
+                1
+            );
+
+            rootParameters[to_underlying(EGenParams::OutputViewSlot)].InitAsDescriptorTable(1, &outputImageRange);
+            rootParameters[to_underlying(EGenParams::BeamASSlot)].InitAsShaderResourceView(0);
+            rootParameters[to_underlying(EGenParams::SurfaceASSlot)].InitAsShaderResourceView(1);
+            rootParameters[to_underlying(EGenParams::ReadBuffersSlot)].InitAsDescriptorTable(1,&buffersRange);
+            rootParameters[to_underlying(EGenParams::TextureMapsSlot)].InitAsDescriptorTable(1,&textureMapsRange);
+            rootParameters[to_underlying(EGenParams::CameraConstantSlot)].InitAsConstantBufferView(1);
+
+            CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters, 1, &GetLinearSampler());
+            desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
+            SerializeAndCreateRootSignature(
+                desc,
+                m_rayRootSignatures[to_underlying(ERootSignatures::Gen)].GetAddressOf()
+            );
+        }
+
+        // Camera ray trace any hit nad intersection
+        {
+            CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EAnyHitAndIntParams::Count)] = {};
+
+            rootParameters[to_underlying(EAnyHitAndIntParams::BeamBufferSlot)].InitAsShaderResourceView(0);
+
+            CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters);
+            desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
+            SerializeAndCreateRootSignature(
+                desc,
+                m_rayRootSignatures[to_underlying(ERootSignatures::AnyHitAndInt)].GetAddressOf()
+            );
+        }
+
+    }
+
 }
 
 void PhotonBeamApp::BuildPostRootSignature()
@@ -657,8 +861,9 @@ void PhotonBeamApp::BuildPostRootSignature()
 
 void PhotonBeamApp::BuildShadersAndInputLayout()
 {
-    mShaders["standardVS"] = d3dUtil::CompileShader(L"Shaders\\color.hlsl", nullptr, "VS", "vs_5_1");
-    mShaders["opaquePS"] = d3dUtil::CompileShader(L"Shaders\\color.hlsl", nullptr, "PS", "ps_5_1");
+
+    m_rasterizeShaders["standardVS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\Rasterization.hlsl", L"vs_6_6", L"VS");
+    m_rasterizeShaders["opaquePS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\Rasterization.hlsl", L"ps_6_6", L"PS");
 
     mInputLayout =
     {
@@ -667,18 +872,18 @@ void PhotonBeamApp::BuildShadersAndInputLayout()
         { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 2, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
     };
 
-    mShaders["postVS"] = d3dUtil::CompileShader(L"Shaders\\post_color.hlsl", nullptr, "VS", "vs_5_1");
-    mShaders["postPS"] = d3dUtil::CompileShader(L"Shaders\\post_color.hlsl", nullptr, "PS", "ps_5_1");
+    m_rasterizeShaders["postVS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"vs_6_6", L"VS");
+    m_rasterizeShaders["postPS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"ps_6_6", L"PS");
 
-    m_rayTraceShaders["beamMiss"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\beam_miss.hlsl");
-    m_rayTraceShaders["beamCHit"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\beam_closest_hit.hlsl");
-    m_rayTraceShaders["beamGen"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\beam_gen.hlsl");
+    m_beamShaders[to_underlying(EBeamTracingShaders::Miss)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamMiss.hlsl", L"lib_6_6");
+    m_beamShaders[to_underlying(EBeamTracingShaders::CloseHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamClosestHit.hlsl", L"lib_6_6");
+    m_beamShaders[to_underlying(EBeamTracingShaders::Gen)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamGen.hlsl", L"lib_6_6");
 
-    m_rayTraceShaders["rayBeamAnyHit"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_beam_any_hit.hlsl");
-    m_rayTraceShaders["rayBeamInt"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_beam_int.hlsl");
-    m_rayTraceShaders["raySurfaceAnyInt"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_surface_any_hit.hlsl");
-    m_rayTraceShaders["raySurfaceInt"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_surface_int.hlsl");
-    m_rayTraceShaders["rayGen"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\ray_gen.hlsl");
+    m_rayShaders[to_underlying(ERayTracingShaders::BeamAnyHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RayBeamAnyHit.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ERayTracingShaders::BeamInt)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RayBeamInt.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ERayTracingShaders::SurfaceAnyHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RaySurfaceAnyHit.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ERayTracingShaders::SurfaceInt)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RaySurfaceInt.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ERayTracingShaders::Gen)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RayGen.hlsl", L"lib_6_6");
 }
 
 void PhotonBeamApp::LoadScene()
@@ -770,9 +975,9 @@ void PhotonBeamApp::CreateTextures()
     if (textureImages.empty())
         numTextures = 1;
 
-    if (numTextures > PhotonBeamApp::MAX_NUM_TEXTURES)
+    if (numTextures > MAX_SHADER_MATERIAL_TEXTURES)
     { 
-        numTextures = PhotonBeamApp::MAX_NUM_TEXTURES;
+        numTextures = MAX_SHADER_MATERIAL_TEXTURES;
         MessageBox(
             nullptr, 
             L"Number of texture exeeds the max number of texturs allowed. Modify source code and shader code to increase the maximum", 
@@ -841,7 +1046,7 @@ void PhotonBeamApp::CreateTextures()
         );
 
 
-        D3D12_SUBRESOURCE_DATA textureData = {};
+        D3D12_SUBRESOURCE_DATA textureData{};
         textureData.pData = imageData;
         textureData.RowPitch = imageWidth * 4;
         textureData.SlicePitch = textureData.RowPitch * imageHeight;
@@ -899,6 +1104,181 @@ void PhotonBeamApp::BuildRenderItems()
         mOpaqueRitems.push_back(e.get());
 }
 
+void PhotonBeamApp::BuildBeamTracingPSOs()
+{
+    CD3DX12_STATE_OBJECT_DESC beamTracingPipeline{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
+
+
+    for (size_t i = 0; i < to_underlying(EBeamTracingShaders::Count); i++)
+    {
+        auto& shaderBlob = m_beamShaders[i];
+        auto lib = beamTracingPipeline.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
+        D3D12_SHADER_BYTECODE libdxil{
+            reinterpret_cast<BYTE*>(shaderBlob->GetBufferPointer()),
+            shaderBlob->GetBufferSize()
+        };
+        lib->SetDXILLibrary(&libdxil);
+    }
+
+    {
+        auto hitGroup = beamTracingPipeline.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
+        hitGroup->SetClosestHitShaderImport(c_beamShadersExportNames[to_underlying(EBeamTracingShaders::CloseHit)]);
+        hitGroup->SetHitGroupExport(c_beamHitGroupNames[0]);
+        hitGroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
+    }
+
+
+    auto shaderConfig = beamTracingPipeline.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
+    UINT payloadSize = sizeof(BeamHitPayload);
+    UINT attributeSize = sizeof(BeamHitAttributes);
+    shaderConfig->Config(payloadSize, attributeSize);
+
+
+    {
+        using namespace RootSignatueEnums::BeamTrace;
+
+        // globla root signature
+        {
+            auto globalRootSignature = beamTracingPipeline.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
+            globalRootSignature->SetRootSignature(
+                m_beamRootSignatures[to_underlying(ERootSignatures::Global)].Get()
+            );
+        }
+
+        // beam generation root signature
+        {
+            auto localRootSignature = beamTracingPipeline.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
+            localRootSignature->SetRootSignature(
+                m_beamRootSignatures[to_underlying(ERootSignatures::Gen)].Get()
+            );
+            // Shader association
+            auto rootSignatureAssociation = beamTracingPipeline.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
+            rootSignatureAssociation->SetSubobjectToAssociate(*localRootSignature);
+            rootSignatureAssociation->AddExport(c_beamShadersExportNames[to_underlying(EBeamTracingShaders::Gen)]);
+        }
+
+        //beam closest hit root signatue
+        {
+            auto localRootSignature = beamTracingPipeline.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
+            localRootSignature->SetRootSignature(
+                m_beamRootSignatures[to_underlying(ERootSignatures::CloseHit)].Get()
+            );
+            // Shader association
+            auto rootSignatureAssociation = beamTracingPipeline.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
+            rootSignatureAssociation->SetSubobjectToAssociate(*localRootSignature);
+            rootSignatureAssociation->AddExports(c_beamHitGroupNames);
+        }
+        
+    }
+
+    auto pipelineConfig = beamTracingPipeline.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
+
+    pipelineConfig->Config(1);
+
+    PrintStateObjectDesc(beamTracingPipeline);
+
+    ThrowIfFailed(
+        md3dDevice->CreateStateObject(
+            beamTracingPipeline, 
+            IID_PPV_ARGS(m_beamStateObject.GetAddressOf())
+        )
+    );
+}
+
+void PhotonBeamApp::BuildRayTracingPSOs()
+{
+    CD3DX12_STATE_OBJECT_DESC rayTracingPipeline{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
+
+
+    for (size_t i = 0; i < to_underlying(ERayTracingShaders::Count); i++)
+    {
+        auto& shaderBlob = m_rayShaders[i];
+        auto lib = rayTracingPipeline.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
+        D3D12_SHADER_BYTECODE libdxil{
+            reinterpret_cast<BYTE*>(shaderBlob->GetBufferPointer()),
+            shaderBlob->GetBufferSize()
+        };
+        lib->SetDXILLibrary(&libdxil);
+    }
+
+    // Beam hit group
+    {
+        auto hitGroup = rayTracingPipeline.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
+
+        hitGroup->SetIntersectionShaderImport(c_rayShadersExportNames[to_underlying(ERayTracingShaders::BeamInt)]);
+        hitGroup->SetAnyHitShaderImport(c_rayShadersExportNames[to_underlying(ERayTracingShaders::BeamAnyHit)]);
+        hitGroup->SetHitGroupExport(c_rayHitGroupNames[to_underlying(ERayHitTypes::Beam)]);
+        hitGroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_PROCEDURAL_PRIMITIVE);
+    }
+
+    // Surface hit group
+    {
+        auto hitGroup = rayTracingPipeline.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
+
+        hitGroup->SetIntersectionShaderImport(c_rayShadersExportNames[to_underlying(ERayTracingShaders::SurfaceInt)]);
+        hitGroup->SetAnyHitShaderImport(c_rayShadersExportNames[to_underlying(ERayTracingShaders::SurfaceAnyHit)]);
+        hitGroup->SetHitGroupExport(c_rayHitGroupNames[to_underlying(ERayHitTypes::Surface)]);
+        hitGroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_PROCEDURAL_PRIMITIVE);
+    }
+
+
+    auto shaderConfig = rayTracingPipeline.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
+    UINT payloadSize = sizeof(RayHitPayload);
+    UINT attributeSize = sizeof(RayHitAttributes);
+    shaderConfig->Config(payloadSize, attributeSize);
+
+
+    {
+        using namespace RootSignatueEnums::RayTrace;
+
+        // globla root signature
+        {
+            auto globalRootSignature = rayTracingPipeline.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
+            globalRootSignature->SetRootSignature(
+                m_rayRootSignatures[to_underlying(ERootSignatures::Global)].Get()
+            );
+        }
+
+        // ray generation root signature
+        {
+            auto localRootSignature = rayTracingPipeline.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
+            localRootSignature->SetRootSignature(
+                m_rayRootSignatures[to_underlying(ERootSignatures::Gen)].Get()
+            );
+            // Shader association
+            auto rootSignatureAssociation = rayTracingPipeline.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
+            rootSignatureAssociation->SetSubobjectToAssociate(*localRootSignature);
+            rootSignatureAssociation->AddExport(c_rayShadersExportNames[to_underlying(EBeamTracingShaders::Gen)]);
+        }
+
+        //ray beam any hit and intersection root signatue
+        {
+            auto localRootSignature = rayTracingPipeline.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
+            localRootSignature->SetRootSignature(
+                m_rayRootSignatures[to_underlying(ERootSignatures::AnyHitAndInt)].Get()
+            );
+            // Shader association
+            auto rootSignatureAssociation = rayTracingPipeline.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
+            rootSignatureAssociation->SetSubobjectToAssociate(*localRootSignature);
+            rootSignatureAssociation->AddExports(c_rayHitGroupNames);
+        }
+
+    }
+
+    auto pipelineConfig = rayTracingPipeline.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
+
+    pipelineConfig->Config(1);
+
+    PrintStateObjectDesc(rayTracingPipeline);
+
+    ThrowIfFailed(
+        md3dDevice->CreateStateObject(
+            rayTracingPipeline,
+            IID_PPV_ARGS(m_rayStateObject.GetAddressOf())
+        )
+    );
+}
+
 void PhotonBeamApp::BuildPSOs()
 {
     D3D12_GRAPHICS_PIPELINE_STATE_DESC opaquePsoDesc;
@@ -909,13 +1289,13 @@ void PhotonBeamApp::BuildPSOs()
     opaquePsoDesc.pRootSignature = mRootSignature.Get();
     opaquePsoDesc.VS =
     {
-        reinterpret_cast<BYTE*>(mShaders["standardVS"]->GetBufferPointer()),
-        mShaders["standardVS"]->GetBufferSize()
+        reinterpret_cast<BYTE*>(m_rasterizeShaders["standardVS"]->GetBufferPointer()),
+        m_rasterizeShaders["standardVS"]->GetBufferSize()
     };
     opaquePsoDesc.PS =
     {
-        reinterpret_cast<BYTE*>(mShaders["opaquePS"]->GetBufferPointer()),
-        mShaders["opaquePS"]->GetBufferSize()
+        reinterpret_cast<BYTE*>(m_rasterizeShaders["opaquePS"]->GetBufferPointer()),
+        m_rasterizeShaders["opaquePS"]->GetBufferSize()
     };
     opaquePsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
     opaquePsoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
@@ -940,13 +1320,13 @@ void PhotonBeamApp::BuildPSOs()
     postPsoDesc.pRootSignature = mPostRootSignature.Get();
     postPsoDesc.VS =
     {
-        reinterpret_cast<BYTE*>(mShaders["postVS"]->GetBufferPointer()),
-        mShaders["postVS"]->GetBufferSize()
+        reinterpret_cast<BYTE*>(m_rasterizeShaders["postVS"]->GetBufferPointer()),
+        m_rasterizeShaders["postVS"]->GetBufferSize()
     };
     postPsoDesc.PS =
     {
-        reinterpret_cast<BYTE*>(mShaders["postPS"]->GetBufferPointer()),
-        mShaders["postPS"]->GetBufferSize()
+        reinterpret_cast<BYTE*>(m_rasterizeShaders["postPS"]->GetBufferPointer()),
+        m_rasterizeShaders["postPS"]->GetBufferSize()
     };
     postPsoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
     postPsoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
@@ -1321,7 +1701,7 @@ void PhotonBeamApp::BuildBeamSignatures()
             }
         }
     );
-    rsc.Generate(md3dDevice.Get(), true, m_beamGenSignature.GetAddressOf());
+    //rsc.Generate(md3dDevice.Get(), true, m_beamGenSignature.GetAddressOf());
 
 
 }

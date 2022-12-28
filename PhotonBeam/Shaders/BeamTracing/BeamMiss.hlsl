@@ -1,5 +1,9 @@
 
-#include "beam_common.hlsl"
+#ifndef PHOTONBEAM_BEAM_MISS
+#define PHOTONBEAM_BEAM_MISS
+
+#include "..\RaytracingHlslCompat.h"
+
 
 [shader("miss")]
 void Miss(inout BeamHitPayload prd : SV_RayPayload)
@@ -10,3 +14,5 @@ void Miss(inout BeamHitPayload prd : SV_RayPayload)
 	//prd.hitNormal = float3(0.0f, 0.0f, 0.0f);
 	prd.weight = float3(0.0f, 0.0f, 0.0f);
 }
+
+#endif

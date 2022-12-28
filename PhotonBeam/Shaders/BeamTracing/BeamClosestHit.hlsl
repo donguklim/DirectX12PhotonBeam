@@ -1,21 +1,24 @@
-#include "gltf.hlsl"
-#include "beam_common.hlsl"
-#include "sampling.hlsl"
-#include "host_device.h"
+
+#ifndef PHOTONBEAM_BEAM_CLOSE_HIT
+#define PHOTONBEAM_BEAM_CLOSE_HIT
+
+#include "..\util\Gltf.hlsli"
+#include "..\util\RayTracingSampling.hlsli"
+#include "..\RaytracingHlslCompat.h"
 
 
 
 ConstantBuffer<PushConstantRay> pc_ray : register(b0);
 
-RaytracingAccelerationStructure g_scene : register(t0);
 // Triangle resources
+StructuredBuffer<uint3> g_indices : register(t0, space0);
 StructuredBuffer<float3> g_vertices : register(t1, space0);
 StructuredBuffer<float3> g_normals : register(t2, space0);
 StructuredBuffer<float2> g_texCoords : register(t3, space0);
-StructuredBuffer<uint3> g_indices : register(t4, space0);
 
-StructuredBuffer<GltfShadeMaterial> g_materials : register(t5, space0);
-StructuredBuffer<PrimMeshInfo> g_meshInfos : register(t6, space0);
+
+StructuredBuffer<GltfShadeMaterial> g_materials : register(t4, space0);
+StructuredBuffer<PrimMeshInfo> g_meshInfos : register(t5, space0);
 
 Texture2D g_texturesMap[] : register(t0, space1);
 
@@ -59,7 +62,7 @@ bool randomScatterOccured(inout BeamHitPayload prd, const in float3 world_positi
 
 
 [shader("closesthit")] 
-void ClosestHit(inout BeamHitPayload prd, Attributes attribs)
+void ClosestHit(inout BeamHitPayload prd, BeamHitAttributes attribs)
 {
     PrimMeshInfo meshInfo = g_meshInfos[InstanceID()];
     prd.instanceID = InstanceID();
@@ -156,3 +159,5 @@ void ClosestHit(inout BeamHitPayload prd, Attributes attribs)
 
     return;
 }
+
+#endif

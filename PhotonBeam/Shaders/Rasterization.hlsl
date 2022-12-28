@@ -1,8 +1,13 @@
 
-#include "gltf.hlsl"
+// typedef statements for compatibility with shader model 6
+
+#ifndef RASTERIAZTION_WITHOUT_PHOTON_BEAM_HLSL
+#define RASTERIAZTION_WITHOUT_PHOTON_BEAM_HLSL
+
+#include "util\Gltf.hlsli"
 
 
-Texture2D gTextures[16] : register(t0);
+Texture2D gTextures[MAX_SHADER_MATERIAL_TEXTURES] : register(t0);
 
 StructuredBuffer<GltfShadeMaterial> g_material : register(t0, space1);
 
@@ -96,3 +101,5 @@ float4 PS(VertexOut pin) : SV_Target
 
     return pow(float4(lightIntensity * (diffuse + specular), 1), gammaVec);
 }
+
+#endif

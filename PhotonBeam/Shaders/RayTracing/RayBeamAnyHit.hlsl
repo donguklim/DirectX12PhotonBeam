@@ -1,16 +1,17 @@
 
-#include "ray_common.hlsl"
-#include "sampling.hlsl"
-#include "host_device.h"
+#ifndef PHOTONBEAM_RAY_BEAM_ANY_HIT
+#define PHOTONBEAM_RAY_BEAM_ANY_HIT
 
+#include "..\util\RayTracingSampling.hlsli"
+#include "..\RaytracingHlslCompat.h"
 
-ConstantBuffer<PushConstantRay> pc_ray : register(b0);
 
 StructuredBuffer<PhotonBeam> g_photonBeams: register(t0);
+ConstantBuffer<PushConstantRay> pc_ray : register(b0);
 
 
 [shader("anyhit")]
-void RayAnyHit(inout RayHitPayload prd, HitAttributes attrs) {
+void BeamAnyHit(inout RayHitPayload prd, RayHitAttributes attrs) {
 
     PhotonBeam beam = g_photonBeams[InstanceID()];
 
@@ -46,3 +47,5 @@ void RayAnyHit(inout RayHitPayload prd, HitAttributes attrs) {
     IgnoreHit();
 
 }
+
+#endif
