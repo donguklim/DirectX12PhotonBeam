@@ -25,10 +25,6 @@ ConstantBuffer<PushConstantRay> pc_ray : register(b0);
 ConstantBuffer<GlobalUniforms> g_uni : register(b1);
 
 
-
-
-
-
 [shader("raygeneration")]
 void RayGen() {
 
@@ -161,6 +157,8 @@ void RayGen() {
             prd
         );
         prd.weight = prd.weight * 1.0;
+
+        // stop the loop at this point if this is the last iteration
         if (i + 1 >= num_iteration)
             break;
 

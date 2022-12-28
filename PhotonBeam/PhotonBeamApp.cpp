@@ -1176,8 +1176,7 @@ void PhotonBeamApp::BuildBeamTracingPSOs()
 
     auto pipelineConfig = beamTracingPipeline.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
 
-    UINT maxRecursionDepth = 1;
-    pipelineConfig->Config(maxRecursionDepth);
+    pipelineConfig->Config(1);
 
     PrintStateObjectDesc(beamTracingPipeline);
 
@@ -1271,8 +1270,7 @@ void PhotonBeamApp::BuildRayTracingPSOs()
 
     auto pipelineConfig = rayTracingPipeline.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
 
-    UINT maxRecursionDepth = 2;
-    pipelineConfig->Config(maxRecursionDepth);
+    pipelineConfig->Config(1);
 
     PrintStateObjectDesc(rayTracingPipeline);
 
