@@ -226,7 +226,7 @@ private:
     void BuildBeamTracingPSOs();
     void BuildRayTracingPSOs();
 
-    void BuildRayTraceOutputResource();
+    void BuildRayTracingOutputResource();
 
     void BuildFrameResources();
     void BuildRenderItems();

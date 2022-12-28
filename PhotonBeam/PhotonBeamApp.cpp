@@ -147,10 +147,12 @@ bool PhotonBeamApp::Initialize()
     BuildFrameResources();
     BuildDescriptorHeaps();
     BuildRayTracingDescriptorHeaps();
+    BuildRayTracingDescriptorHeaps();
     BuildPSOs();
 
     CreateBottomLevelAS();
     CreateTopLevelAS();
+    BuildRayTracingOutputResource();
 
     // Execute the initialization commands.
     ThrowIfFailed(mCommandList->Close());
@@ -659,8 +661,39 @@ void PhotonBeamApp::BuildDescriptorHeaps()
 
 void PhotonBeamApp::BuildRayTracingDescriptorHeaps()
 {
+    // beam tracing
+    {
+        D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
+        // Allocate a heap for 6 descriptors:
+        // 2 - vertex and index  buffer SRVs
+        // 1 - raytracing output texture SRV
+        descriptorHeapDesc.NumDescriptors = 3;
+        descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        descriptorHeapDesc.NodeMask = 0;
+        md3dDevice->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&m_beamTracingDescriptorHeap));
+        NAME_D3D12_OBJECT(m_beamTracingDescriptorHeap);
+    }
+
+    // ray tracing
+    {
+        D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
+        // Allocate a heap for 6 descriptors:
+        // 2 - vertex and index  buffer SRVs
+        // 1 - raytracing output texture SRV
+        descriptorHeapDesc.NumDescriptors = 3;
+        descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        descriptorHeapDesc.NodeMask = 0;
+        md3dDevice->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&m_rayTracingDescriptorHeap));
+        NAME_D3D12_OBJECT(m_rayTracingDescriptorHeap);
+    }
+
 
 }
+    
+
+    
 
 void PhotonBeamApp::BuildRasterizeRootSignature()
 {    
@@ -1701,7 +1734,7 @@ uint32_t PhotonBeamApp::AllocateRayTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE
     
 }
 
-void PhotonBeamApp::BuildRayTraceOutputResource()
+void PhotonBeamApp::BuildRayTracingOutputResource()
 {
 
     auto backbufferFormat = mBackBufferFormat;
