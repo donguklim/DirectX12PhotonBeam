@@ -1678,3 +1678,8 @@ void PhotonBeamApp::CreateTopLevelAS() {
 
     return;
 }
+
+void PhotonBeamApp::BuildRayTraceOutputResource()
+{
+
+}

@@ -224,11 +224,14 @@ private:
     void BuildBeamTracingPSOs();
     void BuildRayTracingPSOs();
 
+    void BuildRayTraceOutputResource();
+
     void BuildFrameResources();
     void BuildRenderItems();
     void DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems);
     void RenderUI();
     void SetDefaults();
+
     void Rasterize(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc);
     void LightTrace(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc);
     void RayTrace();
