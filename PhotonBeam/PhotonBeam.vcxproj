@@ -82,7 +82,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\WICTextureLoader;..\imgui;..\imgui-helper;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\imgui-helper;</AdditionalIncludeDirectories>
       <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
@@ -115,7 +115,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\WICTextureLoader;..\imgui;..\imgui-helper;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\imgui-helper;</AdditionalIncludeDirectories>
       <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
@@ -151,11 +151,14 @@
     <ClInclude Include="..\Common\MathHelper.h" />
     <ClInclude Include="..\Common\UploadBuffer.h" />
     <ClInclude Include="..\imgui-helper\imgui_helper.h" />
-    <ClInclude Include="..\imgui\imconfig.h" />
-    <ClInclude Include="..\imgui\imgui.h" />
-    <ClInclude Include="..\imgui\imgui_impl_dx12.h" />
-    <ClInclude Include="..\imgui\imgui_impl_win32.h" />
-    <ClInclude Include="..\imgui\imgui_internal.h" />
+    <ClInclude Include="..\third-party\imgui\imconfig.h" />
+    <ClInclude Include="..\third-party\imgui\imgui.h" />
+    <ClInclude Include="..\third-party\imgui\imgui_impl_dx12.h" />
+    <ClInclude Include="..\third-party\imgui\imgui_impl_win32.h" />
+    <ClInclude Include="..\third-party\imgui\imgui_internal.h" />
+    <ClInclude Include="..\third-party\imgui\imstb_rectpack.h" />
+    <ClInclude Include="..\third-party\imgui\imstb_textedit.h" />
+    <ClInclude Include="..\third-party\imgui\imstb_truetype.h" />
     <ClInclude Include="..\third-party\microsoft-directx-graphics-samples\DirectXRaytracingHelper.h" />
     <ClInclude Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\BottomLevelASGenerator.h" />
     <ClInclude Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\RaytracingPipelineGenerator.h" />
@@ -183,13 +186,13 @@
     <ClCompile Include="..\Common\GameTimer.cpp" />
     <ClCompile Include="..\Common\MathHelper.cpp" />
     <ClCompile Include="..\imgui-helper\imgui_helper.cpp" />
-    <ClCompile Include="..\imgui\imgui.cpp" />
-    <ClCompile Include="..\imgui\imgui_demo.cpp" />
-    <ClCompile Include="..\imgui\imgui_draw.cpp" />
-    <ClCompile Include="..\imgui\imgui_impl_dx12.cpp" />
-    <ClCompile Include="..\imgui\imgui_impl_win32.cpp" />
-    <ClCompile Include="..\imgui\imgui_tables.cpp" />
-    <ClCompile Include="..\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="..\third-party\imgui\imgui.cpp" />
+    <ClCompile Include="..\third-party\imgui\imgui_demo.cpp" />
+    <ClCompile Include="..\third-party\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\third-party\imgui\imgui_impl_dx12.cpp" />
+    <ClCompile Include="..\third-party\imgui\imgui_impl_win32.cpp" />
+    <ClCompile Include="..\third-party\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\third-party\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\BottomLevelASGenerator.cpp" />
     <ClCompile Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\RaytracingPipelineGenerator.cpp" />
     <ClCompile Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\RootSignatureGenerator.cpp" />

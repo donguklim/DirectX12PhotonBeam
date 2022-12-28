@@ -24,8 +24,8 @@
 
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS 1
 #define IMGUI_DEFINE_MATH_OPERATORS
-#include "imgui.h"
-#include "imgui_internal.h"
+#include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
 
 
 #include <algorithm>
