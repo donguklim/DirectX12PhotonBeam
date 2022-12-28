@@ -15,7 +15,6 @@
 #include "../Common/UploadBuffer.h"
 #include "nv_helpers_dx12/TopLevelASGenerator.h"
 #include "nv_helpers_dx12/BottomLevelASGenerator.h"
-#include "nv_helpers_dx12/RootSignatureGenerator.h"
 #include "FrameResource.h"
 #include "GltfScene.hpp"
 
@@ -237,7 +236,6 @@ private:
 
     void CreateBottomLevelAS();
     void CreateTopLevelAS();
-    void BuildBeamSignatures();
 
     static const CD3DX12_STATIC_SAMPLER_DESC& GetLinearSampler();
 
