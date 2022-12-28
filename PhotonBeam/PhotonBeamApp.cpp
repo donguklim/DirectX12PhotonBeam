@@ -1729,7 +1729,7 @@ void PhotonBeamApp::BuildRayTraceOutputResource()
             IID_PPV_ARGS(&m_raytracingOutput)
         )
     );
-    //NAME_D3D12_OBJECT(m_raytracingOutput);
+    NAME_D3D12_OBJECT(m_raytracingOutput);
 
     D3D12_CPU_DESCRIPTOR_HANDLE uavDescriptorHandle;
     m_raytracingOutputResourceUAVDescriptorHeapIndex = AllocateRayTracingDescriptor(&uavDescriptorHandle, m_raytracingOutputResourceUAVDescriptorHeapIndex);

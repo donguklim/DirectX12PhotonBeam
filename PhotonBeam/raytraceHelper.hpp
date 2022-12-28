@@ -87,3 +87,6 @@ namespace raytrace_helper
     Microsoft::WRL::ComPtr<IDxcBlob> CompileShaderLibrary(LPCWSTR fileName, LPCWSTR targetProfile, LPCWSTR entryPoint= L"");
 
 }
+
+#define NAME_D3D12_OBJECT(x) raytrace_helper::SetName((x).Get(), L#x)
+#define NAME_D3D12_OBJECT_INDEXED(x, n) raytrace_helper::SetNameIndexed((x)[n].Get(), L#x, n)
