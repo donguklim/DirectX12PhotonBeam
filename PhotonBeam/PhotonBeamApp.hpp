@@ -239,6 +239,8 @@ private:
     void CreateTopLevelAS();
     void BuildBeamSignatures();
 
+    static const CD3DX12_STATIC_SAMPLER_DESC& GetLinearSampler();
+
 private:
 
     std::vector<std::unique_ptr<FrameResource>> mFrameResources;
@@ -268,7 +270,6 @@ private:
     static const wchar_t* c_rayShadersExportNames[to_underlying(ERayTracingShaders::Count)];
     static const wchar_t* c_beamHitGroupNames[to_underlying(EBeamHitTypes::Count)];
     
-
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
 

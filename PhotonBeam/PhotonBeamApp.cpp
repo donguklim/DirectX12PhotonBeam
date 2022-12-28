@@ -52,6 +52,20 @@ const wchar_t* PhotonBeamApp::c_beamShadersExportNames[to_underlying(EBeamTracin
     L"Miss"
 };
 
+const CD3DX12_STATIC_SAMPLER_DESC& PhotonBeamApp::GetLinearSampler()
+{
+    static const CD3DX12_STATIC_SAMPLER_DESC linearWrap(
+        0, // shaderRegister
+        D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
+        D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
+        D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
+        D3D12_TEXTURE_ADDRESS_MODE_WRAP
+    );
+
+    return linearWrap;
+}
+
+
 PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance)
     : D3DApp(hInstance)
 {
@@ -655,21 +669,12 @@ void PhotonBeamApp::BuildRasterizeRootSignature()
     slotRootParameter[2].InitAsShaderResourceView(0, 1);
     slotRootParameter[3].InitAsDescriptorTable(1, &texTable, D3D12_SHADER_VISIBILITY_PIXEL);
 
-
-    const CD3DX12_STATIC_SAMPLER_DESC linearWrap(
-        0, // shaderRegister
-        D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
-        D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
-        D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
-        D3D12_TEXTURE_ADDRESS_MODE_WRAP
-    );
-
     // A root signature is an array of root parameters.
     CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(
         4, 
         slotRootParameter, 
         1, 
-        &linearWrap,
+        &GetLinearSampler(),
         D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
     );
 
@@ -678,14 +683,6 @@ void PhotonBeamApp::BuildRasterizeRootSignature()
 
 void PhotonBeamApp::BuildRayTracingRootSignatures()
 {
-    const CD3DX12_STATIC_SAMPLER_DESC linearWrap(
-        0, // shaderRegister
-        D3D12_FILTER_MIN_MAG_MIP_LINEAR, // filter
-        D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressU
-        D3D12_TEXTURE_ADDRESS_MODE_WRAP,  // addressV
-        D3D12_TEXTURE_ADDRESS_MODE_WRAP
-    );
-
     // Global Root Signature
     // This is a root signature that is shared across all raytracing shaders invoked during a DispatchRays() call.
     {
@@ -743,7 +740,7 @@ void PhotonBeamApp::BuildRayTracingRootSignatures()
                 &textureMapsRange
             );
 
-            CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters, 1, &linearWrap);
+            CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters, 1, &GetLinearSampler());
             desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
             SerializeAndCreateRootSignature(
                 desc,
@@ -791,7 +788,7 @@ void PhotonBeamApp::BuildRayTracingRootSignatures()
             rootParameters[to_underlying(EGenParams::TextureMapsSlot)].InitAsDescriptorTable(1,&textureMapsRange);
             rootParameters[to_underlying(EGenParams::CameraConstantSlot)].InitAsConstantBufferView(1);
 
-            CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters, 1, &linearWrap);
+            CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters, 1, &GetLinearSampler());
             desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
             SerializeAndCreateRootSignature(
                 desc,
