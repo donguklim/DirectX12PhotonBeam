@@ -21,6 +21,7 @@
 #include "raytraceHelper.hpp"
 
 #include "Shaders/RaytracingHlslCompat.h"
+//#include <microsoft-directx-graphics-samples/DXSampleHelper.h>
 #include <microsoft-directx-graphics-samples/DirectXRaytracingHelper.h>
 
 using Microsoft::WRL::ComPtr;
@@ -66,14 +67,19 @@ const CD3DX12_STATIC_SAMPLER_DESC& PhotonBeamApp::GetLinearSampler()
 }
 
 
-PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance)
-    : D3DApp(hInstance)
+PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance): 
+    D3DApp(hInstance),
+    m_raytracingOutputResourceUAVDescriptorHeapIndex(UINT_MAX),
+    m_beamTracingDescriptorsAllocated(0),
+    m_rayTracingDescriptorsAllocated(0)
 {
     mLastMousePos = POINT{};
     m_useRayTracer = true;
     m_airScatterCoff = XMVECTORF32{};
     m_airExtinctCoff = XMVECTORF32{};
     m_sourceLight = XMVECTORF32{};
+
+    
 
     for (size_t i = 0; i < to_underlying(RootSignatueEnums::BeamTrace::ERootSignatures::Count); i++)
     {
@@ -1679,7 +1685,57 @@ void PhotonBeamApp::CreateTopLevelAS() {
     return;
 }
 
+uint32_t PhotonBeamApp::AllocateRayTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE* cpuDescriptor, UINT descriptorIndexToUse)
+{
+    
+    auto descriptorHeapCpuBase = m_rayTracingDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+    if (descriptorIndexToUse >= m_rayTracingDescriptorHeap->GetDesc().NumDescriptors)
+    {
+        ThrowIfFalse(
+            m_rayTracingDescriptorsAllocated < m_rayTracingDescriptorHeap->GetDesc().NumDescriptors 
+        );
+        descriptorIndexToUse = m_rayTracingDescriptorsAllocated++;
+    }
+    *cpuDescriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE(descriptorHeapCpuBase, descriptorIndexToUse, mCbvSrvDescriptorSize);
+    return descriptorIndexToUse;
+    
+}
+
 void PhotonBeamApp::BuildRayTraceOutputResource()
 {
+
+    auto backbufferFormat = mBackBufferFormat;
+
+    // Create the output resource. The dimensions and format should match the swap-chain.
+    auto uavDesc = CD3DX12_RESOURCE_DESC::Tex2D(
+        mBackBufferFormat, 
+        mClientWidth, 
+        mClientHeight, 
+        1, 
+        1, 
+        m4xMsaaState ? 4 : 1,
+        m4xMsaaState ? (m4xMsaaQuality - 1) : 0,
+        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+    );
+
+    auto defaultHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+    ThrowIfFailed(
+        md3dDevice->CreateCommittedResource(
+            &defaultHeapProperties, 
+            D3D12_HEAP_FLAG_NONE, 
+            &uavDesc, 
+            D3D12_RESOURCE_STATE_UNORDERED_ACCESS, 
+            nullptr, 
+            IID_PPV_ARGS(&m_raytracingOutput)
+        )
+    );
+    //NAME_D3D12_OBJECT(m_raytracingOutput);
+
+    D3D12_CPU_DESCRIPTOR_HANDLE uavDescriptorHandle;
+    m_raytracingOutputResourceUAVDescriptorHeapIndex = AllocateRayTracingDescriptor(&uavDescriptorHandle, m_raytracingOutputResourceUAVDescriptorHeapIndex);
+    D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
+    UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+    md3dDevice->CreateUnorderedAccessView(m_raytracingOutput.Get(), nullptr, &UAVDesc, uavDescriptorHandle);
+    m_raytracingOutputResourceUAVGpuDescriptor = CD3DX12_GPU_DESCRIPTOR_HANDLE(m_rayTracingDescriptorHeap->GetGPUDescriptorHandleForHeapStart(), m_raytracingOutputResourceUAVDescriptorHeapIndex, mCbvSrvUavDescriptorSize);
 
 }

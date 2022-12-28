@@ -8,6 +8,15 @@
 #pragma comment(lib,"dxcompiler.lib")
 
 
+#ifndef ThrowIfFalse
+#define ThrowIfFalse(x)                                              \
+{                                                                     \
+    HRESULT hr__ = x ? S_OK : E_FAIL;                                    \
+    std::wstring wfn = AnsiToWString(__FILE__);                       \
+    if(!(x)) { throw DxException(hr__, L"ThrowIfFalse", wfn, __LINE__); } \
+}
+#endif
+
 namespace raytrace_helper
 {
     static const D3D12_HEAP_PROPERTIES pmUploadHeapProps = {
@@ -52,6 +61,28 @@ namespace raytrace_helper
         return resultBuffer;
     }
 
+    // Assign a name to the object to aid with debugging.
+#if defined(_DEBUG) || defined(DBG)
+    inline void SetName(ID3D12Object * pObject, LPCWSTR name)
+    {
+        pObject->SetName(name);
+    }
+    inline void SetNameIndexed(ID3D12Object* pObject, LPCWSTR name, UINT index)
+    {
+        WCHAR fullName[50];
+        if (swprintf_s(fullName, L"%s[%u]", name, index) > 0)
+        {
+            pObject->SetName(fullName);
+        }
+    }
+#else
+    inline void SetName(ID3D12Object*, LPCWSTR)
+    {
+    }
+    inline void SetNameIndexed(ID3D12Object*, LPCWSTR, UINT)
+    {
+    }
+#endif
     
     Microsoft::WRL::ComPtr<IDxcBlob> CompileShaderLibrary(LPCWSTR fileName, LPCWSTR targetProfile, LPCWSTR entryPoint= L"");
 

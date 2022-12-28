@@ -219,6 +219,8 @@ private:
     void BuildShadersAndInputLayout();
     void BuildPSOs();
 
+    uint32_t AllocateRayTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE* cpuDescriptor, UINT descriptorIndexToUse);
+
     void BuildRayTracingDescriptorHeaps();
     void BuildRayTracingRootSignatures();
     void BuildBeamTracingPSOs();
@@ -254,6 +256,14 @@ private:
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mGuiDescriptorHeap = nullptr;
 
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_beamTracingDescriptorHeap = nullptr;
+    uint32_t m_beamTracingDescriptorsAllocated;
+    D3D12_GPU_DESCRIPTOR_HANDLE m_raytracingOutputResourceUAVGpuDescriptor{};
+    
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rayTracingDescriptorHeap = nullptr;
+    uint32_t m_rayTracingDescriptorsAllocated;
+    uint32_t m_raytracingOutputResourceUAVDescriptorHeapIndex;
+
     std::vector<std::unique_ptr<Texture>> m_textures;
     std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> mGeometries;
     std::unordered_map<std::string, Microsoft::WRL::ComPtr<IDxcBlob>> m_rasterizeShaders;
@@ -270,6 +280,8 @@ private:
     Microsoft::WRL::ComPtr<IDxcBlob> m_rayShaders[to_underlying(ERayTracingShaders::Count)];
     static const wchar_t* c_rayShadersExportNames[to_underlying(ERayTracingShaders::Count)];
     static const wchar_t* c_beamHitGroupNames[to_underlying(EBeamHitTypes::Count)];
+
+    Microsoft::WRL::ComPtr<ID3D12Resource> m_raytracingOutput = nullptr;
     
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
