@@ -64,7 +64,7 @@ namespace RootSignatueEnums
     }
 
 
-    namespace CameraRayTrace 
+    namespace RayTrace 
     {
         enum class ERootSignatures : uint16_t 
         {
@@ -104,7 +104,7 @@ namespace RootSignatueEnums
 }
 
 
-enum class ECameraRayTracingShaders : uint16_t
+enum class ERayTracingShaders : uint16_t
 {
     Gen = 0,
     BeamInt,
@@ -223,7 +223,7 @@ private:
     void BuildRayTracingDescriptorHeaps();
     void BuildRayTracingRootSignatures();
     void BuildBeamTracingPSOs();
-    void BuildCameraRayTracingPSOs();
+    void BuildRayTracingPSOs();
 
     void BuildFrameResources();
     void BuildRenderItems();
@@ -263,9 +263,9 @@ private:
     static const wchar_t* c_rayHitGroupNames[to_underlying(ERayHitTypes::Count)];
 
     Microsoft::WRL::ComPtr<ID3D12StateObject> m_rayStateObject = nullptr;
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rayRootSignatures[to_underlying(RootSignatueEnums::CameraRayTrace::ERootSignatures::Count)];
-    Microsoft::WRL::ComPtr<IDxcBlob> m_rayShaders[to_underlying(ECameraRayTracingShaders::Count)];
-    static const wchar_t* c_rayShadersExportNames[to_underlying(ECameraRayTracingShaders::Count)];
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rayRootSignatures[to_underlying(RootSignatueEnums::RayTrace::ERootSignatures::Count)];
+    Microsoft::WRL::ComPtr<IDxcBlob> m_rayShaders[to_underlying(ERayTracingShaders::Count)];
+    static const wchar_t* c_rayShadersExportNames[to_underlying(ERayTracingShaders::Count)];
     static const wchar_t* c_beamHitGroupNames[to_underlying(EBeamHitTypes::Count)];
     
 

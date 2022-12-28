@@ -31,11 +31,11 @@
     <Filter Include="Shaders\Beam Tracing">
       <UniqueIdentifier>{93e52299-c24c-4caf-b4a7-3cd6f8572bcc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shaders\Camera Ray Tracing">
-      <UniqueIdentifier>{8c71dea3-a7aa-41f5-806c-ad7f308a2470}</UniqueIdentifier>
-    </Filter>
     <Filter Include="DirectX12 Util Files">
       <UniqueIdentifier>{1158a41d-4fbd-4ed3-8f0c-14d08e2055ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Ray Tracing">
+      <UniqueIdentifier>{0ec05b24-b9af-47c3-84b8-2dcec17acbed}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -205,20 +205,20 @@
     <FxCompile Include="Shaders\BeamTracing\BeamMiss.hlsl">
       <Filter>Shaders\Beam Tracing</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\CameraRayTracing\RayBeamAnyHit.hlsl">
-      <Filter>Shaders\Camera Ray Tracing</Filter>
+    <FxCompile Include="Shaders\RayTracing\RayBeamAnyHit.hlsl">
+      <Filter>Shaders\Ray Tracing</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\CameraRayTracing\RayBeamInt.hlsl">
-      <Filter>Shaders\Camera Ray Tracing</Filter>
+    <FxCompile Include="Shaders\RayTracing\RayBeamInt.hlsl">
+      <Filter>Shaders\Ray Tracing</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\CameraRayTracing\RayGen.hlsl">
-      <Filter>Shaders\Camera Ray Tracing</Filter>
+    <FxCompile Include="Shaders\RayTracing\RayGen.hlsl">
+      <Filter>Shaders\Ray Tracing</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\CameraRayTracing\RaySurfaceAnyHit.hlsl">
-      <Filter>Shaders\Camera Ray Tracing</Filter>
+    <FxCompile Include="Shaders\RayTracing\RaySurfaceAnyHit.hlsl">
+      <Filter>Shaders\Ray Tracing</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\CameraRayTracing\RaySurfaceInt.hlsl">
-      <Filter>Shaders\Camera Ray Tracing</Filter>
+    <FxCompile Include="Shaders\RayTracing\RaySurfaceInt.hlsl">
+      <Filter>Shaders\Ray Tracing</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

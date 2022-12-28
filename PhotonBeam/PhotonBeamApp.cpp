@@ -38,7 +38,7 @@ const wchar_t* PhotonBeamApp::c_rayHitGroupNames[] = {
     L"HitGroup_Surface"
 };
 
-const wchar_t* PhotonBeamApp::c_rayShadersExportNames[to_underlying(ECameraRayTracingShaders::Count)] = {
+const wchar_t* PhotonBeamApp::c_rayShadersExportNames[to_underlying(ERayTracingShaders::Count)] = {
     L"RayGen",
     L"BeamInt",
     L"BeamAnyHit",
@@ -66,12 +66,12 @@ PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance)
         m_beamRootSignatures[i] = nullptr;
     }
 
-    for (size_t i = 0; i < to_underlying(RootSignatueEnums::CameraRayTrace::ERootSignatures::Count); i++)
+    for (size_t i = 0; i < to_underlying(RootSignatueEnums::RayTrace::ERootSignatures::Count); i++)
     {
         m_rayRootSignatures[i] = nullptr;
     }
 
-    for (size_t i = 0; i < to_underlying(ECameraRayTracingShaders::Count); i++)
+    for (size_t i = 0; i < to_underlying(ERayTracingShaders::Count); i++)
     {
         m_rayShaders[i] = nullptr;
     }
@@ -121,7 +121,7 @@ bool PhotonBeamApp::Initialize()
     BuildRayTracingRootSignatures();
     BuildShadersAndInputLayout();
     BuildBeamTracingPSOs();
-    BuildCameraRayTracingPSOs();
+    BuildRayTracingPSOs();
 
     BuildRenderItems();
     BuildFrameResources();
@@ -754,7 +754,7 @@ void PhotonBeamApp::BuildRayTracingRootSignatures()
     }
 
     {
-        using namespace RootSignatueEnums::CameraRayTrace;
+        using namespace RootSignatueEnums::RayTrace;
 
         // Camera ray trace global 
         {
@@ -882,11 +882,11 @@ void PhotonBeamApp::BuildShadersAndInputLayout()
     m_beamShaders[to_underlying(EBeamTracingShaders::CloseHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamClosestHit.hlsl", L"lib_6_6");
     m_beamShaders[to_underlying(EBeamTracingShaders::Gen)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamGen.hlsl", L"lib_6_6");
 
-    m_rayShaders[to_underlying(ECameraRayTracingShaders::BeamAnyHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\CameraRayTracing\\RayBeamAnyHit.hlsl", L"lib_6_6");
-    m_rayShaders[to_underlying(ECameraRayTracingShaders::BeamInt)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\CameraRayTracing\\RayBeamInt.hlsl", L"lib_6_6");
-    m_rayShaders[to_underlying(ECameraRayTracingShaders::SurfaceAnyHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\CameraRayTracing\\RaySurfaceAnyHit.hlsl", L"lib_6_6");
-    m_rayShaders[to_underlying(ECameraRayTracingShaders::SurfaceInt)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\CameraRayTracing\\RaySurfaceInt.hlsl", L"lib_6_6");
-    m_rayShaders[to_underlying(ECameraRayTracingShaders::Gen)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\CameraRayTracing\\RayGen.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ERayTracingShaders::BeamAnyHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RayBeamAnyHit.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ERayTracingShaders::BeamInt)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RayBeamInt.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ERayTracingShaders::SurfaceAnyHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RaySurfaceAnyHit.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ERayTracingShaders::SurfaceInt)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RaySurfaceInt.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ERayTracingShaders::Gen)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RayGen.hlsl", L"lib_6_6");
 }
 
 void PhotonBeamApp::LoadScene()
@@ -1189,12 +1189,12 @@ void PhotonBeamApp::BuildBeamTracingPSOs()
     );
 }
 
-void PhotonBeamApp::BuildCameraRayTracingPSOs()
+void PhotonBeamApp::BuildRayTracingPSOs()
 {
     CD3DX12_STATE_OBJECT_DESC rayTracingPipeline{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
 
 
-    for (size_t i = 0; i < to_underlying(ECameraRayTracingShaders::Count); i++)
+    for (size_t i = 0; i < to_underlying(ERayTracingShaders::Count); i++)
     {
         auto& shaderBlob = m_rayShaders[i];
         auto lib = rayTracingPipeline.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
@@ -1209,8 +1209,8 @@ void PhotonBeamApp::BuildCameraRayTracingPSOs()
     {
         auto hitGroup = rayTracingPipeline.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
 
-        hitGroup->SetIntersectionShaderImport(c_rayShadersExportNames[to_underlying(ECameraRayTracingShaders::BeamInt)]);
-        hitGroup->SetAnyHitShaderImport(c_rayShadersExportNames[to_underlying(ECameraRayTracingShaders::BeamAnyHit)]);
+        hitGroup->SetIntersectionShaderImport(c_rayShadersExportNames[to_underlying(ERayTracingShaders::BeamInt)]);
+        hitGroup->SetAnyHitShaderImport(c_rayShadersExportNames[to_underlying(ERayTracingShaders::BeamAnyHit)]);
         hitGroup->SetHitGroupExport(c_rayHitGroupNames[to_underlying(ERayHitTypes::Beam)]);
         hitGroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_PROCEDURAL_PRIMITIVE);
     }
@@ -1219,8 +1219,8 @@ void PhotonBeamApp::BuildCameraRayTracingPSOs()
     {
         auto hitGroup = rayTracingPipeline.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
 
-        hitGroup->SetIntersectionShaderImport(c_rayShadersExportNames[to_underlying(ECameraRayTracingShaders::SurfaceInt)]);
-        hitGroup->SetAnyHitShaderImport(c_rayShadersExportNames[to_underlying(ECameraRayTracingShaders::SurfaceAnyHit)]);
+        hitGroup->SetIntersectionShaderImport(c_rayShadersExportNames[to_underlying(ERayTracingShaders::SurfaceInt)]);
+        hitGroup->SetAnyHitShaderImport(c_rayShadersExportNames[to_underlying(ERayTracingShaders::SurfaceAnyHit)]);
         hitGroup->SetHitGroupExport(c_rayHitGroupNames[to_underlying(ERayHitTypes::Surface)]);
         hitGroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_PROCEDURAL_PRIMITIVE);
     }
@@ -1233,7 +1233,7 @@ void PhotonBeamApp::BuildCameraRayTracingPSOs()
 
 
     {
-        using namespace RootSignatueEnums::CameraRayTrace;
+        using namespace RootSignatueEnums::RayTrace;
 
         // globla root signature
         {
