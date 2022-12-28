@@ -156,7 +156,7 @@
     <ClInclude Include="..\imgui\imgui_impl_dx12.h" />
     <ClInclude Include="..\imgui\imgui_impl_win32.h" />
     <ClInclude Include="..\imgui\imgui_internal.h" />
-    <ClInclude Include="..\third-party\DirectXRaytracingHelper.h" />
+    <ClInclude Include="..\third-party\microsoft-directx-graphics-samples\DirectXRaytracingHelper.h" />
     <ClInclude Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\BottomLevelASGenerator.h" />
     <ClInclude Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\RaytracingPipelineGenerator.h" />
     <ClInclude Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\RootSignatureGenerator.h" />
