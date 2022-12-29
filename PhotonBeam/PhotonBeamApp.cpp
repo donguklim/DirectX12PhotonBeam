@@ -66,14 +66,19 @@ const CD3DX12_STATIC_SAMPLER_DESC& PhotonBeamApp::GetLinearSampler()
 }
 
 
-PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance)
-    : D3DApp(hInstance)
+PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance): 
+    D3DApp(hInstance),
+    m_raytracingOutputResourceUAVDescriptorHeapIndex(UINT_MAX),
+    m_beamTracingDescriptorsAllocated(0),
+    m_rayTracingDescriptorsAllocated(0)
 {
     mLastMousePos = POINT{};
     m_useRayTracer = true;
     m_airScatterCoff = XMVECTORF32{};
     m_airExtinctCoff = XMVECTORF32{};
     m_sourceLight = XMVECTORF32{};
+
+    
 
     for (size_t i = 0; i < to_underlying(RootSignatueEnums::BeamTrace::ERootSignatures::Count); i++)
     {
@@ -136,15 +141,18 @@ bool PhotonBeamApp::Initialize()
     BuildShadersAndInputLayout();
     BuildBeamTracingPSOs();
     BuildRayTracingPSOs();
+    BuildRayTracingDescriptorHeaps();
 
     BuildRenderItems();
     BuildFrameResources();
     BuildDescriptorHeaps();
-    BuildRayTracingDescriptorHeaps();
+
     BuildPSOs();
 
     CreateBottomLevelAS();
     CreateTopLevelAS();
+    CreateRayTracingOutputResource();
+    CreateBeamResource();
 
     // Execute the initialization commands.
     ThrowIfFailed(mCommandList->Close());
@@ -268,6 +276,9 @@ void PhotonBeamApp::Update(const GameTimer& gt)
             CloseHandle(eventHandle);
         }
     }
+
+    m_raytracingOutput.Reset();
+    CreateRayTracingOutputResource();
 
     UpdateObjectCBs(gt);
     UpdateMainPassCB(gt);
@@ -653,8 +664,218 @@ void PhotonBeamApp::BuildDescriptorHeaps()
 
 void PhotonBeamApp::BuildRayTracingDescriptorHeaps()
 {
+    // beam tracing
+    {
+        D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
+        // Allocate a heap for 3 + 6 + (number of textures) descriptors:
+        // 3 - beam data, sub beam AS instance info, beam counters
+        // 6 - indice buffer, vertex buffer, normal buffer, text coordinate buffer, material buffer, mesh buffer
+        // number of textures
+        descriptorHeapDesc.NumDescriptors =  9 + static_cast<UINT>(m_textures.size());
+        descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        descriptorHeapDesc.NodeMask = 0;
+
+        md3dDevice->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&m_beamTracingDescriptorHeap));
+        NAME_D3D12_OBJECT(m_beamTracingDescriptorHeap);
+
+        // set geometry related data
+        {
+            auto geo = mGeometries["cornellBox"].get();
+
+            D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+            srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+            srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+            srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+            srvDesc.Buffer.FirstElement = 0;
+            srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+            srvDesc.Buffer.NumElements = geo->VertexBufferByteSize / geo->VertexByteStride;
+            srvDesc.Buffer.StructureByteStride = geo->VertexByteStride;
+
+            D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle;
+            auto vertexHeapIndex = AllocateBeamTracingDescriptor(&descriptorHandle);
+
+            md3dDevice->CreateShaderResourceView(geo->VertexBufferGPU.Get(), &srvDesc, descriptorHandle);
+
+            m_beamTracingVertexDescriptorHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(
+                m_beamTracingDescriptorHeap->GetGPUDescriptorHandleForHeapStart(),
+                vertexHeapIndex,
+                mCbvSrvUavDescriptorSize
+            );
+
+            srvDesc.Buffer.NumElements = geo->NormalBufferByteSize / geo->NormalByteStride;
+            srvDesc.Buffer.StructureByteStride = geo->NormalByteStride;
+            AllocateBeamTracingDescriptor(&descriptorHandle,  vertexHeapIndex + 1);
+            md3dDevice->CreateShaderResourceView(geo->NormalBufferGPU.Get(), &srvDesc, descriptorHandle);
+
+            srvDesc.Buffer.NumElements = geo->UvBufferByteSize / geo->UvByteStride;
+            srvDesc.Buffer.StructureByteStride = geo->UvByteStride;
+            AllocateBeamTracingDescriptor(&descriptorHandle, vertexHeapIndex + 2);
+            md3dDevice->CreateShaderResourceView(geo->UvBufferGPU.Get(), &srvDesc, descriptorHandle);
+
+            srvDesc.Buffer.NumElements = geo->IndexBufferByteSize / sizeof(uint32_t);
+            srvDesc.Buffer.StructureByteStride = sizeof(uint32_t);
+            AllocateBeamTracingDescriptor(&descriptorHandle, vertexHeapIndex + 3);
+            md3dDevice->CreateShaderResourceView(geo->IndexBufferGPU.Get(), &srvDesc, descriptorHandle);
+
+            srvDesc.Buffer.NumElements = geo->MaterialBufferByteSize / geo->MaterialByteStride;
+            srvDesc.Buffer.StructureByteStride = geo->MaterialByteStride;
+            AllocateBeamTracingDescriptor(&descriptorHandle, vertexHeapIndex + 4);
+            md3dDevice->CreateShaderResourceView(geo->MaterialBufferGPU.Get(), &srvDesc, descriptorHandle);
+
+            srvDesc.Buffer.NumElements = geo->MeshBufferByteSize / geo->MeshByteStride;
+            srvDesc.Buffer.StructureByteStride = geo->MeshByteStride;
+            AllocateBeamTracingDescriptor(&descriptorHandle, vertexHeapIndex + 5);
+            md3dDevice->CreateShaderResourceView(geo->MeshBufferGPU.Get(), &srvDesc, descriptorHandle);
+
+        }
+
+        // set texture views to heap
+        {
+            D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+            srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+            srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+            srvDesc.Texture2D.MostDetailedMip = 0;
+            srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+
+            uint32_t textureHeapIndex{};
+            // make descriptor handle for the first texure
+            {
+                auto& textureResource = m_textures[0];
+                D3D12_CPU_DESCRIPTOR_HANDLE uavDescriptorHandle;
+                textureHeapIndex = AllocateBeamTracingDescriptor(&uavDescriptorHandle);
+
+                srvDesc.Format = textureResource->Resource->GetDesc().Format;
+                srvDesc.Texture2D.MipLevels = textureResource->Resource->GetDesc().MipLevels;
+                md3dDevice->CreateShaderResourceView(textureResource->Resource.Get(), &srvDesc, uavDescriptorHandle);
+
+                m_beamTracingTextureDescriptorHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(
+                    m_beamTracingDescriptorHeap->GetGPUDescriptorHandleForHeapStart(),
+                    textureHeapIndex,
+                    mCbvSrvUavDescriptorSize
+                );
+            }
+
+            // set left textures to the heap
+            for (uint32_t i = 1; i < m_textures.size(); i++)
+            {
+                auto& textureResource = m_textures[i];
+                D3D12_CPU_DESCRIPTOR_HANDLE uavDescriptorHandle;
+                AllocateBeamTracingDescriptor(&uavDescriptorHandle, textureHeapIndex + i);
+
+                srvDesc.Format = textureResource->Resource->GetDesc().Format;
+                srvDesc.Texture2D.MipLevels = textureResource->Resource->GetDesc().MipLevels;
+                md3dDevice->CreateShaderResourceView(textureResource->Resource.Get(), &srvDesc, uavDescriptorHandle);
+            }
+        }
+    }
+
+
+    // ray tracing
+    {
+        D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
+        // Allocate a heap for  5 + (number of textures) descriptors:
+        // 5 - indice buffer,  normal buffer, text coordinate buffer, material buffer, mesh buffer
+        // number of textures
+        descriptorHeapDesc.NumDescriptors = 5 + static_cast<UINT>(m_textures.size());
+        descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        descriptorHeapDesc.NodeMask = 0;
+
+        md3dDevice->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&m_rayTracingDescriptorHeap));
+        NAME_D3D12_OBJECT(m_rayTracingDescriptorHeap);
+
+        // set geometry related data
+        {
+            auto geo = mGeometries["cornellBox"].get();
+
+            D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+            srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+            srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+            srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+            srvDesc.Buffer.FirstElement = 0;
+            srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+            srvDesc.Buffer.NumElements = geo->NormalBufferByteSize / geo->NormalByteStride;
+            srvDesc.Buffer.StructureByteStride = geo->NormalByteStride;
+
+            D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle;
+            auto normalHeapIndex = AllocateRayTracingDescriptor(&descriptorHandle);
+
+            md3dDevice->CreateShaderResourceView(geo->NormalBufferGPU.Get(), &srvDesc, descriptorHandle);
+
+            m_rayTracingNormalDescriptorHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(
+                m_rayTracingDescriptorHeap->GetGPUDescriptorHandleForHeapStart(),
+                normalHeapIndex,
+                mCbvSrvUavDescriptorSize
+            );
+
+            srvDesc.Buffer.NumElements = geo->UvBufferByteSize / geo->UvByteStride;
+            srvDesc.Buffer.StructureByteStride = geo->UvByteStride;
+            AllocateRayTracingDescriptor(&descriptorHandle, normalHeapIndex + 1);
+            md3dDevice->CreateShaderResourceView(geo->UvBufferGPU.Get(), &srvDesc, descriptorHandle);
+
+            srvDesc.Buffer.NumElements = geo->IndexBufferByteSize / sizeof(uint32_t);
+            srvDesc.Buffer.StructureByteStride = sizeof(uint32_t);
+            AllocateRayTracingDescriptor(&descriptorHandle, normalHeapIndex + 2);
+            md3dDevice->CreateShaderResourceView(geo->IndexBufferGPU.Get(), &srvDesc, descriptorHandle);
+
+            srvDesc.Buffer.NumElements = geo->MaterialBufferByteSize / geo->MaterialByteStride;
+            srvDesc.Buffer.StructureByteStride = geo->MaterialByteStride;
+            AllocateRayTracingDescriptor(&descriptorHandle, normalHeapIndex + 3);
+            md3dDevice->CreateShaderResourceView(geo->MaterialBufferGPU.Get(), &srvDesc, descriptorHandle);
+
+            srvDesc.Buffer.NumElements = geo->MeshBufferByteSize / geo->MeshByteStride;
+            srvDesc.Buffer.StructureByteStride = geo->MeshByteStride;
+            AllocateRayTracingDescriptor(&descriptorHandle, normalHeapIndex + 4);
+            md3dDevice->CreateShaderResourceView(geo->MeshBufferGPU.Get(), &srvDesc, descriptorHandle);
+        }
+
+        // set texture views to heap
+        {
+            D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+            srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+            srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+            srvDesc.Texture2D.MostDetailedMip = 0;
+            srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+
+            uint32_t textureHeapIndex{};
+
+            // make descriptor handle for the first texure
+            {
+                auto& textureResource = m_textures[0];
+                D3D12_CPU_DESCRIPTOR_HANDLE uavDescriptorHandle;
+                textureHeapIndex = AllocateRayTracingDescriptor(&uavDescriptorHandle);
+
+                srvDesc.Format = textureResource->Resource->GetDesc().Format;
+                srvDesc.Texture2D.MipLevels = textureResource->Resource->GetDesc().MipLevels;
+                md3dDevice->CreateShaderResourceView(textureResource->Resource.Get(), &srvDesc, uavDescriptorHandle);
+
+                m_rayTracingTextureDescriptorHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(
+                    m_rayTracingDescriptorHeap->GetGPUDescriptorHandleForHeapStart(),
+                    textureHeapIndex,
+                    mCbvSrvUavDescriptorSize
+                );
+            }
+
+            // set left textures to the heap
+            for (uint32_t i = 1; i < m_textures.size(); i++)
+            {
+                auto& textureResource = m_textures[i];
+                D3D12_CPU_DESCRIPTOR_HANDLE uavDescriptorHandle;
+                AllocateBeamTracingDescriptor(&uavDescriptorHandle, textureHeapIndex + i);
+
+                srvDesc.Format = textureResource->Resource->GetDesc().Format;
+                srvDesc.Texture2D.MipLevels = textureResource->Resource->GetDesc().MipLevels;
+                md3dDevice->CreateShaderResourceView(textureResource->Resource.Get(), &srvDesc, uavDescriptorHandle);
+            }
+        }
+
+    }
 
 }
+    
+
+    
 
 void PhotonBeamApp::BuildRasterizeRootSignature()
 {    
@@ -773,7 +994,7 @@ void PhotonBeamApp::BuildRayTracingRootSignatures()
             CD3DX12_DESCRIPTOR_RANGE outputImageRange{}, buffersRange{}, textureMapsRange{};
 
             outputImageRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
-            buffersRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 6, 2);
+            buffersRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5, 2);
             textureMapsRange.Init(
                 D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
                 static_cast<uint32_t>(m_textures.size()),
@@ -913,6 +1134,20 @@ void PhotonBeamApp::LoadScene()
         );
     }
 
+    auto& meshes = m_gltfScene.GetPrimMeshes();
+    std::vector<PrimMeshInfo> shaderMeshes;
+    
+    for (const auto& m : meshes)
+    {
+        shaderMeshes.emplace_back(
+            PrimMeshInfo{
+                m.firstIndex,
+                m.vertexOffset,
+                m.materialIndex
+            }
+        );
+    }
+
     auto geo = std::make_unique<MeshGeometry>();
     geo->Name = "cornellBox";
 
@@ -921,6 +1156,7 @@ void PhotonBeamApp::LoadScene()
     const UINT ubByteSize = (UINT)vertexUVs.size() * sizeof(XMFLOAT2);
     const UINT ibByteSize = (UINT)indices.size() * sizeof(std::uint32_t);
     const UINT mbByteSize = (UINT)shadeMaterials.size() * sizeof(GltfShadeMaterial);
+    const UINT meshBufferByteSize = (UINT)shaderMeshes.size() * sizeof(PrimMeshInfo);
 
     // upload to cpu is not necessary now
     ThrowIfFailed(D3DCreateBlob(vbByteSize, &geo->VertexBufferCPU));
@@ -934,6 +1170,7 @@ void PhotonBeamApp::LoadScene()
 
     ThrowIfFailed(D3DCreateBlob(ibByteSize, &geo->IndexBufferCPU));
     CopyMemory(geo->IndexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
+
 
     geo->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
         mCommandList.Get(), vertexPositions.data(), vbByteSize, geo->VertexBufferUploader);
@@ -950,6 +1187,9 @@ void PhotonBeamApp::LoadScene()
     geo->MaterialBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
         mCommandList.Get(), shadeMaterials.data(), mbByteSize, geo->MaterialBufferUploader);
 
+    geo->MeshBufferGPU = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
+        mCommandList.Get(), shaderMeshes.data(), meshBufferByteSize, geo->MeshBufferUploader);
+
     geo->VertexByteStride = sizeof(XMFLOAT3);
     geo->VertexBufferByteSize = vbByteSize;
     geo->NormalByteStride = sizeof(XMFLOAT3);
@@ -959,8 +1199,11 @@ void PhotonBeamApp::LoadScene()
     geo->IndexFormat = DXGI_FORMAT_R32_UINT;
     geo->IndexBufferByteSize = ibByteSize;
 
-    geo->MaterialByteStride = sizeof(shadeMaterials);
+    geo->MaterialByteStride = sizeof(GltfShadeMaterial);
     geo->MaterialBufferByteSize = mbByteSize;
+
+    geo->MeshByteStride = sizeof(PrimMeshInfo);
+    geo->MeshBufferByteSize = meshBufferByteSize;
 
     mGeometries[geo->Name] = std::move(geo);
 
@@ -1677,4 +1920,227 @@ void PhotonBeamApp::CreateTopLevelAS() {
     );
 
     return;
+}
+
+uint32_t PhotonBeamApp::AllocateRayTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE* cpuDescriptor, UINT descriptorIndexToUse)
+{
+    
+    auto descriptorHeapCpuBase = m_rayTracingDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+    if (descriptorIndexToUse >= m_rayTracingDescriptorHeap->GetDesc().NumDescriptors)
+    {
+        ThrowIfFalse(
+            m_rayTracingDescriptorsAllocated < m_rayTracingDescriptorHeap->GetDesc().NumDescriptors 
+        );
+        descriptorIndexToUse = m_rayTracingDescriptorsAllocated++;
+    }
+    *cpuDescriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE(descriptorHeapCpuBase, descriptorIndexToUse, mCbvSrvDescriptorSize);
+    return descriptorIndexToUse;
+    
+}
+
+uint32_t PhotonBeamApp::AllocateBeamTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE* cpuDescriptor, UINT descriptorIndexToUse)
+{
+
+    auto descriptorHeapCpuBase = m_beamTracingDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+    if (descriptorIndexToUse >= m_beamTracingDescriptorHeap->GetDesc().NumDescriptors)
+    {
+        ThrowIfFalse(
+            m_beamTracingDescriptorsAllocated < m_beamTracingDescriptorHeap->GetDesc().NumDescriptors
+        );
+        descriptorIndexToUse = m_beamTracingDescriptorsAllocated++;
+    }
+    *cpuDescriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE(descriptorHeapCpuBase, descriptorIndexToUse, mCbvSrvDescriptorSize);
+    return descriptorIndexToUse;
+
+}
+
+void PhotonBeamApp::CreateRayTracingOutputResource()
+{
+
+    auto backbufferFormat = mBackBufferFormat;
+
+    // Create the output resource. The dimensions and format should match the swap-chain.
+    auto uavDesc = CD3DX12_RESOURCE_DESC::Tex2D(
+        mBackBufferFormat, 
+        mClientWidth, 
+        mClientHeight, 
+        1, 
+        1, 
+        m4xMsaaState ? 4 : 1,
+        m4xMsaaState ? (m4xMsaaQuality - 1) : 0,
+        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+    );
+
+    auto defaultHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+    ThrowIfFailed(
+        md3dDevice->CreateCommittedResource(
+            &defaultHeapProperties, 
+            D3D12_HEAP_FLAG_NONE, 
+            &uavDesc, 
+            D3D12_RESOURCE_STATE_UNORDERED_ACCESS, 
+            nullptr, 
+            IID_PPV_ARGS(&m_raytracingOutput)
+        )
+    );
+    NAME_D3D12_OBJECT(m_raytracingOutput);
+
+    D3D12_CPU_DESCRIPTOR_HANDLE uavDescriptorHandle;
+    m_raytracingOutputResourceUAVDescriptorHeapIndex = AllocateRayTracingDescriptor(
+        &uavDescriptorHandle, 
+        m_raytracingOutputResourceUAVDescriptorHeapIndex
+    );
+    D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
+    UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+    md3dDevice->CreateUnorderedAccessView(
+        m_raytracingOutput.Get(), 
+        nullptr, 
+        &UAVDesc, 
+        uavDescriptorHandle
+    );
+    m_rayTracingOutputDescriptorHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(
+        m_rayTracingDescriptorHeap->GetGPUDescriptorHandleForHeapStart(), 
+        m_raytracingOutputResourceUAVDescriptorHeapIndex, 
+        mCbvSrvUavDescriptorSize
+    );
+
+}
+
+
+void PhotonBeamApp::CreateBeamResource()
+{
+    uint32_t photonBeamHeapIndex{};
+    // Buffer for beam data
+    {
+        auto counterDesc = CD3DX12_RESOURCE_DESC::Buffer(
+            sizeof(PhotonBeam) * m_maxNumBeamData, 
+            D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+        );
+
+        auto defaultHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+
+        // below statement, and other CreateCommittedResource statement for RWStructuredBuffer creation  give warnings, but I don't know how to solve.
+        // A similar statement in Frank Lua's sample code also gives the same warning.
+        // Bellow is the actual warning from the staement.
+        /*
+            D3D12 WARNING: ID3D12Device::CreateCommittedResource: Ignoring InitialState D3D12_RESOURCE_STATE_UNORDERED_ACCESS. 
+            Buffers are effectively created in state D3D12_RESOURCE_STATE_COMMON. 
+            [ STATE_CREATION WARNING #1328: CREATERESOURCE_STATE_IGNORED]
+        */
+        ThrowIfFailed(
+            md3dDevice->CreateCommittedResource(
+                &defaultHeapProperties,
+                D3D12_HEAP_FLAG_NONE,
+                &counterDesc,
+                D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                nullptr,
+                IID_PPV_ARGS(&m_beamData)
+            )
+        );
+        NAME_D3D12_OBJECT(m_beamData);
+
+        // set descriptor handle for beam tracing
+
+        D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
+        UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+        UAVDesc.Format = DXGI_FORMAT_UNKNOWN;
+        UAVDesc.Buffer.CounterOffsetInBytes = 0;
+        UAVDesc.Buffer.NumElements = m_maxNumBeamData;
+        UAVDesc.Buffer.StructureByteStride = sizeof(PhotonBeam);
+        UAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+
+        D3D12_CPU_DESCRIPTOR_HANDLE uavDescriptorHandle;
+        photonBeamHeapIndex = AllocateBeamTracingDescriptor(&uavDescriptorHandle);
+
+        md3dDevice->CreateUnorderedAccessView(
+            m_beamData.Get(),
+            nullptr,
+            &UAVDesc,
+            uavDescriptorHandle
+        );
+
+        m_beamTracingBeamDataDescriptorHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(
+            m_beamTracingDescriptorHeap->GetGPUDescriptorHandleForHeapStart(),
+            photonBeamHeapIndex,
+            mCbvSrvUavDescriptorSize
+        );
+    }
+
+    //Buffer for storing sub beam Accelerated Structure instance info
+    {
+        auto counterDesc = CD3DX12_RESOURCE_DESC::Buffer(
+            sizeof(ShaderRayTracingTopASInstanceDesc) * m_maxNumSubBeamInfo,
+            D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+        );
+
+        auto defaultHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+        ThrowIfFailed(
+            md3dDevice->CreateCommittedResource(
+                &defaultHeapProperties,
+                D3D12_HEAP_FLAG_NONE,
+                &counterDesc,
+                D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                nullptr,
+                IID_PPV_ARGS(m_beamAsInstanceDescData.GetAddressOf())
+            )
+        );
+        NAME_D3D12_OBJECT(m_beamAsInstanceDescData);
+
+        D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
+        UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+        UAVDesc.Format = DXGI_FORMAT_UNKNOWN;
+        UAVDesc.Buffer.CounterOffsetInBytes = 0;
+        UAVDesc.Buffer.NumElements = m_maxNumSubBeamInfo;
+        UAVDesc.Buffer.StructureByteStride = sizeof(ShaderRayTracingTopASInstanceDesc);
+        UAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+
+        D3D12_CPU_DESCRIPTOR_HANDLE uavDescriptorHandle;
+        AllocateBeamTracingDescriptor(&uavDescriptorHandle, photonBeamHeapIndex + 1);
+
+        md3dDevice->CreateUnorderedAccessView(
+            m_beamAsInstanceDescData.Get(),
+            nullptr,
+            &UAVDesc,
+            uavDescriptorHandle
+        );
+    }
+
+    // Create beam counter Buffer
+    {
+        auto counterDesc = CD3DX12_RESOURCE_DESC::Buffer(
+            sizeof(PhotonBeamCounter),
+            D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+        );
+
+        auto defaultHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+        ThrowIfFailed(
+            md3dDevice->CreateCommittedResource(
+                &defaultHeapProperties,
+                D3D12_HEAP_FLAG_NONE,
+                &counterDesc,
+                D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                nullptr,
+                IID_PPV_ARGS(&m_beamCounter)
+            )
+        );
+        NAME_D3D12_OBJECT(m_beamCounter);
+
+        D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
+        UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+        UAVDesc.Format = DXGI_FORMAT_UNKNOWN;
+        UAVDesc.Buffer.CounterOffsetInBytes = 0;
+        UAVDesc.Buffer.NumElements = 1;
+        UAVDesc.Buffer.StructureByteStride = sizeof(PhotonBeamCounter);
+        UAVDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+
+        D3D12_CPU_DESCRIPTOR_HANDLE uavDescriptorHandle;
+        AllocateBeamTracingDescriptor(&uavDescriptorHandle, photonBeamHeapIndex + 2);
+
+        md3dDevice->CreateUnorderedAccessView(
+            m_beamCounter.Get(),
+            nullptr,
+            &UAVDesc,
+            uavDescriptorHandle
+        );
+    }
+
 }

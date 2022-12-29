@@ -169,18 +169,21 @@ struct MeshGeometry
     Microsoft::WRL::ComPtr<ID3DBlob> UvBufferCPU = nullptr;
 	Microsoft::WRL::ComPtr<ID3DBlob> IndexBufferCPU  = nullptr;
     Microsoft::WRL::ComPtr<ID3DBlob> MaterialBufferCPU = nullptr;
+    Microsoft::WRL::ComPtr<ID3DBlob> MeshBufferCPU = nullptr;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> VertexBufferGPU = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> NormalBufferGPU = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> UvBufferGPU = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Resource> IndexBufferGPU = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> MaterialBufferGPU = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> MeshBufferGPU = nullptr;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> VertexBufferUploader = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> NormalBufferUploader = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> UvBufferUploader = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Resource> IndexBufferUploader = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> MaterialBufferUploader = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> MeshBufferUploader = nullptr;
 
     // Data about the buffers.
 	UINT VertexByteStride = 0;
@@ -192,6 +195,9 @@ struct MeshGeometry
 
     UINT MaterialByteStride = 0;
     UINT MaterialBufferByteSize = 0;
+
+    UINT MeshByteStride = 0;
+    UINT MeshBufferByteSize = 0;
 
 	DXGI_FORMAT IndexFormat = DXGI_FORMAT_R16_UINT;
 	UINT IndexBufferByteSize = 0;

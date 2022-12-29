@@ -6,8 +6,8 @@
 #include "..\RaytracingHlslCompat.h"
 
 
-StructuredBuffer<PhotonBeam> g_photonBeams: register(t0);
 ConstantBuffer<PushConstantRay> pc_ray : register(b0);
+StructuredBuffer<PhotonBeam> g_photonBeams: register(t0);
 
 
 [shader("intersection")]
