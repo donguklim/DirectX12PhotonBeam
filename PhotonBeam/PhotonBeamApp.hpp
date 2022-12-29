@@ -269,6 +269,7 @@ private:
     uint32_t m_rayTracingDescriptorsAllocated;
     uint32_t m_raytracingOutputResourceUAVDescriptorHeapIndex;
     D3D12_GPU_DESCRIPTOR_HANDLE m_rayTracingOutputDescriptorHandle{};
+    D3D12_GPU_DESCRIPTOR_HANDLE m_rayTracingNormalDescriptorHandle{};
     D3D12_GPU_DESCRIPTOR_HANDLE m_rayTracingTextureDescriptorHandle{};
 
     std::vector<std::unique_ptr<Texture>> m_textures;

@@ -767,21 +767,17 @@ void PhotonBeamApp::BuildRayTracingDescriptorHeaps()
                 srvDesc.Texture2D.MipLevels = textureResource->Resource->GetDesc().MipLevels;
                 md3dDevice->CreateShaderResourceView(textureResource->Resource.Get(), &srvDesc, uavDescriptorHandle);
             }
-
         }
-
-        
-
     }
 
 
     // ray tracing
     {
         D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
-        // Allocate a heap for 6 descriptors:
-        // 2 - vertex and index  buffer SRVs
-        // 1 - raytracing output texture SRV
-        descriptorHeapDesc.NumDescriptors = 3;
+        // Allocate a heap for  5 + (number of textures) descriptors:
+        // 5 - indice buffer,  normal buffer, text coordinate buffer, material buffer, mesh buffer
+        // number of textures
+        descriptorHeapDesc.NumDescriptors = 5 + static_cast<UINT>(m_textures.size());
         descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         descriptorHeapDesc.NodeMask = 0;
@@ -789,10 +785,49 @@ void PhotonBeamApp::BuildRayTracingDescriptorHeaps()
         md3dDevice->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&m_rayTracingDescriptorHeap));
         NAME_D3D12_OBJECT(m_rayTracingDescriptorHeap);
 
-        // set 
+        // set geometry related data
         {
+            auto geo = mGeometries["cornellBox"].get();
 
+            D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+            srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+            srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+            srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+            srvDesc.Buffer.FirstElement = 0;
+            srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+            srvDesc.Buffer.NumElements = geo->NormalBufferByteSize / geo->NormalByteStride;
+            srvDesc.Buffer.StructureByteStride = geo->NormalByteStride;
 
+            D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle;
+            auto normalHeapIndex = AllocateRayTracingDescriptor(&descriptorHandle);
+
+            md3dDevice->CreateShaderResourceView(geo->NormalBufferGPU.Get(), &srvDesc, descriptorHandle);
+
+            m_rayTracingNormalDescriptorHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(
+                m_rayTracingDescriptorHeap->GetGPUDescriptorHandleForHeapStart(),
+                normalHeapIndex,
+                mCbvSrvUavDescriptorSize
+            );
+
+            srvDesc.Buffer.NumElements = geo->UvBufferByteSize / geo->UvByteStride;
+            srvDesc.Buffer.StructureByteStride = geo->UvByteStride;
+            AllocateRayTracingDescriptor(&descriptorHandle, normalHeapIndex + 1);
+            md3dDevice->CreateShaderResourceView(geo->UvBufferGPU.Get(), &srvDesc, descriptorHandle);
+
+            srvDesc.Buffer.NumElements = geo->IndexBufferByteSize / sizeof(uint32_t);
+            srvDesc.Buffer.StructureByteStride = sizeof(uint32_t);
+            AllocateRayTracingDescriptor(&descriptorHandle, normalHeapIndex + 2);
+            md3dDevice->CreateShaderResourceView(geo->IndexBufferGPU.Get(), &srvDesc, descriptorHandle);
+
+            srvDesc.Buffer.NumElements = geo->MaterialBufferByteSize / geo->MaterialByteStride;
+            srvDesc.Buffer.StructureByteStride = geo->MaterialByteStride;
+            AllocateRayTracingDescriptor(&descriptorHandle, normalHeapIndex + 3);
+            md3dDevice->CreateShaderResourceView(geo->MaterialBufferGPU.Get(), &srvDesc, descriptorHandle);
+
+            srvDesc.Buffer.NumElements = geo->MeshBufferByteSize / geo->MeshByteStride;
+            srvDesc.Buffer.StructureByteStride = geo->MeshByteStride;
+            AllocateRayTracingDescriptor(&descriptorHandle, normalHeapIndex + 4);
+            md3dDevice->CreateShaderResourceView(geo->MeshBufferGPU.Get(), &srvDesc, descriptorHandle);
         }
 
         // set texture views to heap
@@ -959,7 +994,7 @@ void PhotonBeamApp::BuildRayTracingRootSignatures()
             CD3DX12_DESCRIPTOR_RANGE outputImageRange{}, buffersRange{}, textureMapsRange{};
 
             outputImageRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0);
-            buffersRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 6, 2);
+            buffersRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 5, 2);
             textureMapsRange.Init(
                 D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
                 static_cast<uint32_t>(m_textures.size()),
