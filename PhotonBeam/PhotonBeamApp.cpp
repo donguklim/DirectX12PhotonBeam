@@ -2173,6 +2173,17 @@ void PhotonBeamApp::BuildBeamTracingShaderTables()
 
         shaderIDSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
     }
+
+    // BeamGen shader table.
+    {
+        uint32_t numShaderRecords = 1;
+        uint32_t shaderRecordSize = shaderIDSize; // No root arguments
+
+        raytrace_helper::ShaderTable beamGenShaderTable(md3dDevice.Get(), numShaderRecords, shaderRecordSize, L"BeamGenShaderTable");
+        beamGenShaderTable.push_back(raytrace_helper::ShaderRecord(beamGenShaderID, shaderRecordSize, nullptr, 0));
+        beamGenShaderTable.DebugPrint(shaderIdToStringMap);
+        m_beamGenShaderTable = beamGenShaderTable.GetResource();
+    }
 }
 
 void PhotonBeamApp::BuildRayTracingShaderTables()
@@ -2202,6 +2213,17 @@ void PhotonBeamApp::BuildRayTracingShaderTables()
         shaderIdToStringMap[surfaceHitGroupShaderID] = surfaceHitGroupName;
 
         shaderIDSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+    }
+
+    // RayGen shader table.
+    {
+        uint32_t numShaderRecords = 1;
+        uint32_t shaderRecordSize = shaderIDSize; // No root arguments
+
+        raytrace_helper::ShaderTable rayGenShaderTable(md3dDevice.Get(), numShaderRecords, shaderRecordSize, L"RayGenShaderTable");
+        rayGenShaderTable.push_back(raytrace_helper::ShaderRecord(rayGenShaderID, shaderRecordSize, nullptr, 0));
+        rayGenShaderTable.DebugPrint(shaderIdToStringMap);
+        m_rayGenShaderTable = rayGenShaderTable.GetResource();
     }
 
 }

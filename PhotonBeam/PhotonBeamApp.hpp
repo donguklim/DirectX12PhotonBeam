@@ -284,12 +284,21 @@ private:
     Microsoft::WRL::ComPtr<IDxcBlob> m_beamShaders[to_underlying(EBeamTracingShaders::Count)];
     static const wchar_t* c_beamShadersExportNames[to_underlying(EBeamTracingShaders::Count)];
     static const wchar_t* c_rayHitGroupNames[to_underlying(ERayHitTypes::Count)];
+    Microsoft::WRL::ComPtr<ID3D12Resource> m_beamGenShaderTable;
+    Microsoft::WRL::ComPtr<ID3D12Resource> m_beamMissShaderTable;
+    uint32_t m_beamMissShaderTableStrideInBytes = 0;
+    Microsoft::WRL::ComPtr<ID3D12Resource> m_beamHitGroupShaderTable;
+    uint32_t m_beamHitGroupShaderTableStrideInBytes = 0;
+    
 
     Microsoft::WRL::ComPtr<ID3D12StateObject> m_rayStateObject = nullptr;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rayRootSignatures[to_underlying(RootSignatueEnums::RayTrace::ERootSignatures::Count)];
     Microsoft::WRL::ComPtr<IDxcBlob> m_rayShaders[to_underlying(ERayTracingShaders::Count)];
     static const wchar_t* c_rayShadersExportNames[to_underlying(ERayTracingShaders::Count)];
     static const wchar_t* c_beamHitGroupNames[to_underlying(EBeamHitTypes::Count)];
+    Microsoft::WRL::ComPtr<ID3D12Resource> m_rayGenShaderTable;
+    Microsoft::WRL::ComPtr<ID3D12Resource> m_rayHitGroupShaderTable;
+    uint32_t m_rayHitGroupShaderTableStrideInBytes = 0;
 
     Microsoft::WRL::ComPtr<ID3D12Resource> m_raytracingOutput = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounter = nullptr;
