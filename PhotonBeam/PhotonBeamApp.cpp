@@ -2174,11 +2174,17 @@ void PhotonBeamApp::BuildBeamTracingShaderTables()
         shaderIDSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
     }
 
+   
     // BeamGen shader table.
     {
         struct {
-
+            D3D12_GPU_VIRTUAL_ADDRESS topLevelAsAddress;
+            D3D12_GPU_DESCRIPTOR_HANDLE beamDataDescriptorTable;
         } rootArgs;
+
+        rootArgs.topLevelAsAddress = m_topLevelASBuffers.pResult->GetGPUVirtualAddress();
+        rootArgs.beamDataDescriptorTable = m_beamTracingBeamDataDescriptorHandle;
+        
 
         uint32_t numShaderRecords = 1;
         uint32_t shaderRecordSize = shaderIDSize; // No root arguments
@@ -2191,15 +2197,12 @@ void PhotonBeamApp::BuildBeamTracingShaderTables()
 
     // Miss shader table.
     {
-        struct {
-
-        } rootArgs;
 
         UINT numShaderRecords = 1;
         UINT shaderRecordSize = shaderIDSize; // No root arguments
 
         raytrace_helper::ShaderTable beamMissShaderTable(md3dDevice.Get(), numShaderRecords, shaderRecordSize, L"BeamMissShaderTable");
-        beamMissShaderTable.push_back(raytrace_helper::ShaderRecord(missShaderID, shaderIDSize, &rootArgs, sizeof(rootArgs)));
+        beamMissShaderTable.push_back(raytrace_helper::ShaderRecord(missShaderID, shaderIDSize, nullptr, 0));
         
         beamMissShaderTable.DebugPrint(shaderIdToStringMap);
         m_beamMissShaderTableStrideInBytes = beamMissShaderTable.GetShaderRecordSize();
@@ -2210,8 +2213,12 @@ void PhotonBeamApp::BuildBeamTracingShaderTables()
     // Hit group shader table.
     {
         struct {
-
+            D3D12_GPU_DESCRIPTOR_HANDLE goemetryDescriptorTable;
+            D3D12_GPU_DESCRIPTOR_HANDLE textureDescriptorTable;
         } rootArgs;
+
+        rootArgs.goemetryDescriptorTable = m_beamTracingVertexDescriptorHandle;
+        rootArgs.textureDescriptorTable = m_beamTracingTextureDescriptorHandle;
 
         UINT numShaderRecords = 1;
         UINT shaderRecordSize = shaderIDSize;
@@ -2259,8 +2266,20 @@ void PhotonBeamApp::BuildRayTracingShaderTables()
     // RayGen shader table.
     {
         struct {
-
+            D3D12_GPU_DESCRIPTOR_HANDLE outputImageDescriptorTable;
+            D3D12_GPU_VIRTUAL_ADDRESS beamAsAddress;
+            D3D12_GPU_VIRTUAL_ADDRESS surfaceAsAddress;
+            D3D12_GPU_DESCRIPTOR_HANDLE geometryDescriptorTable;
+            D3D12_GPU_DESCRIPTOR_HANDLE textureDescriptorTable;
+            D3D12_GPU_VIRTUAL_ADDRESS cameraConstantBuffer;
         } rootArgs;
+
+        rootArgs.outputImageDescriptorTable = m_rayTracingOutputDescriptorHandle;;
+        // rootArgs.beamAsAddress = 
+        rootArgs.surfaceAsAddress = m_topLevelASBuffers.pResult->GetGPUVirtualAddress();
+        rootArgs.geometryDescriptorTable = m_rayTracingNormalDescriptorHandle;
+        rootArgs.textureDescriptorTable = m_rayTracingTextureDescriptorHandle;
+        //rootArgs.cameraConstantBuffer =
 
         uint32_t numShaderRecords = 1;
         uint32_t shaderRecordSize = shaderIDSize; // No root arguments
@@ -2274,8 +2293,10 @@ void PhotonBeamApp::BuildRayTracingShaderTables()
     // Hit group shader table.
     {
         struct {
-
+            D3D12_GPU_VIRTUAL_ADDRESS beamDataAddress;
         } rootArgs;
+
+        rootArgs.beamDataAddress = m_beamData->GetGPUVirtualAddress();
 
         UINT numShaderRecords = 2;
         UINT shaderRecordSize = shaderIDSize;
