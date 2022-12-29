@@ -219,7 +219,8 @@ private:
     void BuildShadersAndInputLayout();
     void BuildPSOs();
 
-    uint32_t AllocateRayTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE* cpuDescriptor, UINT descriptorIndexToUse);
+    uint32_t AllocateRayTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE* cpuDescriptor, UINT descriptorIndexToUse = UINT_MAX);
+    uint32_t AllocateBeamTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE* cpuDescriptor, UINT descriptorIndexToUse = UINT_MAX);
 
     void BuildRayTracingDescriptorHeaps();
     void BuildRayTracingRootSignatures();
@@ -259,11 +260,12 @@ private:
 
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_beamTracingDescriptorHeap = nullptr;
     uint32_t m_beamTracingDescriptorsAllocated;
-    D3D12_GPU_DESCRIPTOR_HANDLE m_raytracingOutputResourceUAVGpuDescriptor{};
+    D3D12_GPU_DESCRIPTOR_HANDLE m_beamDataDescriptor{};
     
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rayTracingDescriptorHeap = nullptr;
     uint32_t m_rayTracingDescriptorsAllocated;
     uint32_t m_raytracingOutputResourceUAVDescriptorHeapIndex;
+    D3D12_GPU_DESCRIPTOR_HANDLE m_raytracingOutputResourceUAVGpuDescriptor{};
 
     std::vector<std::unique_ptr<Texture>> m_textures;
     std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> mGeometries;

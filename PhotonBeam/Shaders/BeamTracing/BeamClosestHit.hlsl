@@ -11,10 +11,11 @@
 ConstantBuffer<PushConstantRay> pc_ray : register(b0);
 
 // Triangle resources
-StructuredBuffer<uint3> g_indices : register(t0, space0);
-StructuredBuffer<float3> g_vertices : register(t1, space0);
-StructuredBuffer<float3> g_normals : register(t2, space0);
-StructuredBuffer<float2> g_texCoords : register(t3, space0);
+
+StructuredBuffer<float3> g_vertices : register(t0, space0);
+StructuredBuffer<float3> g_normals : register(t1, space0);
+StructuredBuffer<float2> g_texCoords : register(t2, space0);
+StructuredBuffer<uint3> g_indices : register(t3, space0);
 
 
 StructuredBuffer<GltfShadeMaterial> g_materials : register(t4, space0);
