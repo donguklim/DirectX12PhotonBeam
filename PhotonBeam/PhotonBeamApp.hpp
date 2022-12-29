@@ -226,6 +226,8 @@ private:
     void BuildRayTracingRootSignatures();
     void BuildBeamTracingPSOs();
     void BuildRayTracingPSOs();
+    void BuildBeamTracingShaderTables();
+    void BuildRayTracingShaderTables();
 
     void CreateRayTracingOutputResource();
     void CreateBeamResource();

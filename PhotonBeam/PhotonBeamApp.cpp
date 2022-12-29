@@ -2144,3 +2144,13 @@ void PhotonBeamApp::CreateBeamResource()
     }
 
 }
+
+void PhotonBeamApp::BuildBeamTracingShaderTables()
+{
+
+}
+
+void PhotonBeamApp::BuildRayTracingShaderTables()
+{
+
+}
