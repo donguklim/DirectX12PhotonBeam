@@ -260,12 +260,16 @@ private:
 
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_beamTracingDescriptorHeap = nullptr;
     uint32_t m_beamTracingDescriptorsAllocated;
-    D3D12_GPU_DESCRIPTOR_HANDLE m_beamDataDescriptor{};
+    D3D12_GPU_DESCRIPTOR_HANDLE m_beamTracingBeamDataDescriptor{};
+    D3D12_GPU_DESCRIPTOR_HANDLE m_beamTracingTextureDescriptor{};
+    
     
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rayTracingDescriptorHeap = nullptr;
     uint32_t m_rayTracingDescriptorsAllocated;
     uint32_t m_raytracingOutputResourceUAVDescriptorHeapIndex;
-    D3D12_GPU_DESCRIPTOR_HANDLE m_raytracingOutputResourceUAVGpuDescriptor{};
+    D3D12_GPU_DESCRIPTOR_HANDLE m_rayTracingOutputResourceUAVGpuDescriptor{};
+    D3D12_GPU_DESCRIPTOR_HANDLE m_rayTracingBeamDataDescriptor{};
+    D3D12_GPU_DESCRIPTOR_HANDLE m_rayTracingTextureDescriptor{};
 
     std::vector<std::unique_ptr<Texture>> m_textures;
     std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> mGeometries;
