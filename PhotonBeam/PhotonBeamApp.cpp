@@ -152,7 +152,8 @@ bool PhotonBeamApp::Initialize()
 
     CreateBottomLevelAS();
     CreateTopLevelAS();
-    BuildRayTracingOutputResource();
+    CreateRayTracingOutputResource();
+    CreateBeamResource();
 
     // Execute the initialization commands.
     ThrowIfFailed(mCommandList->Close());
@@ -278,7 +279,7 @@ void PhotonBeamApp::Update(const GameTimer& gt)
     }
 
     m_raytracingOutput.Reset();
-    BuildRayTracingOutputResource();
+    CreateRayTracingOutputResource();
 
     UpdateObjectCBs(gt);
     UpdateMainPassCB(gt);
@@ -1737,7 +1738,7 @@ uint32_t PhotonBeamApp::AllocateRayTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE
     
 }
 
-void PhotonBeamApp::BuildRayTracingOutputResource()
+void PhotonBeamApp::CreateRayTracingOutputResource()
 {
 
     auto backbufferFormat = mBackBufferFormat;
@@ -1774,4 +1775,62 @@ void PhotonBeamApp::BuildRayTracingOutputResource()
     md3dDevice->CreateUnorderedAccessView(m_raytracingOutput.Get(), nullptr, &UAVDesc, uavDescriptorHandle);
     m_raytracingOutputResourceUAVGpuDescriptor = CD3DX12_GPU_DESCRIPTOR_HANDLE(m_rayTracingDescriptorHeap->GetGPUDescriptorHandleForHeapStart(), m_raytracingOutputResourceUAVDescriptorHeapIndex, mCbvSrvUavDescriptorSize);
 
+}
+
+
+void PhotonBeamApp::CreateBeamResource()
+{
+    // Create beam counter Buffer
+    {
+        auto counterDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(PhotonBeamCounter));
+
+        auto defaultHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+        ThrowIfFailed(
+            md3dDevice->CreateCommittedResource(
+                &defaultHeapProperties,
+                D3D12_HEAP_FLAG_NONE,
+                &counterDesc,
+                D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                nullptr,
+                IID_PPV_ARGS(&m_beamCounter)
+            )
+        );
+        NAME_D3D12_OBJECT(m_beamCounter);
+    }
+
+    // Buffer for beam data
+    {
+        auto counterDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(PhotonBeam) * m_maxNumBeamData);
+
+        auto defaultHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+        ThrowIfFailed(
+            md3dDevice->CreateCommittedResource(
+                &defaultHeapProperties,
+                D3D12_HEAP_FLAG_NONE,
+                &counterDesc,
+                D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                nullptr,
+                IID_PPV_ARGS(&m_beamData)
+            )
+        );
+        NAME_D3D12_OBJECT(m_beamData);
+    }
+
+    //Buffer for storing sub beam Accelerated Structure instance info
+    {
+        auto counterDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(PhotonBeam) * m_maxNumSubBeamInfo);
+
+        auto defaultHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+        ThrowIfFailed(
+            md3dDevice->CreateCommittedResource(
+                &defaultHeapProperties,
+                D3D12_HEAP_FLAG_NONE,
+                &counterDesc,
+                D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                nullptr,
+                IID_PPV_ARGS(&m_beamData)
+            )
+        );
+        NAME_D3D12_OBJECT(m_beamData);
+    }
 }

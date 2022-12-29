@@ -226,7 +226,8 @@ private:
     void BuildBeamTracingPSOs();
     void BuildRayTracingPSOs();
 
-    void BuildRayTracingOutputResource();
+    void CreateRayTracingOutputResource();
+    void CreateBeamResource();
 
     void BuildFrameResources();
     void BuildRenderItems();
@@ -282,6 +283,9 @@ private:
     static const wchar_t* c_beamHitGroupNames[to_underlying(EBeamHitTypes::Count)];
 
     Microsoft::WRL::ComPtr<ID3D12Resource> m_raytracingOutput = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounter = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> m_beamData = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> m_beamAsInstanceDescData = nullptr;
     
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
@@ -307,11 +311,23 @@ private:
     float    m_airAlbedo{ 0.1f };
     float m_beamRadius{ 0.5f };
     float    m_photonRadius{ 0.5f };
+
+    // number of beams and photons shot from the light source
     uint32_t m_numBeamSamples{ 1024 };
     uint32_t m_numPhotonSamples{ 4 * 4 * 1024 };
 
-    unsigned int m_maxNumBeamSamples;
-    unsigned int m_maxNumPhotonSamples;
+    // maximum number of beam sources or photon sources shot from the light origin
+    const uint32_t m_maxNumBeamSamples{ 2048 };
+    const uint32_t m_maxNumPhotonSamples{ 4 * 4 * 4096 };
+
+    // maximum number of beam data allowed. A refraction or reflection of a beam generates a new beam data.
+    // max(number of photon samples, number of number of beam samples) * (expected number of scatter  + surface intersection )
+    const uint32_t m_maxNumBeamData{ (m_maxNumBeamSamples > m_maxNumPhotonSamples ? m_maxNumBeamSamples : m_maxNumPhotonSamples) * 32 };
+
+    //maximum number of total sub beams allowed. Equivalent to the maximum number of instances in Beam Accelerated Structure.
+    // number of beam samples * (expected number of scatter  + surface intersection ) * (expected length of the beam / (radius * 2)) 
+    const uint32_t m_maxNumSubBeamInfo{ m_maxNumBeamSamples * 48 + m_maxNumPhotonSamples };
+
     bool m_useRayTracer;
     DirectX::XMVECTORF32 m_beamNearColor;
     DirectX::XMVECTORF32 m_beamUnitDistantColor;
