@@ -2147,10 +2147,61 @@ void PhotonBeamApp::CreateBeamResource()
 
 void PhotonBeamApp::BuildBeamTracingShaderTables()
 {
+    void* beamGenShaderID;
+    void* missShaderID;
+    void* hitGroupShaderID;
 
+    // A shader name look-up table for shader table debug print out.
+    std::unordered_map<void*, std::wstring> shaderIdToStringMap;
+
+    UINT shaderIDSize;
+    {
+        ComPtr<ID3D12StateObjectProperties> stateObjectProperties;
+        ThrowIfFailed(m_beamStateObject.As(&stateObjectProperties));
+        
+        auto& beamGenShaderName = c_beamShadersExportNames[to_underlying(EBeamTracingShaders::Gen)];
+        beamGenShaderID = stateObjectProperties->GetShaderIdentifier(beamGenShaderName);
+        shaderIdToStringMap[beamGenShaderID] = beamGenShaderName;
+
+        auto& hitGroupName = c_beamHitGroupNames[to_underlying(EBeamHitTypes::Surface)];
+        hitGroupShaderID = stateObjectProperties->GetShaderIdentifier(hitGroupName);
+        shaderIdToStringMap[hitGroupShaderID] = hitGroupName;
+
+        auto& missShaderName = c_beamShadersExportNames[to_underlying(EBeamTracingShaders::Miss)];
+        missShaderID = stateObjectProperties->GetShaderIdentifier(missShaderName);
+        shaderIdToStringMap[hitGroupShaderID] = missShaderName;
+
+        shaderIDSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+    }
 }
 
 void PhotonBeamApp::BuildRayTracingShaderTables()
 {
+    void* rayGenShaderID;
+    void* beamHitGroupShaderID;
+    void* surfaceHitGroupShaderID;
+
+    // A shader name look-up table for shader table debug print out.
+    std::unordered_map<void*, std::wstring> shaderIdToStringMap;
+
+    UINT shaderIDSize;
+    {
+        ComPtr<ID3D12StateObjectProperties> stateObjectProperties;
+        ThrowIfFailed(m_rayStateObject.As(&stateObjectProperties));
+
+        auto& rayGenShaderName = c_rayShadersExportNames[to_underlying(ERayTracingShaders::Gen)];
+        rayGenShaderID = stateObjectProperties->GetShaderIdentifier(rayGenShaderName);
+        shaderIdToStringMap[rayGenShaderID] = rayGenShaderName;
+
+        auto& beamHitGroupName = c_rayHitGroupNames[to_underlying(ERayHitTypes::Beam)];
+        beamHitGroupShaderID = stateObjectProperties->GetShaderIdentifier(beamHitGroupName);
+        shaderIdToStringMap[beamHitGroupShaderID] = beamHitGroupName;
+
+        auto& surfaceHitGroupName = c_rayHitGroupNames[to_underlying(ERayHitTypes::Surface)];
+        surfaceHitGroupShaderID = stateObjectProperties->GetShaderIdentifier(surfaceHitGroupName);
+        shaderIdToStringMap[surfaceHitGroupShaderID] = surfaceHitGroupName;
+
+        shaderIDSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+    }
 
 }
