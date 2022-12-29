@@ -1811,7 +1811,10 @@ void PhotonBeamApp::CreateBeamResource()
     uint32_t photonBeamHeapIndex{};
     // Buffer for beam data
     {
-        auto counterDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(PhotonBeam) * m_maxNumBeamData);
+        auto counterDesc = CD3DX12_RESOURCE_DESC::Buffer(
+            sizeof(PhotonBeam) * m_maxNumBeamData, 
+            D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+        );
 
         auto defaultHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
         ThrowIfFailed(
@@ -1837,12 +1840,26 @@ void PhotonBeamApp::CreateBeamResource()
         D3D12_CPU_DESCRIPTOR_HANDLE uavDescriptorHandle;
         photonBeamHeapIndex = AllocateBeamTracingDescriptor(&uavDescriptorHandle);
 
+        md3dDevice->CreateUnorderedAccessView(
+            m_beamData.Get(),
+            nullptr, 
+            &UAVDesc, 
+            uavDescriptorHandle
+        );
 
+        m_beamDataDescriptor = CD3DX12_GPU_DESCRIPTOR_HANDLE(
+            m_rayTracingDescriptorHeap->GetGPUDescriptorHandleForHeapStart(),
+            photonBeamHeapIndex,
+            mCbvSrvUavDescriptorSize
+        );
     }
 
     //Buffer for storing sub beam Accelerated Structure instance info
     {
-        auto counterDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(ShaderRayTracingTopASInstanceDesc) * m_maxNumSubBeamInfo);
+        auto counterDesc = CD3DX12_RESOURCE_DESC::Buffer(
+            sizeof(ShaderRayTracingTopASInstanceDesc) * m_maxNumSubBeamInfo,
+            D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+        );
 
         auto defaultHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
         ThrowIfFailed(
@@ -1868,12 +1885,20 @@ void PhotonBeamApp::CreateBeamResource()
         D3D12_CPU_DESCRIPTOR_HANDLE uavDescriptorHandle;
         AllocateBeamTracingDescriptor(&uavDescriptorHandle, photonBeamHeapIndex + 1);
 
-
+        md3dDevice->CreateUnorderedAccessView(
+            m_beamAsInstanceDescData.Get(),
+            nullptr,
+            &UAVDesc,
+            uavDescriptorHandle
+        );
     }
 
     // Create beam counter Buffer
     {
-        auto counterDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(PhotonBeamCounter));
+        auto counterDesc = CD3DX12_RESOURCE_DESC::Buffer(
+            sizeof(PhotonBeamCounter),
+            D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+        );
 
         auto defaultHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
         ThrowIfFailed(
@@ -1899,7 +1924,12 @@ void PhotonBeamApp::CreateBeamResource()
         D3D12_CPU_DESCRIPTOR_HANDLE uavDescriptorHandle;
         AllocateBeamTracingDescriptor(&uavDescriptorHandle, photonBeamHeapIndex + 2);
 
-
+        md3dDevice->CreateUnorderedAccessView(
+            m_beamCounter.Get(),
+            nullptr,
+            &UAVDesc,
+            uavDescriptorHandle
+        );
     }
 
 }
