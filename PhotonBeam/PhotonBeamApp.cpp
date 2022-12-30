@@ -381,16 +381,6 @@ void PhotonBeamApp::Rasterize()
         mCommandList->SetPipelineState(mPSOs["opaque"].Get());
     }
 
-
-    // Indicate a state transition on the resource usage.
-    auto resourceBarrierRender = CD3DX12_RESOURCE_BARRIER::Transition(
-        CurrentBackBuffer(),
-        D3D12_RESOURCE_STATE_PRESENT,
-        D3D12_RESOURCE_STATE_RENDER_TARGET
-    );
-    mCommandList->ResourceBarrier(1, &resourceBarrierRender);
-
-
     CD3DX12_CLEAR_VALUE clearValue{ DXGI_FORMAT_R32G32B32_FLOAT, m_clearColor };
 
     D3D12_RENDER_PASS_BEGINNING_ACCESS renderPassBeginningAccessClear{ D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR, { clearValue } };
@@ -536,15 +526,31 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
         m_createBeamPhotonAS = false;
     }
 
+    // Indicate a state transition on the resource usage.
+    auto resourceBarrierRender = CD3DX12_RESOURCE_BARRIER::Transition(
+        CurrentBackBuffer(),
+        D3D12_RESOURCE_STATE_PRESENT,
+        D3D12_RESOURCE_STATE_RENDER_TARGET
+    );
+    mCommandList->ResourceBarrier(1, &resourceBarrierRender);
 
-    Rasterize();
+    if (m_useRayTracer && false)
+    {
+        ID3D12DescriptorHeap* guiDescriptorHeaps[] = { mGuiDescriptorHeap.Get() };
+        mCommandList->SetDescriptorHeaps(_countof(guiDescriptorHeaps), guiDescriptorHeaps);
+        ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList.Get());
+    }
+    else
+    {
+        Rasterize();
 
-    ID3D12DescriptorHeap* guiDescriptorHeaps[] = { mGuiDescriptorHeap.Get() };
-    mCommandList->SetDescriptorHeaps(_countof(guiDescriptorHeaps), guiDescriptorHeaps);
-    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList.Get());
-    mCommandList->EndRenderPass();
+        ID3D12DescriptorHeap* guiDescriptorHeaps[] = { mGuiDescriptorHeap.Get() };
+        mCommandList->SetDescriptorHeaps(_countof(guiDescriptorHeaps), guiDescriptorHeaps);
+        ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList.Get());
 
-    
+        mCommandList->EndRenderPass();
+    }
+
 
     // Indicate a state transition on the resource usage.
     auto presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
