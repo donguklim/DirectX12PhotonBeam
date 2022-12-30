@@ -8,6 +8,9 @@ FrameResource::FrameResource(ID3D12Device* device, UINT passCount, UINT objectCo
 
     PassCB = std::make_unique<UploadBuffer<PassConstants>>(device, passCount, true);
     ObjectCB = std::make_unique<UploadBuffer<ObjectConstants>>(device, objectCount, true);
+
+    PcRay = std::make_unique<UploadBuffer<PushConstantRay>>(device, 1, true);
+    PcBeam = std::make_unique<UploadBuffer<PushConstantBeam>>(device, 1, true);
 }
 
 FrameResource::~FrameResource()

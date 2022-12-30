@@ -203,6 +203,7 @@ private:
     void OnKeyboardInput(const GameTimer& gt);
     void UpdateObjectCBs(const GameTimer& gt);
     void UpdateMainPassCB(const GameTimer& gt);
+    void UpdateRayTracingPushConstants();
 
     void SerializeAndCreateRootSignature(
         D3D12_ROOT_SIGNATURE_DESC& desc,
@@ -243,7 +244,7 @@ private:
     void CreateSurfaceBlas();
     void CreateSurfaceTlas();
 
-    void CreateBeamBlas();
+    void CreateBeamBlases();
 
     static const CD3DX12_STATIC_SAMPLER_DESC& GetLinearSampler();
 
@@ -315,6 +316,9 @@ private:
 
     PassConstants mMainPassCB;
 
+    PushConstantRay m_pcRay;
+    PushConstantBeam m_pcBeam;
+
     GltfScene m_gltfScene;
 
     bool mIsWireframe = false;
@@ -366,6 +370,7 @@ private:
     AccelerationStructureBuffers m_surfaceTlasBuffers{};
 
     AccelerationStructureBuffers m_beamBlasBuffers{};
+    AccelerationStructureBuffers m_photonBlasBuffers{};
     AccelerationStructureBuffers m_beamTlasBuffers{};
 
     Microsoft::WRL::ComPtr<ID3D12Resource> m_bottomLevelAS; // Storage for the bottom Level AS

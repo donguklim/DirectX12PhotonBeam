@@ -103,6 +103,9 @@ PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance):
 
     SetDefaults();
 
+    m_pcBeam.maxNumBeams = m_maxNumBeamData;
+    m_pcBeam.maxNumSubBeams = m_maxNumSubBeamInfo;
+
 }
 
 PhotonBeamApp::~PhotonBeamApp()
@@ -152,7 +155,7 @@ bool PhotonBeamApp::Initialize()
 
     CreateSurfaceBlas();
     CreateSurfaceTlas();
-    CreateBeamBlas();
+    CreateBeamBlases();
 
     CreateRayTracingOutputResource();
     CreateBeamBuffers();
@@ -167,6 +170,11 @@ bool PhotonBeamApp::Initialize()
 
     mGeometries["cornellBox"].get()->DisposeUploaders();
     m_gltfScene.destroy();
+
+    // release scratch buffers for creating accelerated structures;
+    m_beamBlasBuffers.pScratch.Reset();
+    m_photonBlasBuffers.pScratch.Reset();
+    m_surfaceTlasBuffers.pScratch.Reset();
 
     return true;
 }
@@ -285,6 +293,7 @@ void PhotonBeamApp::Update(const GameTimer& gt)
 
     UpdateObjectCBs(gt);
     UpdateMainPassCB(gt);
+    UpdateRayTracingPushConstants();
 }
 
 void PhotonBeamApp::drawPost(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc)
@@ -630,6 +639,47 @@ void PhotonBeamApp::UpdateMainPassCB(const GameTimer& gt)
 
     auto currPassCB = mCurrFrameResource->PassCB.get();
     currPassCB->CopyData(0, mMainPassCB);
+}
+
+void PhotonBeamApp::UpdateRayTracingPushConstants()
+{
+    XMMATRIX view = mCamera.GetView();
+    XMMATRIX proj = mCamera.GetProj();
+
+    XMMATRIX viewProj = XMMatrixMultiply(view, proj);
+
+    auto viewDeterminant = XMMatrixDeterminant(view);
+    auto projDeterminant = XMMatrixDeterminant(proj);
+    auto viewProjDeterminant = XMMatrixDeterminant(viewProj);
+
+    XMMATRIX invView = XMMatrixInverse(&viewDeterminant, view);
+    XMMATRIX invProj = XMMatrixInverse(&projDeterminant, proj);
+
+    XMStoreFloat4x4(&m_pcRay.viewInverse, XMMatrixTranspose(invView));
+    XMStoreFloat4x4(&m_pcRay.projInverse, XMMatrixTranspose(invProj));
+    XMStoreFloat4x4(&m_pcRay.viewProj, XMMatrixTranspose(viewProj));
+
+    m_pcRay.clearColor = XMFLOAT4(m_clearColor[0], m_clearColor[1], m_clearColor[2], 1.0);
+    m_pcRay.airScatterCoff = XMFLOAT3(m_airScatterCoff[0], m_airScatterCoff[1], m_airScatterCoff[2]);
+    m_pcRay.airExtinctCoff = XMFLOAT3(m_airExtinctCoff[0], m_airExtinctCoff[1], m_airExtinctCoff[2]);
+    m_pcRay.airHGAssymFactor = m_hgAssymFactor;
+    m_pcRay.photonRadius = m_photonRadius;
+    m_pcRay.numBeamSources = m_numBeamSamples;
+    m_pcRay.numPhotonSources = m_numPhotonSamples;
+    m_pcRay.seed = 231;
+
+    m_pcBeam.seed = 1017;
+    m_pcBeam.lightPosition = XMFLOAT3(m_lightPosition[0], m_lightPosition[1], m_lightPosition[2]);
+    m_pcBeam.airExtinctCoff = m_pcRay.airScatterCoff;
+    m_pcBeam.airExtinctCoff = m_pcRay.airExtinctCoff;
+    m_pcBeam.airHGAssymFactor = m_hgAssymFactor;
+    m_pcBeam.beamRadius = m_beamRadius;
+    m_pcBeam.sourceLight = XMFLOAT3(m_sourceLight[0], m_sourceLight[1], m_sourceLight[2]);
+    m_pcBeam.numBeamSources = m_numBeamSamples;
+    m_pcBeam.numPhotonSources = m_numPhotonSamples;
+
+    auto currPcRay = mCurrFrameResource->PcRay.get();
+    currPcRay->CopyData(0, m_pcRay);
 }
 
 void PhotonBeamApp::BuildDescriptorHeaps()
@@ -1919,7 +1969,7 @@ void PhotonBeamApp::CreateSurfaceTlas()
     );
 }
 
-void PhotonBeamApp::CreateBeamBlas()
+void PhotonBeamApp::CreateBeamBlases()
 {
     static const D3D12_RAYTRACING_AABB beamPhotonBoxes[] = {
         { -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 2.0f }, // beam box 
@@ -1933,37 +1983,74 @@ void PhotonBeamApp::CreateBeamBlas()
         boxUploadBuffer
     );
 
-    ASBuilder::BottomLevelASGenerator generator{};
+    {
+        ASBuilder::BottomLevelASGenerator beamBoxGenerator{};
 
-    generator.AddAabbBuffer(boxBuffer.Get(), 0, 1);
-    generator.AddAabbBuffer(boxBuffer.Get(), sizeof(D3D12_RAYTRACING_AABB), 1);
+        beamBoxGenerator.AddAabbBuffer(boxBuffer.Get(), 0, 1);
 
-    UINT64 scratchSizeInBytes = 0;
-    UINT64 resultSizeInBytes = 0;
-    generator.ComputeASBufferSizes(md3dDevice.Get(), false, &scratchSizeInBytes, &resultSizeInBytes);
+        UINT64 scratchSizeInBytes = 0;
+        UINT64 resultSizeInBytes = 0;
+        beamBoxGenerator.ComputeASBufferSizes(md3dDevice.Get(), false, &scratchSizeInBytes, &resultSizeInBytes);
 
-    m_beamBlasBuffers.pScratch = raytrace_helper::CreateBuffer(
-        md3dDevice.Get(),
-        scratchSizeInBytes,
-        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
-        D3D12_RESOURCE_STATE_COMMON,
-        raytrace_helper::pmDefaultHeapProps
-    );
-    m_beamBlasBuffers.pResult = raytrace_helper::CreateBuffer(
-        md3dDevice.Get(),
-        resultSizeInBytes,
-        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
-        D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
-        raytrace_helper::pmDefaultHeapProps
-    );
+        m_beamBlasBuffers.pScratch = raytrace_helper::CreateBuffer(
+            md3dDevice.Get(),
+            scratchSizeInBytes,
+            D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+            D3D12_RESOURCE_STATE_COMMON,
+            raytrace_helper::pmDefaultHeapProps
+        );
+        m_beamBlasBuffers.pResult = raytrace_helper::CreateBuffer(
+            md3dDevice.Get(),
+            resultSizeInBytes,
+            D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+            D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
+            raytrace_helper::pmDefaultHeapProps
+        );
 
-    generator.Generate(
-        mCommandList.Get(),
-        m_beamBlasBuffers.pScratch.Get(),
-        m_beamBlasBuffers.pResult.Get(),
-        false,
-        nullptr
-    );
+        beamBoxGenerator.Generate(
+            mCommandList.Get(),
+            m_beamBlasBuffers.pScratch.Get(),
+            m_beamBlasBuffers.pResult.Get(),
+            false,
+            nullptr
+        );
+    }
+
+    {
+        ASBuilder::BottomLevelASGenerator photonBoxGenerator{};
+
+        photonBoxGenerator.AddAabbBuffer(boxBuffer.Get(), sizeof(D3D12_RAYTRACING_AABB), 1);
+
+        UINT64 scratchSizeInBytes = 0;
+        UINT64 resultSizeInBytes = 0;
+        photonBoxGenerator.ComputeASBufferSizes(md3dDevice.Get(), false, &scratchSizeInBytes, &resultSizeInBytes);
+
+        m_photonBlasBuffers.pScratch = raytrace_helper::CreateBuffer(
+            md3dDevice.Get(),
+            scratchSizeInBytes,
+            D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+            D3D12_RESOURCE_STATE_COMMON,
+            raytrace_helper::pmDefaultHeapProps
+        );
+        m_photonBlasBuffers.pResult = raytrace_helper::CreateBuffer(
+            md3dDevice.Get(),
+            resultSizeInBytes,
+            D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+            D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
+            raytrace_helper::pmDefaultHeapProps
+        );
+
+        photonBoxGenerator.Generate(
+            mCommandList.Get(),
+            m_photonBlasBuffers.pScratch.Get(),
+            m_photonBlasBuffers.pResult.Get(),
+            false,
+            nullptr
+        );
+    }
+    
+    m_pcBeam.beamBlasAddress = m_photonBlasBuffers.pResult->GetGPUVirtualAddress();
+    m_pcBeam.photonBlasAddress = m_photonBlasBuffers.pResult->GetGPUVirtualAddress();
 }
 
 uint32_t PhotonBeamApp::AllocateRayTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE* cpuDescriptor, UINT descriptorIndexToUse)
