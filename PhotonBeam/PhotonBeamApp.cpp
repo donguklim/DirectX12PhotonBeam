@@ -149,10 +149,10 @@ bool PhotonBeamApp::Initialize()
 
     BuildPSOs();
 
-    CreateBottomLevelAS();
-    CreateTopLevelAS();
+    CreateBottomLevelSurfaceAS();
+    CreateTopLevelSurfaceAS();
     CreateRayTracingOutputResource();
-    CreateBeamResource();
+    CreateBeamBuffers();
 
     // Execute the initialization commands.
     ThrowIfFailed(mCommandList->Close());
@@ -1007,7 +1007,6 @@ void PhotonBeamApp::BuildRayTracingRootSignatures()
             rootParameters[to_underlying(EGenParams::SurfaceASSlot)].InitAsShaderResourceView(1);
             rootParameters[to_underlying(EGenParams::ReadBuffersSlot)].InitAsDescriptorTable(1,&buffersRange);
             rootParameters[to_underlying(EGenParams::TextureMapsSlot)].InitAsDescriptorTable(1,&textureMapsRange);
-            rootParameters[to_underlying(EGenParams::CameraConstantSlot)].InitAsConstantBufferView(1);
 
             CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters, 1, &GetLinearSampler());
             desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
@@ -1370,12 +1369,10 @@ void PhotonBeamApp::BuildBeamTracingPSOs()
         hitGroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
     }
 
-
     auto shaderConfig = beamTracingPipeline.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
     UINT payloadSize = sizeof(BeamHitPayload);
     UINT attributeSize = sizeof(BeamHitAttributes);
     shaderConfig->Config(payloadSize, attributeSize);
-
 
     {
         using namespace RootSignatueEnums::BeamTrace;
@@ -1431,7 +1428,6 @@ void PhotonBeamApp::BuildBeamTracingPSOs()
 void PhotonBeamApp::BuildRayTracingPSOs()
 {
     CD3DX12_STATE_OBJECT_DESC rayTracingPipeline{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
-
 
     for (size_t i = 0; i < to_underlying(ERayTracingShaders::Count); i++)
     {
@@ -1813,8 +1809,8 @@ void PhotonBeamApp::RenderUI()
 }
 
 
-void PhotonBeamApp::CreateBottomLevelAS() {
-
+void PhotonBeamApp::CreateBottomLevelSurfaceAS()
+{
     nv_helpers_dx12::BottomLevelASGenerator bottomLevelAS{};
     // Adding all vertex buffers and not transforming their position. 
 
@@ -1865,9 +1861,8 @@ void PhotonBeamApp::CreateBottomLevelAS() {
     );
 }
 
-void PhotonBeamApp::CreateTopLevelAS() {
-
-
+void PhotonBeamApp::CreateTopLevelSurfaceAS()
+{
     for (auto& node : m_gltfScene.GetNodes())
     {
         m_topLevelASGenerator.AddInstance(
@@ -1918,13 +1913,15 @@ void PhotonBeamApp::CreateTopLevelAS() {
         m_topLevelASBuffers.pResult.Get(),
         m_topLevelASBuffers.pInstanceDesc.Get()
     );
+}
 
-    return;
+void PhotonBeamApp::CreateBottomLevelBeamAS()
+{
+
 }
 
 uint32_t PhotonBeamApp::AllocateRayTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE* cpuDescriptor, UINT descriptorIndexToUse)
 {
-    
     auto descriptorHeapCpuBase = m_rayTracingDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
     if (descriptorIndexToUse >= m_rayTracingDescriptorHeap->GetDesc().NumDescriptors)
     {
@@ -1935,12 +1932,10 @@ uint32_t PhotonBeamApp::AllocateRayTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE
     }
     *cpuDescriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE(descriptorHeapCpuBase, descriptorIndexToUse, mCbvSrvDescriptorSize);
     return descriptorIndexToUse;
-    
 }
 
 uint32_t PhotonBeamApp::AllocateBeamTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE* cpuDescriptor, UINT descriptorIndexToUse)
 {
-
     auto descriptorHeapCpuBase = m_beamTracingDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
     if (descriptorIndexToUse >= m_beamTracingDescriptorHeap->GetDesc().NumDescriptors)
     {
@@ -1951,12 +1946,10 @@ uint32_t PhotonBeamApp::AllocateBeamTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDL
     }
     *cpuDescriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE(descriptorHeapCpuBase, descriptorIndexToUse, mCbvSrvDescriptorSize);
     return descriptorIndexToUse;
-
 }
 
 void PhotonBeamApp::CreateRayTracingOutputResource()
 {
-
     auto backbufferFormat = mBackBufferFormat;
 
     // Create the output resource. The dimensions and format should match the swap-chain.
@@ -2002,11 +1995,9 @@ void PhotonBeamApp::CreateRayTracingOutputResource()
         m_raytracingOutputResourceUAVDescriptorHeapIndex, 
         mCbvSrvUavDescriptorSize
     );
-
 }
 
-
-void PhotonBeamApp::CreateBeamResource()
+void PhotonBeamApp::CreateBeamBuffers()
 {
     uint32_t photonBeamHeapIndex{};
     // Buffer for beam data
@@ -2142,5 +2133,164 @@ void PhotonBeamApp::CreateBeamResource()
             uavDescriptorHandle
         );
     }
+}
 
+void PhotonBeamApp::BuildBeamTracingShaderTables()
+{
+    void* beamGenShaderID;
+    void* missShaderID;
+    void* hitGroupShaderID;
+
+    // A shader name look-up table for shader table debug print out.
+    std::unordered_map<void*, std::wstring> shaderIdToStringMap;
+
+    UINT shaderIDSize;
+    {
+        ComPtr<ID3D12StateObjectProperties> stateObjectProperties;
+        ThrowIfFailed(m_beamStateObject.As(&stateObjectProperties));
+        
+        auto& beamGenShaderName = c_beamShadersExportNames[to_underlying(EBeamTracingShaders::Gen)];
+        beamGenShaderID = stateObjectProperties->GetShaderIdentifier(beamGenShaderName);
+        shaderIdToStringMap[beamGenShaderID] = beamGenShaderName;
+
+        auto& hitGroupName = c_beamHitGroupNames[to_underlying(EBeamHitTypes::Surface)];
+        hitGroupShaderID = stateObjectProperties->GetShaderIdentifier(hitGroupName);
+        shaderIdToStringMap[hitGroupShaderID] = hitGroupName;
+
+        auto& missShaderName = c_beamShadersExportNames[to_underlying(EBeamTracingShaders::Miss)];
+        missShaderID = stateObjectProperties->GetShaderIdentifier(missShaderName);
+        shaderIdToStringMap[hitGroupShaderID] = missShaderName;
+
+        shaderIDSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+    }
+   
+    // BeamGen shader table.
+    {
+        struct {
+            D3D12_GPU_VIRTUAL_ADDRESS topLevelAsAddress;
+            D3D12_GPU_DESCRIPTOR_HANDLE beamDataDescriptorTable;
+        } rootArgs;
+
+        rootArgs.topLevelAsAddress = m_topLevelASBuffers.pResult->GetGPUVirtualAddress();
+        rootArgs.beamDataDescriptorTable = m_beamTracingBeamDataDescriptorHandle;
+        
+
+        uint32_t numShaderRecords = 1;
+        uint32_t shaderRecordSize = shaderIDSize; // No root arguments
+
+        raytrace_helper::ShaderTable beamGenShaderTable(md3dDevice.Get(), numShaderRecords, shaderRecordSize, L"BeamGenShaderTable");
+        beamGenShaderTable.push_back(raytrace_helper::ShaderRecord(beamGenShaderID, shaderIDSize, &rootArgs, sizeof(rootArgs)));
+        beamGenShaderTable.DebugPrint(shaderIdToStringMap);
+        m_beamGenShaderTable = beamGenShaderTable.GetResource();
+    }
+
+    // Miss shader table.
+    {
+
+        UINT numShaderRecords = 1;
+        UINT shaderRecordSize = shaderIDSize; // No root arguments
+
+        raytrace_helper::ShaderTable beamMissShaderTable(md3dDevice.Get(), numShaderRecords, shaderRecordSize, L"BeamMissShaderTable");
+        beamMissShaderTable.push_back(raytrace_helper::ShaderRecord(missShaderID, shaderIDSize, nullptr, 0));
+        
+        beamMissShaderTable.DebugPrint(shaderIdToStringMap);
+        m_beamMissShaderTableStrideInBytes = beamMissShaderTable.GetShaderRecordSize();
+        m_beamMissShaderTable = beamMissShaderTable.GetResource();
+    }
+
+    // Hit group shader table.
+    {
+        struct {
+            D3D12_GPU_DESCRIPTOR_HANDLE goemetryDescriptorTable;
+            D3D12_GPU_DESCRIPTOR_HANDLE textureDescriptorTable;
+        } rootArgs;
+
+        rootArgs.goemetryDescriptorTable = m_beamTracingVertexDescriptorHandle;
+        rootArgs.textureDescriptorTable = m_beamTracingTextureDescriptorHandle;
+
+        UINT numShaderRecords = 1;
+        UINT shaderRecordSize = shaderIDSize;
+        raytrace_helper::ShaderTable beamHitGroupShaderTable(md3dDevice.Get(), numShaderRecords, shaderRecordSize, L"BeamHitGroupShaderTable");
+
+        beamHitGroupShaderTable.push_back(raytrace_helper::ShaderRecord(hitGroupShaderID, shaderIDSize, &rootArgs, sizeof(rootArgs)));
+
+        beamHitGroupShaderTable.DebugPrint(shaderIdToStringMap);
+        m_beamHitGroupShaderTableStrideInBytes = beamHitGroupShaderTable.GetShaderRecordSize();
+        m_beamHitGroupShaderTable = beamHitGroupShaderTable.GetResource();
+    }
+}
+
+void PhotonBeamApp::BuildRayTracingShaderTables()
+{
+    void* rayGenShaderID;
+    void* beamHitGroupShaderID;
+    void* surfaceHitGroupShaderID;
+
+    // A shader name look-up table for shader table debug print out.
+    std::unordered_map<void*, std::wstring> shaderIdToStringMap;
+
+    UINT shaderIDSize;
+    {
+        ComPtr<ID3D12StateObjectProperties> stateObjectProperties;
+        ThrowIfFailed(m_rayStateObject.As(&stateObjectProperties));
+
+        auto& rayGenShaderName = c_rayShadersExportNames[to_underlying(ERayTracingShaders::Gen)];
+        rayGenShaderID = stateObjectProperties->GetShaderIdentifier(rayGenShaderName);
+        shaderIdToStringMap[rayGenShaderID] = rayGenShaderName;
+
+        auto& beamHitGroupName = c_rayHitGroupNames[to_underlying(ERayHitTypes::Beam)];
+        beamHitGroupShaderID = stateObjectProperties->GetShaderIdentifier(beamHitGroupName);
+        shaderIdToStringMap[beamHitGroupShaderID] = beamHitGroupName;
+
+        auto& surfaceHitGroupName = c_rayHitGroupNames[to_underlying(ERayHitTypes::Surface)];
+        surfaceHitGroupShaderID = stateObjectProperties->GetShaderIdentifier(surfaceHitGroupName);
+        shaderIdToStringMap[surfaceHitGroupShaderID] = surfaceHitGroupName;
+
+        shaderIDSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+    }
+
+    // RayGen shader table.
+    {
+        struct {
+            D3D12_GPU_DESCRIPTOR_HANDLE outputImageDescriptorTable;
+            D3D12_GPU_VIRTUAL_ADDRESS beamAsAddress;
+            D3D12_GPU_VIRTUAL_ADDRESS surfaceAsAddress;
+            D3D12_GPU_DESCRIPTOR_HANDLE geometryDescriptorTable;
+            D3D12_GPU_DESCRIPTOR_HANDLE textureDescriptorTable;
+        } rootArgs;
+
+        rootArgs.outputImageDescriptorTable = m_rayTracingOutputDescriptorHandle;;
+        // rootArgs.beamAsAddress = 
+        rootArgs.surfaceAsAddress = m_topLevelASBuffers.pResult->GetGPUVirtualAddress();
+        rootArgs.geometryDescriptorTable = m_rayTracingNormalDescriptorHandle;
+        rootArgs.textureDescriptorTable = m_rayTracingTextureDescriptorHandle;
+
+        uint32_t numShaderRecords = 1;
+        uint32_t shaderRecordSize = shaderIDSize; // No root arguments
+
+        raytrace_helper::ShaderTable rayGenShaderTable(md3dDevice.Get(), numShaderRecords, shaderRecordSize, L"RayGenShaderTable");
+        rayGenShaderTable.push_back(raytrace_helper::ShaderRecord(rayGenShaderID, shaderRecordSize, &rootArgs, sizeof(rootArgs)));
+        rayGenShaderTable.DebugPrint(shaderIdToStringMap);
+        m_rayGenShaderTable = rayGenShaderTable.GetResource();
+    }
+
+    // Hit group shader table.
+    {
+        struct {
+            D3D12_GPU_VIRTUAL_ADDRESS beamDataAddress;
+        } rootArgs;
+
+        rootArgs.beamDataAddress = m_beamData->GetGPUVirtualAddress();
+
+        UINT numShaderRecords = 2;
+        UINT shaderRecordSize = shaderIDSize;
+        raytrace_helper::ShaderTable rayHitGroupShaderTable(md3dDevice.Get(), numShaderRecords, shaderRecordSize, L"RayHitGroupShaderTable");
+
+        rayHitGroupShaderTable.push_back(raytrace_helper::ShaderRecord(beamHitGroupShaderID, shaderIDSize, &rootArgs, sizeof(rootArgs)));
+        rayHitGroupShaderTable.push_back(raytrace_helper::ShaderRecord(surfaceHitGroupShaderID, shaderIDSize, &rootArgs, sizeof(rootArgs)));
+
+        rayHitGroupShaderTable.DebugPrint(shaderIdToStringMap);
+        m_rayHitGroupShaderTableStrideInBytes = rayHitGroupShaderTable.GetShaderRecordSize();
+        m_rayHitGroupShaderTable = rayHitGroupShaderTable.GetResource();
+    }
 }

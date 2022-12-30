@@ -5,7 +5,7 @@
 #include "..\util\RayTracingSampling.hlsli"
 #include "..\RaytracingHlslCompat.h"
 
-ConstantBuffer<PushConstantRay> pc_ray : register(b0);
+ConstantBuffer<PushConstantBeam> pc_beam : register(b0);
 RaytracingAccelerationStructure g_scene : register(t0);
 
 RWStructuredBuffer<PhotonBeam> g_photonBeams: register(u0, space0);
@@ -27,10 +27,10 @@ void BeamGen() {
     BeamHitPayload prd;
 
     // Initialize the random number
-    uint seed = tea(launchIndex, pc_ray.seed);
+    uint seed = tea(launchIndex, pc_beam.seed);
     prd.rayDirection = uniformSamplingSphere(seed);
     prd.seed = seed;
-    prd.rayOrigin = pc_ray.lightPosition;
+    prd.rayOrigin = pc_beam.lightPosition;
    
     prd.weight = float3(0, 0, 0);
 
@@ -46,7 +46,7 @@ void BeamGen() {
 
     uint beamIndex;
     uint subBeamIndex;
-    float3 beamColor = pc_ray.sourceLight;
+    float3 beamColor = pc_beam.sourceLight;
     
     bool keepTracing = true;
     while(keepTracing)
@@ -69,13 +69,13 @@ void BeamGen() {
         newBeam.startPos = rayOrigin;
         newBeam.endPos = prd.rayOrigin;
         newBeam.mediaIndex = 0;
-        // newBeam.radius = pc_ray.beamRadius;
+        // newBeam.radius = pc_beam.beamRadius;
         newBeam.radius = 0;
         newBeam.lightColor = beamColor;
         newBeam.hitInstanceID = prd.instanceID;
 
         InterlockedAdd(g_photonBeamCounters[0].beamCount, 1, beamIndex);
-        if (beamIndex >= pc_ray.maxNumBeams)
+        if (beamIndex >= pc_beam.maxNumBeams)
             return;
 
         g_photonBeams[beamIndex] = newBeam;
@@ -83,17 +83,17 @@ void BeamGen() {
         float3 beamVec = newBeam.endPos - newBeam.startPos;
         float beamLength = sqrt(dot(beamVec, beamVec));
 
-        uint num_split = uint(beamLength / (pc_ray.beamRadius * 2.0f) + 1.0f);
-        if (num_split * pc_ray.beamRadius * 2.0 <= beamLength)
+        uint num_split = uint(beamLength / (pc_beam.beamRadius * 2.0f) + 1.0f);
+        if (num_split * pc_beam.beamRadius * 2.0 <= beamLength)
             num_split += 1;
 
         // this value must be either 0 or 1
         uint numSurfacePhoton = (prd.isHit > 0) ? 1 : 0;
 
-        if (launchIndex >= pc_ray.numBeamSources)
+        if (launchIndex >= pc_beam.numBeamSources)
             num_split = 0;
 
-        if (launchIndex >= pc_ray.numPhotonSources)
+        if (launchIndex >= pc_beam.numPhotonSources)
             numSurfacePhoton = 0;
 
         if (numSurfacePhoton + num_split < 1)
@@ -103,17 +103,17 @@ void BeamGen() {
 
         // Not using min function with subtraction operator to simplify the if statement
         // because subtraction between unsinged integer values can cause overflow.
-        if (subBeamIndex >= pc_ray.maxNumBeams)
+        if (subBeamIndex >= pc_beam.maxNumBeams)
         {
             return;
         }
-        else if (subBeamIndex + numSurfacePhoton >= pc_ray.maxNumBeams)
+        else if (subBeamIndex + numSurfacePhoton >= pc_beam.maxNumBeams)
         {
             num_split = 0;
         }
-        else if (num_split + subBeamIndex + numSurfacePhoton >= pc_ray.maxNumSubBeams)
+        else if (num_split + subBeamIndex + numSurfacePhoton >= pc_beam.maxNumSubBeams)
         {
-            num_split = (pc_ray.maxNumSubBeams - subBeamIndex - numSurfacePhoton);
+            num_split = (pc_beam.maxNumSubBeams - subBeamIndex - numSurfacePhoton);
         }
 
         float3 tangent, bitangent;
@@ -121,17 +121,17 @@ void BeamGen() {
 
         for (uint i = 0; i < num_split; i++)
         {
-            float3 splitStart = newBeam.startPos + pc_ray.beamRadius * 2 * float(i) * rayDirection;
+            float3 splitStart = newBeam.startPos + pc_beam.beamRadius * 2 * float(i) * rayDirection;
             ShaderRayTracingTopASInstanceDesc asInfo;
             asInfo.instanceCustomIndexAndmask = beamIndex | (0xFF << 24);
             asInfo.instanceShaderBindingTableRecordOffsetAndflags = HitTypeAir | (0x00000001 << 24); // use the hit group 0
-            asInfo.accelerationStructureReference = pc_ray.beamBlasAddress;
+            asInfo.accelerationStructureReference = pc_beam.beamBlasAddress;
 
             float3x4 transformMat = transpose(
                 float4x3(
-                    bitangent * pc_ray.beamRadius,
-                    tangent * pc_ray.beamRadius,
-                    rayDirection * pc_ray.beamRadius,
+                    bitangent * pc_beam.beamRadius,
+                    tangent * pc_beam.beamRadius,
+                    rayDirection * pc_beam.beamRadius,
                     splitStart
                     )
             );
@@ -147,14 +147,14 @@ void BeamGen() {
             ShaderRayTracingTopASInstanceDesc asInfo;
             asInfo.instanceCustomIndexAndmask = beamIndex | (0xFF << 24);
             asInfo.instanceShaderBindingTableRecordOffsetAndflags = HitTypeSolid | (0x00000001 << 24); // use the hit group 1
-            asInfo.accelerationStructureReference = pc_ray.photonBlasAddress;
+            asInfo.accelerationStructureReference = pc_beam.photonBlasAddress;
 
             createCoordinateSystem(prd.hitNormal, tangent, bitangent);
 
             float3x4 transformMat = transpose(
                 float4x3(
-                    bitangent * pc_ray.photonRadius,
-                    prd.hitNormal * pc_ray.photonRadius,
+                    bitangent * pc_beam.photonRadius,
+                    prd.hitNormal * pc_beam.photonRadius,
                     tangent,
                     boxStart
                     )
@@ -167,7 +167,7 @@ void BeamGen() {
             g_photonBeamsTopAsInstanceDescs[subBeamIndex + num_split] = asInfo;
         }
 
-        if (subBeamIndex + num_split + numSurfacePhoton >= pc_ray.maxNumSubBeams)
+        if (subBeamIndex + num_split + numSurfacePhoton >= pc_beam.maxNumSubBeams)
             return;
 
         beamColor *= prd.weight;

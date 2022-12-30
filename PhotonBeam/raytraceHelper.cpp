@@ -98,4 +98,5 @@ Microsoft::WRL::ComPtr<IDxcBlob> raytrace_helper::CompileShaderLibrary(LPCWSTR f
 
     ThrowIfFailed(pResult->GetResult(pBlob.GetAddressOf()));
     return pBlob;
+
 }

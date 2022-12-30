@@ -71,15 +71,6 @@ struct RayHitAttributes
 
 const static uint32_t MAX_SHADER_MATERIAL_TEXTURES = 16;
 
-struct SceneDesc
-{
-	uint64_t vertexAddress;    // Address of the Vertex buffer
-	uint64_t normalAddress;    // Address of the Normal buffer
-	uint64_t uvAddress;        // Address of the texture coordinates buffer
-	uint64_t indexAddress;     // Address of the triangle indices buffer
-	uint64_t materialAddress;  // Address of the Materials buffer (GltfShadeMaterial)
-	uint64_t primInfoAddress;  // Address of the mesh primitives buffer (PrimMeshInfo)
-};
 
 // Uniform buffer set at each frame
 struct GlobalUniforms
@@ -104,7 +95,31 @@ struct PushConstantRaster
 // Push constant structure for the ray tracer
 struct PushConstantRay
 {
+	XMFLOAT4X4 viewProj;     // Camera view * projection
+	XMFLOAT4X4 viewInverse;  // Camera inverse view matrix
+	XMFLOAT4X4 projInverse;
+
 	XMFLOAT4  clearColor;
+
+	XMFLOAT3     airScatterCoff;
+	float beamRadius;
+
+	XMFLOAT3     airExtinctCoff;
+	uint32_t showDirectColor;
+
+	XMFLOAT3     padding;
+	uint32_t seed;
+
+	float    airHGAssymFactor;
+	float    photonRadius;
+	uint32_t numBeamSources;
+	uint32_t numPhotonSources;
+	
+
+};
+
+struct PushConstantBeam
+{
 
 	XMFLOAT3  lightPosition;
 	uint32_t    maxNumBeams;
@@ -120,14 +135,12 @@ struct PushConstantRay
 
 	uint64_t beamBlasAddress;
 	uint64_t photonBlasAddress;
-	
+
 	float    airHGAssymFactor;
 	float    photonRadius;
 	uint32_t numBeamSources;
 	uint32_t numPhotonSources;
-	
-	uint32_t showDirectColor;
-	uint32_t padding[3];
+
 };
 
 // Structure used for retrieving the primitive information in the closest hit

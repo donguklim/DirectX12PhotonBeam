@@ -8,7 +8,7 @@
 
 
 
-ConstantBuffer<PushConstantRay> pc_ray : register(b0);
+ConstantBuffer<PushConstantBeam> pc_beam : register(b0);
 
 // Triangle resources
 
@@ -28,12 +28,12 @@ SamplerState gsamLinearWrap  : register(s0);
 bool randomScatterOccured(inout BeamHitPayload prd, const in float3 world_position) {
     
     prd.isHit = 0;
-    float min_extinct = min(min(pc_ray.airExtinctCoff.x, pc_ray.airExtinctCoff.y), pc_ray.airExtinctCoff.z);
+    float min_extinct = min(min(pc_beam.airExtinctCoff.x, pc_beam.airExtinctCoff.y), pc_beam.airExtinctCoff.z);
     
     if (min_extinct <= 0.001)
         return false;
 
-    float max_extinct = max(max(pc_ray.airExtinctCoff.x, pc_ray.airExtinctCoff.y), pc_ray.airExtinctCoff.z);
+    float max_extinct = max(max(pc_beam.airExtinctCoff.x, pc_beam.airExtinctCoff.y), pc_beam.airExtinctCoff.z);
 
     // random walk within participating media(air) scattering
     float rayLength = length(prd.rayOrigin - world_position);
@@ -46,7 +46,7 @@ bool randomScatterOccured(inout BeamHitPayload prd, const in float3 world_positi
     prd.rayOrigin = prd.rayOrigin + prd.rayDirection * airScatterAt;
     prd.isHit = 1;
 
-    float3 albedo = pc_ray.airScatterCoff / pc_ray.airExtinctCoff;
+    float3 albedo = pc_beam.airScatterCoff / pc_beam.airExtinctCoff;
     float absorptionProb = 1.0 - max(max(albedo.x, albedo.y), albedo.z);
 
     // use russian roulett to decide whether scatter or absortion occurs
@@ -55,8 +55,8 @@ bool randomScatterOccured(inout BeamHitPayload prd, const in float3 world_positi
         return true;
     }
 
-    prd.weight = exp(-pc_ray.airExtinctCoff * airScatterAt);
-    prd.rayDirection = heneyGreenPhaseFuncSampling(prd.seed, prd.rayDirection, pc_ray.airHGAssymFactor);
+    prd.weight = exp(-pc_beam.airExtinctCoff * airScatterAt);
+    prd.rayDirection = heneyGreenPhaseFuncSampling(prd.seed, prd.rayDirection, pc_beam.airHGAssymFactor);
 
     return true;
 }
@@ -156,7 +156,7 @@ void ClosestHit(inout BeamHitPayload prd, BeamHitAttributes attribs)
 
     prd.rayOrigin = rayOrigin;
     prd.rayDirection = rayDirection;
-    prd.weight = material_f * cos_theta * exp(-pc_ray.airExtinctCoff * rayLength);
+    prd.weight = material_f * cos_theta * exp(-pc_beam.airExtinctCoff * rayLength);
 
     return;
 }

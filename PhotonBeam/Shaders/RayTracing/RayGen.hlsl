@@ -22,7 +22,6 @@ Texture2D g_texturesMap[] : register(t0, space1);
 SamplerState gsamLinearWrap  : register(s0);
 
 ConstantBuffer<PushConstantRay> pc_ray : register(b0);
-ConstantBuffer<GlobalUniforms> g_uni : register(b1);
 
 
 [shader("raygeneration")]
@@ -40,9 +39,9 @@ void RayGen() {
     const float2 pixelCenter = float2(dispatchIndex.xy) + (float2)(0.5);
     const float2 inUV = pixelCenter / float2(dispatchDimensionSize.xy) * 2.0 - 1.0;
 
-    float4 origin = mul(g_uni.viewInverse, float4(0, 0, 0, 1));
-    float4 target = mul(g_uni.projInverse, float4(inUV, 1, 1));
-    float4 direction = mul(g_uni.viewInverse, float4(normalize(target.xyz), 0));
+    float4 origin = mul(pc_ray.viewInverse, float4(0, 0, 0, 1));
+    float4 target = mul(pc_ray.projInverse, float4(inUV, 1, 1));
+    float4 direction = mul(pc_ray.viewInverse, float4(normalize(target.xyz), 0));
 
     RayHitPayload prd;
 
