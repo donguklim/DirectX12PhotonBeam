@@ -160,13 +160,12 @@
     <ClInclude Include="..\third-party\imgui\imstb_textedit.h" />
     <ClInclude Include="..\third-party\imgui\imstb_truetype.h" />
     <ClInclude Include="..\third-party\microsoft-directx-graphics-samples\DirectXRaytracingHelper.h" />
-    <ClInclude Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\BottomLevelASGenerator.h" />
-    <ClInclude Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\ShaderBindingTableGenerator.h" />
     <ClInclude Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\TopLevelASGenerator.h" />
     <ClInclude Include="..\third-party\tiny-gltf\json.hpp" />
     <ClInclude Include="..\third-party\tiny-gltf\stb_image.h" />
     <ClInclude Include="..\third-party\tiny-gltf\stb_image_write.h" />
     <ClInclude Include="..\third-party\tiny-gltf\tiny_gltf.h" />
+    <ClInclude Include="AS-Builders\BlasGenerator.h" />
     <ClInclude Include="FrameResource.h" />
     <ClInclude Include="GltfScene.hpp" />
     <ClInclude Include="PhotonBeamApp.hpp" />
@@ -189,9 +188,8 @@
     <ClCompile Include="..\third-party\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="..\third-party\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\third-party\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\BottomLevelASGenerator.cpp" />
-    <ClCompile Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\ShaderBindingTableGenerator.cpp" />
     <ClCompile Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\TopLevelASGenerator.cpp" />
+    <ClCompile Include="AS-Builders\BlasGenerator.cpp" />
     <ClCompile Include="FrameResource.cpp" />
     <ClCompile Include="GltfScene.cpp" />
     <ClCompile Include="main.cpp" />
