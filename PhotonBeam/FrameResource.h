@@ -3,6 +3,7 @@
 #include "../Common/d3dUtil.h"
 #include "../Common/MathHelper.h"
 #include "../Common/UploadBuffer.h"
+#include "Shaders/RaytracingHlslCompat.h"
 
 struct ObjectConstants
 {
@@ -55,6 +56,9 @@ public:
     // that reference it.  So each frame needs their own cbuffers.
     std::unique_ptr<UploadBuffer<PassConstants>> PassCB = nullptr;
     std::unique_ptr<UploadBuffer<ObjectConstants>> ObjectCB = nullptr;
+
+    std::unique_ptr<UploadBuffer<PushConstantRay>> PcRay = nullptr;
+    std::unique_ptr<UploadBuffer<PushConstantBeam>> PcBeam = nullptr;
 
     // Fence value to mark commands up to this fence point.  This lets us
     // check if these frame resources are still in use by the GPU.
