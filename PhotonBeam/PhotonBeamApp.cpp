@@ -21,6 +21,7 @@
 #include "raytraceHelper.hpp"
 
 #include "Shaders/RaytracingHlslCompat.h"
+#include "AS-Builders/BlasGenerator.h"
 #include <microsoft-directx-graphics-samples/DirectXRaytracingHelper.h>
 
 using Microsoft::WRL::ComPtr;
@@ -151,6 +152,8 @@ bool PhotonBeamApp::Initialize()
 
     CreateBottomLevelSurfaceAS();
     CreateTopLevelSurfaceAS();
+    CreateBottomLevelBeamAS();
+
     CreateRayTracingOutputResource();
     CreateBeamBuffers();
 
@@ -1917,7 +1920,49 @@ void PhotonBeamApp::CreateTopLevelSurfaceAS()
 
 void PhotonBeamApp::CreateBottomLevelBeamAS()
 {
+    static const D3D12_RAYTRACING_AABB beamPhotonBoxes[] = {
+        { -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 2.0f }, // beam box 
+        { -1.0f, -0.1f, -1.0, 1.0f, 0.1f, 1.0f }, // photon box
+    };
+    static ComPtr<ID3D12Resource> boxUploadBuffer = nullptr;
+    static const ComPtr<ID3D12Resource> boxBuffer = d3dUtil::CreateDefaultBuffer(
+        md3dDevice.Get(),
+        mCommandList.Get(), 
+        beamPhotonBoxes, 2 * sizeof(D3D12_RAYTRACING_AABB), 
+        boxUploadBuffer
+    );
 
+    ASBuilder::BottomLevelASGenerator generator{};
+
+    generator.AddAabbBuffer(boxBuffer.Get(), 0, 1);
+    generator.AddAabbBuffer(boxBuffer.Get(), sizeof(D3D12_RAYTRACING_AABB), 1);
+
+    UINT64 scratchSizeInBytes = 0;
+    UINT64 resultSizeInBytes = 0;
+    generator.ComputeASBufferSizes(md3dDevice.Get(), false, &scratchSizeInBytes, &resultSizeInBytes);
+
+    m_beamBoxASBuffers.pScratch = raytrace_helper::CreateBuffer(
+        md3dDevice.Get(),
+        scratchSizeInBytes,
+        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+        D3D12_RESOURCE_STATE_COMMON,
+        raytrace_helper::pmDefaultHeapProps
+    );
+    m_beamBoxASBuffers.pResult = raytrace_helper::CreateBuffer(
+        md3dDevice.Get(),
+        resultSizeInBytes,
+        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+        D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
+        raytrace_helper::pmDefaultHeapProps
+    );
+
+    generator.Generate(
+        mCommandList.Get(),
+        m_bottomLevelASBuffers.pScratch.Get(),
+        m_bottomLevelASBuffers.pResult.Get(),
+        false,
+        nullptr
+    );
 }
 
 uint32_t PhotonBeamApp::AllocateRayTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE* cpuDescriptor, UINT descriptorIndexToUse)

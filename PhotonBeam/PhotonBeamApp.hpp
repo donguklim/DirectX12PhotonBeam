@@ -366,6 +366,8 @@ private:
     AccelerationStructureBuffers m_bottomLevelASBuffers{};
     AccelerationStructureBuffers m_topLevelASBuffers{};
 
+    AccelerationStructureBuffers m_beamBoxASBuffers{};
+
     Microsoft::WRL::ComPtr<ID3D12Resource> m_bottomLevelAS; // Storage for the bottom Level AS
     nv_helpers_dx12::TopLevelASGenerator m_topLevelASGenerator;
 
