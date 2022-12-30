@@ -72,14 +72,6 @@ struct RayHitAttributes
 const static uint32_t MAX_SHADER_MATERIAL_TEXTURES = 16;
 
 
-// Uniform buffer set at each frame
-struct GlobalUniforms
-{
-	XMFLOAT4X4 viewProj;     // Camera view * projection
-	XMFLOAT4X4 viewInverse;  // Camera inverse view matrix
-	XMFLOAT4X4 projInverse;  // Camera inverse projection matrix
-};
-
 // Push constant structure for the raster
 struct PushConstantRaster
 {
@@ -185,13 +177,6 @@ struct ShaderRayTracingTopASInstanceDesc
 	uint32_t instanceCustomIndexAndmask;
 	uint32_t instanceShaderBindingTableRecordOffsetAndflags;
 	uint64_t accelerationStructureReference;
-};
-
-
-struct Aabb
-{
-	XMFLOAT3 minimum;
-	XMFLOAT3 maximum;
 };
 
 #endif
