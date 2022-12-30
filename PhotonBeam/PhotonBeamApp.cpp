@@ -171,6 +171,11 @@ bool PhotonBeamApp::Initialize()
     mGeometries["cornellBox"].get()->DisposeUploaders();
     m_gltfScene.destroy();
 
+    // release scratch buffers for creating accelerated structures;
+    m_beamBlasBuffers.pScratch.Reset();
+    m_photonBlasBuffers.pScratch.Reset();
+    m_surfaceTlasBuffers.pScratch.Reset();
+
     return true;
 }
 
