@@ -237,7 +237,7 @@ private:
     void SetDefaults();
 
     void Rasterize();
-    void LightTrace();
+    void BeamTrace();
     void RayTrace();
     void drawPost();
 

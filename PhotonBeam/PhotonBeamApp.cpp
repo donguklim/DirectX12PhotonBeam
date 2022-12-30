@@ -432,8 +432,12 @@ void PhotonBeamApp::Rasterize()
 
 }
 
-void PhotonBeamApp::LightTrace()
+void PhotonBeamApp::BeamTrace()
 {
+    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc = mCurrFrameResource->CmdListAlloc;
+    ThrowIfFailed(cmdListAlloc->Reset());
+    ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));
+
     // Reset beam counter to zero
     {
         // this barrier may not necessary
@@ -495,6 +499,14 @@ void PhotonBeamApp::LightTrace()
 
     mCommandList->DispatchRays(&dispatchDesc);
 
+    ThrowIfFailed(mCommandList->Close());
+    ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
+    mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+
+    // Wait until initialization is complete.
+    FlushCommandQueue();
+    //ThrowIfFailed(cmdListAlloc->Reset());
+
 }
 
 void PhotonBeamApp::RayTrace()
@@ -510,19 +522,8 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
 
     if (m_createBeamPhotonAS)
     {
-        ThrowIfFailed(cmdListAlloc->Reset());
-        ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));
-
-        LightTrace();
+        BeamTrace();
         m_createBeamPhotonAS = false;
-
-        ThrowIfFailed(mCommandList->Close());
-        ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
-        mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
-
-        // Wait until initialization is complete.
-        FlushCommandQueue();
-        //ThrowIfFailed(cmdListAlloc->Reset());
     }
 
     // Start the Dear ImGui frame
