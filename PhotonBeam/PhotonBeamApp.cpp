@@ -2308,7 +2308,7 @@ void PhotonBeamApp::BuildBeamTracingShaderTables()
         struct {
             D3D12_GPU_VIRTUAL_ADDRESS topLevelAsAddress;
             D3D12_GPU_DESCRIPTOR_HANDLE beamDataDescriptorTable;
-        } rootArgs;
+        } rootArgs{};
 
         rootArgs.topLevelAsAddress = m_surfaceTlasBuffers.pResult->GetGPUVirtualAddress();
         rootArgs.beamDataDescriptorTable = m_beamTracingBeamDataDescriptorHandle;
@@ -2342,7 +2342,7 @@ void PhotonBeamApp::BuildBeamTracingShaderTables()
         struct {
             D3D12_GPU_DESCRIPTOR_HANDLE goemetryDescriptorTable;
             D3D12_GPU_DESCRIPTOR_HANDLE textureDescriptorTable;
-        } rootArgs;
+        } rootArgs{};
 
         rootArgs.goemetryDescriptorTable = m_beamTracingVertexDescriptorHandle;
         rootArgs.textureDescriptorTable = m_beamTracingTextureDescriptorHandle;
@@ -2396,7 +2396,7 @@ void PhotonBeamApp::BuildRayTracingShaderTables()
             D3D12_GPU_VIRTUAL_ADDRESS surfaceAsAddress;
             D3D12_GPU_DESCRIPTOR_HANDLE geometryDescriptorTable;
             D3D12_GPU_DESCRIPTOR_HANDLE textureDescriptorTable;
-        } rootArgs;
+        } rootArgs{};
 
         rootArgs.outputImageDescriptorTable = m_rayTracingOutputDescriptorHandle;
         rootArgs.beamAsAddress = m_beamBlasBuffers.pResult->GetGPUVirtualAddress();
@@ -2417,7 +2417,7 @@ void PhotonBeamApp::BuildRayTracingShaderTables()
     {
         struct {
             D3D12_GPU_VIRTUAL_ADDRESS beamDataAddress;
-        } rootArgs;
+        } rootArgs{};
 
         rootArgs.beamDataAddress = m_beamData->GetGPUVirtualAddress();
 
