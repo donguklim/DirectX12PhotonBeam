@@ -175,6 +175,10 @@ bool PhotonBeamApp::Initialize()
     m_beamBlasBuffers.pScratch.Reset();
     m_photonBlasBuffers.pScratch.Reset();
     m_surfaceTlasBuffers.pScratch.Reset();
+    for (auto& blasBuffers : m_surfaceBlasBuffers)
+    {
+        blasBuffers.pScratch.Reset();
+    }
 
     return true;
 }
@@ -1864,15 +1868,21 @@ void PhotonBeamApp::RenderUI()
 
 void PhotonBeamApp::CreateSurfaceBlas()
 {
-    ASBuilder::BottomLevelASGenerator generator{};
     // Adding all vertex buffers and not transforming their position. 
 
     auto geo = mGeometries["cornellBox"].get();
     auto vertexBufferView = geo->VertexBufferView();
     auto indexbufferView = geo->IndexBufferView();
     const auto& primMeshes = m_gltfScene.GetPrimMeshes();
-    for (const auto& mesh : primMeshes)
+
+    m_surfaceBlasBuffers.clear();
+    m_surfaceBlasBuffers.reserve(primMeshes.size());
+    for (size_t i = 0; i < primMeshes.size(); i++)
     {
+        m_surfaceBlasBuffers.emplace_back(nullptr, nullptr, nullptr );
+        const auto& mesh = primMeshes[i];
+        ASBuilder::BottomLevelASGenerator generator{};
+
         generator.AddVertexBuffer(
             geo->VertexBufferGPU.Get(),
             static_cast<UINT64>(mesh.vertexOffset) * vertexBufferView.StrideInBytes,
@@ -1884,46 +1894,46 @@ void PhotonBeamApp::CreateSurfaceBlas()
             nullptr,
             0
         );
+
+        UINT64 scratchSizeInBytes = 0;
+        UINT64 resultSizeInBytes = 0;
+        generator.ComputeASBufferSizes(md3dDevice.Get(), false, &scratchSizeInBytes, &resultSizeInBytes);
+
+        m_surfaceBlasBuffers[i].pScratch = raytrace_helper::CreateBuffer(
+            md3dDevice.Get(),
+            scratchSizeInBytes,
+            D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+            D3D12_RESOURCE_STATE_COMMON,
+            raytrace_helper::pmDefaultHeapProps
+        );
+        m_surfaceBlasBuffers[i].pResult = raytrace_helper::CreateBuffer(
+            md3dDevice.Get(),
+            resultSizeInBytes,
+            D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+            D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
+            raytrace_helper::pmDefaultHeapProps
+        );
+
+        generator.Generate(
+            mCommandList.Get(),
+            m_surfaceBlasBuffers[i].pScratch.Get(),
+            m_surfaceBlasBuffers[i].pResult.Get(),
+            false,
+            nullptr
+        );
     }
-
-    UINT64 scratchSizeInBytes = 0;
-    UINT64 resultSizeInBytes = 0;
-    generator.ComputeASBufferSizes(md3dDevice.Get(), false, &scratchSizeInBytes, &resultSizeInBytes);
-
-    m_surfaceBlasBuffers.pScratch = raytrace_helper::CreateBuffer(
-        md3dDevice.Get(),
-        scratchSizeInBytes,
-        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
-        D3D12_RESOURCE_STATE_COMMON,
-        raytrace_helper::pmDefaultHeapProps
-    );
-    m_surfaceBlasBuffers.pResult = raytrace_helper::CreateBuffer(
-        md3dDevice.Get(),
-        resultSizeInBytes,
-        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
-        D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
-        raytrace_helper::pmDefaultHeapProps
-    );
-
-    generator.Generate(
-        mCommandList.Get(),
-        m_surfaceBlasBuffers.pScratch.Get(),
-        m_surfaceBlasBuffers.pResult.Get(),
-        false,
-        nullptr
-    );
 }
 
 void PhotonBeamApp::CreateSurfaceTlas()
 {
-    auto blasAddress = m_surfaceBlasBuffers.pResult.Get();
     for (auto& node : m_gltfScene.GetNodes())
     {
+        auto blasAddress = m_surfaceBlasBuffers[node.primMesh].pResult.Get();
         m_topLevelASGenerator.AddInstance(
             blasAddress,
             XMLoadFloat4x4(&node.worldMatrix),
-            static_cast<UINT>(node.primMesh),
-            static_cast<UINT>(0)
+            0,
+            0
         );
     }
 
@@ -2302,7 +2312,7 @@ void PhotonBeamApp::BuildBeamTracingShaderTables()
         struct {
             D3D12_GPU_VIRTUAL_ADDRESS topLevelAsAddress;
             D3D12_GPU_DESCRIPTOR_HANDLE beamDataDescriptorTable;
-        } rootArgs;
+        } rootArgs{};
 
         rootArgs.topLevelAsAddress = m_surfaceTlasBuffers.pResult->GetGPUVirtualAddress();
         rootArgs.beamDataDescriptorTable = m_beamTracingBeamDataDescriptorHandle;
@@ -2336,7 +2346,7 @@ void PhotonBeamApp::BuildBeamTracingShaderTables()
         struct {
             D3D12_GPU_DESCRIPTOR_HANDLE goemetryDescriptorTable;
             D3D12_GPU_DESCRIPTOR_HANDLE textureDescriptorTable;
-        } rootArgs;
+        } rootArgs{};
 
         rootArgs.goemetryDescriptorTable = m_beamTracingVertexDescriptorHandle;
         rootArgs.textureDescriptorTable = m_beamTracingTextureDescriptorHandle;
@@ -2390,7 +2400,7 @@ void PhotonBeamApp::BuildRayTracingShaderTables()
             D3D12_GPU_VIRTUAL_ADDRESS surfaceAsAddress;
             D3D12_GPU_DESCRIPTOR_HANDLE geometryDescriptorTable;
             D3D12_GPU_DESCRIPTOR_HANDLE textureDescriptorTable;
-        } rootArgs;
+        } rootArgs{};
 
         rootArgs.outputImageDescriptorTable = m_rayTracingOutputDescriptorHandle;
         rootArgs.beamAsAddress = m_beamBlasBuffers.pResult->GetGPUVirtualAddress();
@@ -2411,7 +2421,7 @@ void PhotonBeamApp::BuildRayTracingShaderTables()
     {
         struct {
             D3D12_GPU_VIRTUAL_ADDRESS beamDataAddress;
-        } rootArgs;
+        } rootArgs{};
 
         rootArgs.beamDataAddress = m_beamData->GetGPUVirtualAddress();
 
