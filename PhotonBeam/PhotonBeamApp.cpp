@@ -504,6 +504,27 @@ void PhotonBeamApp::RayTrace()
 
 void PhotonBeamApp::Draw(const GameTimer& gt)
 {
+    
+
+    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc = mCurrFrameResource->CmdListAlloc;
+
+    if (m_createBeamPhotonAS)
+    {
+        ThrowIfFailed(cmdListAlloc->Reset());
+        ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));
+
+        LightTrace();
+        m_createBeamPhotonAS = false;
+
+        ThrowIfFailed(mCommandList->Close());
+        ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
+        mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+
+        // Wait until initialization is complete.
+        FlushCommandQueue();
+        //ThrowIfFailed(cmdListAlloc->Reset());
+    }
+
     // Start the Dear ImGui frame
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplWin32_NewFrame();
@@ -511,20 +532,10 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
     RenderUI();
     ImGui::Render();
 
-    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc = mCurrFrameResource->CmdListAlloc;
-
-    
-
     // Reuse the memory associated with command recording.
     // We can only reset when the associated command lists have finished execution on the GPU.
     ThrowIfFailed(cmdListAlloc->Reset());
     ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));
-    if (m_createBeamPhotonAS)
-    {
-        //ThrowIfFailed(cmdListAlloc->Reset());
-        LightTrace();
-        m_createBeamPhotonAS = false;
-    }
 
     // Indicate a state transition on the resource usage.
     auto resourceBarrierRender = CD3DX12_RESOURCE_BARRIER::Transition(
