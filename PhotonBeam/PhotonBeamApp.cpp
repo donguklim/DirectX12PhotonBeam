@@ -840,9 +840,14 @@ void PhotonBeamApp::UpdateRayTracingPushConstants()
     m_pcBeam.sourceLight = XMFLOAT3(m_sourceLight[0], m_sourceLight[1], m_sourceLight[2]);
     m_pcBeam.numBeamSources = m_numBeamSamples;
     m_pcBeam.numPhotonSources = m_numPhotonSamples;
+    m_pcBeam.maxNumBeams = m_maxNumBeamData;
+    m_pcBeam.maxNumSubBeams = m_maxNumSubBeamInfo;
 
     auto currPcRay = mCurrFrameResource->PcRay.get();
     currPcRay->CopyData(0, m_pcRay);
+
+    auto currPcBeam = mCurrFrameResource->PcBeam.get();
+    currPcBeam->CopyData(0, m_pcBeam);
 }
 
 void PhotonBeamApp::BuildDescriptorHeaps()
