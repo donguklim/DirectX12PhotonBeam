@@ -366,7 +366,7 @@ private:
     float m_camearaFOV;
     float m_prevCameraFOV;
 
-    AccelerationStructureBuffers m_surfaceBlasBuffers{};
+    std::vector<AccelerationStructureBuffers> m_surfaceBlasBuffers{};
     AccelerationStructureBuffers m_surfaceTlasBuffers{};
 
     AccelerationStructureBuffers m_beamBlasBuffers{};
