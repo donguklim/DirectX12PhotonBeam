@@ -203,6 +203,7 @@ private:
     void OnKeyboardInput(const GameTimer& gt);
     void UpdateObjectCBs(const GameTimer& gt);
     void UpdateMainPassCB(const GameTimer& gt);
+    void UpdateRayTracingPushConstants(const GameTimer& gt);
 
     void SerializeAndCreateRootSignature(
         D3D12_ROOT_SIGNATURE_DESC& desc,
@@ -314,6 +315,9 @@ private:
     std::vector<RenderItem*> mOpaqueRitems;
 
     PassConstants mMainPassCB;
+
+    PushConstantRay m_pcRay;
+    PushConstantBeam m_pcBeam;
 
     GltfScene m_gltfScene;
 

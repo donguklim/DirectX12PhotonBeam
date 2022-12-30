@@ -632,6 +632,37 @@ void PhotonBeamApp::UpdateMainPassCB(const GameTimer& gt)
     currPassCB->CopyData(0, mMainPassCB);
 }
 
+void PhotonBeamApp::UpdateRayTracingPushConstants(const GameTimer& gt)
+{
+    XMMATRIX view = mCamera.GetView();
+    XMMATRIX proj = mCamera.GetProj();
+
+    XMMATRIX viewProj = XMMatrixMultiply(view, proj);
+
+    auto viewDeterminant = XMMatrixDeterminant(view);
+    auto projDeterminant = XMMatrixDeterminant(proj);
+    auto viewProjDeterminant = XMMatrixDeterminant(viewProj);
+
+    XMMATRIX invView = XMMatrixInverse(&viewDeterminant, view);
+    XMMATRIX invProj = XMMatrixInverse(&projDeterminant, proj);
+
+    XMStoreFloat4x4(&m_pcRay.viewInverse, XMMatrixTranspose(invView));
+    XMStoreFloat4x4(&m_pcRay.projInverse, XMMatrixTranspose(invProj));
+    XMStoreFloat4x4(&m_pcRay.viewProj, XMMatrixTranspose(viewProj));
+
+    m_pcRay.clearColor = XMFLOAT4(m_clearColor[0], m_clearColor[1], m_clearColor[2], 1.0);
+    m_pcRay.airScatterCoff = XMFLOAT3(m_airScatterCoff[0], m_airScatterCoff[1], m_airScatterCoff[2]);
+    m_pcRay.airExtinctCoff = XMFLOAT3(m_airExtinctCoff[0], m_airExtinctCoff[1], m_airExtinctCoff[2]);
+    m_pcRay.airHGAssymFactor = m_hgAssymFactor;
+    m_pcRay.photonRadius = m_photonRadius;
+    m_pcRay.numBeamSources = m_numBeamSamples;
+    m_pcRay.numPhotonSources = m_numPhotonSamples;
+    m_pcRay.seed = 231;
+
+    auto currPcRay = mCurrFrameResource->PcRay.get();
+    currPcRay->CopyData(0, m_pcRay);
+}
+
 void PhotonBeamApp::BuildDescriptorHeaps()
 {
     D3D12_DESCRIPTOR_HEAP_DESC guiHeapDesc = {};

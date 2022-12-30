@@ -101,21 +101,19 @@ struct PushConstantRay
 
 	XMFLOAT4  clearColor;
 
-	XMFLOAT3     airScatterCoff;
+	XMFLOAT3 airScatterCoff;
 	float beamRadius;
 
-	XMFLOAT3     airExtinctCoff;
+	XMFLOAT3 airExtinctCoff;
 	uint32_t showDirectColor;
-
-	XMFLOAT3     padding;
-	uint32_t seed;
 
 	float    airHGAssymFactor;
 	float    photonRadius;
 	uint32_t numBeamSources;
 	uint32_t numPhotonSources;
 	
-
+	uint32_t seed;
+	XMUINT3  padding;
 };
 
 struct PushConstantBeam
