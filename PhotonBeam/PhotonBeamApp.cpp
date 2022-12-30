@@ -1916,8 +1916,6 @@ void PhotonBeamApp::CreateTopLevelSurfaceAS()
         m_topLevelASBuffers.pResult.Get(),
         m_topLevelASBuffers.pInstanceDesc.Get()
     );
-
-    return;
 }
 
 void PhotonBeamApp::CreateBottomLevelBeamAS()
@@ -1927,7 +1925,6 @@ void PhotonBeamApp::CreateBottomLevelBeamAS()
 
 uint32_t PhotonBeamApp::AllocateRayTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE* cpuDescriptor, UINT descriptorIndexToUse)
 {
-    
     auto descriptorHeapCpuBase = m_rayTracingDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
     if (descriptorIndexToUse >= m_rayTracingDescriptorHeap->GetDesc().NumDescriptors)
     {
@@ -1938,12 +1935,10 @@ uint32_t PhotonBeamApp::AllocateRayTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE
     }
     *cpuDescriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE(descriptorHeapCpuBase, descriptorIndexToUse, mCbvSrvDescriptorSize);
     return descriptorIndexToUse;
-    
 }
 
 uint32_t PhotonBeamApp::AllocateBeamTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE* cpuDescriptor, UINT descriptorIndexToUse)
 {
-
     auto descriptorHeapCpuBase = m_beamTracingDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
     if (descriptorIndexToUse >= m_beamTracingDescriptorHeap->GetDesc().NumDescriptors)
     {
@@ -1954,12 +1949,10 @@ uint32_t PhotonBeamApp::AllocateBeamTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDL
     }
     *cpuDescriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE(descriptorHeapCpuBase, descriptorIndexToUse, mCbvSrvDescriptorSize);
     return descriptorIndexToUse;
-
 }
 
 void PhotonBeamApp::CreateRayTracingOutputResource()
 {
-
     auto backbufferFormat = mBackBufferFormat;
 
     // Create the output resource. The dimensions and format should match the swap-chain.
@@ -2005,9 +1998,7 @@ void PhotonBeamApp::CreateRayTracingOutputResource()
         m_raytracingOutputResourceUAVDescriptorHeapIndex, 
         mCbvSrvUavDescriptorSize
     );
-
 }
-
 
 void PhotonBeamApp::CreateBeamBuffers()
 {
@@ -2145,7 +2136,6 @@ void PhotonBeamApp::CreateBeamBuffers()
             uavDescriptorHandle
         );
     }
-
 }
 
 void PhotonBeamApp::BuildBeamTracingShaderTables()
@@ -2176,7 +2166,6 @@ void PhotonBeamApp::BuildBeamTracingShaderTables()
 
         shaderIDSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
     }
-
    
     // BeamGen shader table.
     {
@@ -2212,7 +2201,6 @@ void PhotonBeamApp::BuildBeamTracingShaderTables()
         m_beamMissShaderTable = beamMissShaderTable.GetResource();
     }
 
-
     // Hit group shader table.
     {
         struct {
@@ -2233,8 +2221,6 @@ void PhotonBeamApp::BuildBeamTracingShaderTables()
         m_beamHitGroupShaderTableStrideInBytes = beamHitGroupShaderTable.GetShaderRecordSize();
         m_beamHitGroupShaderTable = beamHitGroupShaderTable.GetResource();
     }
-
-
 }
 
 void PhotonBeamApp::BuildRayTracingShaderTables()
