@@ -240,10 +240,10 @@ private:
     void RayTrace();
     void drawPost(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc);
 
-    void CreateBottomLevelSurfaceAS();
-    void CreateTopLevelSurfaceAS();
+    void CreateSurfaceBlas();
+    void CreateSurfaceTlas();
 
-    void CreateBottomLevelBeamAS();
+    void CreateBeamBlas();
 
     static const CD3DX12_STATIC_SAMPLER_DESC& GetLinearSampler();
 
@@ -362,10 +362,11 @@ private:
     float m_camearaFOV;
     float m_prevCameraFOV;
 
-    AccelerationStructureBuffers m_bottomLevelASBuffers{};
-    AccelerationStructureBuffers m_topLevelASBuffers{};
+    AccelerationStructureBuffers m_surfaceBlasBuffers{};
+    AccelerationStructureBuffers m_surfaceTlasBuffers{};
 
-    AccelerationStructureBuffers m_beamBoxASBuffers{};
+    AccelerationStructureBuffers m_beamBlasBuffers{};
+    AccelerationStructureBuffers m_beamTlasBuffers{};
 
     Microsoft::WRL::ComPtr<ID3D12Resource> m_bottomLevelAS; // Storage for the bottom Level AS
     nv_helpers_dx12::TopLevelASGenerator m_topLevelASGenerator;
