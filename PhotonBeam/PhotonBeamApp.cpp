@@ -162,8 +162,6 @@ bool PhotonBeamApp::Initialize()
     ComPtr<ID3D12Resource> resetValuploadBuffer = nullptr;
     CreateBeamBuffers(resetValuploadBuffer);
 
-    LightTrace();
-
     // Execute the initialization commands.
     ThrowIfFailed(mCommandList->Close());
     ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
@@ -304,9 +302,9 @@ void PhotonBeamApp::Update(const GameTimer& gt)
     UpdateRayTracingPushConstants();
 }
 
-void PhotonBeamApp::drawPost(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc)
+void PhotonBeamApp::drawPost()
 {
-    ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), mPSOs["post"].Get()));
+    mCommandList->SetPipelineState(mPSOs["post"].Get());
 
     // Indicate a state transition on the resource usage.
     auto resourceBarrierRender = CD3DX12_RESOURCE_BARRIER::Transition(
@@ -364,19 +362,24 @@ void PhotonBeamApp::drawPost(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdL
 
 }
 
-void PhotonBeamApp::Rasterize(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc)
+void PhotonBeamApp::Rasterize()
 {
 
     // A command list can be reset after it has been added to the command queue via ExecuteCommandList.
     // Reusing the command list reuses memory.
+
     if (mIsWireframe)
     {
-        ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), mPSOs["opaque_wireframe"].Get()));
+
+        mCommandList->SetPipelineState(mPSOs["opaque_wireframe"].Get());
     }
     else
     {
-        ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), mPSOs["opaque"].Get()));
+
+        mCommandList->SetPipelineState(mPSOs["opaque"].Get());
     }
+
+
     // Indicate a state transition on the resource usage.
     auto resourceBarrierRender = CD3DX12_RESOURCE_BARRIER::Transition(
         CurrentBackBuffer(),
@@ -439,6 +442,7 @@ void PhotonBeamApp::Rasterize(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmd
 
 void PhotonBeamApp::LightTrace()
 {
+
     // Copy Buffer to GPU
     /*
     {
@@ -452,13 +456,35 @@ void PhotonBeamApp::LightTrace()
     }
     */
     // Reset counter to zero
+
+    // this barrier may not necessary
+    auto resourceBarrierCopy = CD3DX12_RESOURCE_BARRIER::Transition(
+        m_beamCounter.Get(),
+        D3D12_RESOURCE_STATE_COMMON,
+        D3D12_RESOURCE_STATE_COPY_DEST
+    );
+
+    mCommandList->ResourceBarrier(1, &resourceBarrierCopy);
+    
     mCommandList->CopyBufferRegion(
-        m_beamCounter.Get(), 
-        0, 
-        m_beamCounterReset.Get(), 
-        0, 
+        m_beamCounter.Get(),
+        0,
+        m_beamCounterReset.Get(),
+        0,
         sizeof(uint32_t) * 2
     );
+
+    auto resourceBarrierRead = CD3DX12_RESOURCE_BARRIER::Transition(
+        m_beamCounter.Get(),
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        D3D12_RESOURCE_STATE_GENERIC_READ
+    );
+
+    mCommandList->ResourceBarrier(1, &resourceBarrierRead);
+
+    OutputDebugString(L"beam counter reset\n");
+
+    
 
     /*
     mCommandList->SetDescriptorHeaps(1, m_beamTracingDescriptorHeap.GetAddressOf());
@@ -499,16 +525,29 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
 
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc = mCurrFrameResource->CmdListAlloc;
 
+    
+
     // Reuse the memory associated with command recording.
     // We can only reset when the associated command lists have finished execution on the GPU.
     ThrowIfFailed(cmdListAlloc->Reset());
+    ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));
+    if (m_createBeamPhotonAS)
+    {
+        //ThrowIfFailed(cmdListAlloc->Reset());
+        LightTrace();
+        m_createBeamPhotonAS = false;
+    }
 
-    Rasterize(cmdListAlloc);
+
+    Rasterize();
 
     ID3D12DescriptorHeap* guiDescriptorHeaps[] = { mGuiDescriptorHeap.Get() };
     mCommandList->SetDescriptorHeaps(_countof(guiDescriptorHeaps), guiDescriptorHeaps);
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList.Get());
     mCommandList->EndRenderPass();
+
+    
+
     // Indicate a state transition on the resource usage.
     auto presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
         CurrentBackBuffer(),

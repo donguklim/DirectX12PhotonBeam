@@ -236,10 +236,10 @@ private:
     void RenderUI();
     void SetDefaults();
 
-    void Rasterize(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc);
+    void Rasterize();
     void LightTrace();
     void RayTrace();
-    void drawPost(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc);
+    void drawPost();
 
     void CreateSurfaceBlas();
     void CreateSurfaceTlas();
