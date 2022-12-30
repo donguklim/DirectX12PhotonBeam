@@ -2142,6 +2142,28 @@ void PhotonBeamApp::CreateRayTracingOutputResource()
 
 void PhotonBeamApp::CreateBeamBuffers()
 {
+    // Buffer for reading beam counter
+    {
+        auto counterDesc = CD3DX12_RESOURCE_DESC::Buffer(
+            sizeof(PhotonBeamCounter),
+            D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE
+        );
+
+        auto defaultHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
+
+        ThrowIfFailed(
+            md3dDevice->CreateCommittedResource(
+                &defaultHeapProperties,
+                D3D12_HEAP_FLAG_NONE,
+                &counterDesc,
+                D3D12_RESOURCE_STATE_COPY_DEST,
+                nullptr,
+                IID_PPV_ARGS(&m_beamCounterRead)
+            )
+        );
+        NAME_D3D12_OBJECT(m_beamCounterRead);
+    }
+
     uint32_t photonBeamHeapIndex{};
     // Buffer for beam data
     {
@@ -2249,9 +2271,9 @@ void PhotonBeamApp::CreateBeamBuffers()
         ThrowIfFailed(
             md3dDevice->CreateCommittedResource(
                 &defaultHeapProperties,
-                D3D12_HEAP_FLAG_NONE,
+                D3D12_HEAP_FLAG_ALLOW_SHADER_ATOMICS,
                 &counterDesc,
-                D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                D3D12_RESOURCE_STATE_UNORDERED_ACCESS | D3D12_RESOURCE_STATE_COPY_SOURCE,
                 nullptr,
                 IID_PPV_ARGS(&m_beamCounter)
             )

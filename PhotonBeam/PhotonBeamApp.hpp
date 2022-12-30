@@ -302,6 +302,7 @@ private:
 
     Microsoft::WRL::ComPtr<ID3D12Resource> m_raytracingOutput = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounter = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounterRead = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamData = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamAsInstanceDescData = nullptr;
     
