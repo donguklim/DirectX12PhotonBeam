@@ -2310,7 +2310,4 @@ void PhotonBeamApp::BuildRayTracingShaderTables()
         m_rayHitGroupShaderTableStrideInBytes = rayHitGroupShaderTable.GetShaderRecordSize();
         m_rayHitGroupShaderTable = rayHitGroupShaderTable.GetResource();
     }
-
-
-
 }
