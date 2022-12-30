@@ -1928,8 +1928,8 @@ void PhotonBeamApp::CreateSurfaceTlas()
         m_topLevelASGenerator.AddInstance(
             blasAddress,
             XMLoadFloat4x4(&node.worldMatrix),
-            static_cast<UINT>(0),
-            static_cast<UINT>(0)
+            0,
+            0
         );
     }
 
