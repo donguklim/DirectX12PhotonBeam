@@ -158,7 +158,11 @@ bool PhotonBeamApp::Initialize()
     CreateBeamBlases();
 
     CreateRayTracingOutputResource();
-    CreateBeamBuffers();
+
+    ComPtr<ID3D12Resource> resetValuploadBuffer = nullptr;
+    CreateBeamBuffers(resetValuploadBuffer);
+
+    LightTrace();
 
     // Execute the initialization commands.
     ThrowIfFailed(mCommandList->Close());
@@ -433,9 +437,10 @@ void PhotonBeamApp::Rasterize(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmd
 
 }
 
-void PhotonBeamApp::LightTrace(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc)
+void PhotonBeamApp::LightTrace()
 {
     // Copy Buffer to GPU
+    /*
     {
         using namespace RootSignatueEnums::BeamTrace;
 
@@ -445,7 +450,17 @@ void PhotonBeamApp::LightTrace(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cm
         mCommandList->SetComputeRootSignature(globalRootSignature.Get());
         mCommandList->SetComputeRootConstantBufferView(to_underlying(EGlobalParams::SceneConstantSlot), pcBeam->GetGPUVirtualAddress());
     }
-    
+    */
+    // Reset counter to zero
+    mCommandList->CopyBufferRegion(
+        m_beamCounter.Get(), 
+        0, 
+        m_beamCounterReset.Get(), 
+        0, 
+        sizeof(uint32_t) * 2
+    );
+
+    /*
     mCommandList->SetDescriptorHeaps(1, m_beamTracingDescriptorHeap.GetAddressOf());
 
     D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
@@ -465,6 +480,7 @@ void PhotonBeamApp::LightTrace(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cm
     mCommandList->SetPipelineState1(m_beamStateObject.Get());
 
     mCommandList->DispatchRays(&dispatchDesc);
+    */
 }
 
 void PhotonBeamApp::RayTrace()
@@ -2169,8 +2185,10 @@ void PhotonBeamApp::CreateRayTracingOutputResource()
     );
 }
 
-void PhotonBeamApp::CreateBeamBuffers()
+void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& resetValuploadBuffer)
 {
+    static const PhotonBeamCounter counterResetVal = { 0, 0, 0, 0 };
+
     // Buffer for reading beam counter
     {
         auto counterDesc = CD3DX12_RESOURCE_DESC::Buffer(
@@ -2191,6 +2209,12 @@ void PhotonBeamApp::CreateBeamBuffers()
             )
         );
         NAME_D3D12_OBJECT(m_beamCounterRead);
+    }
+
+    //upload buffer  for resetting beam counter
+    {
+        m_beamCounterReset = d3dUtil::CreateDefaultBuffer(md3dDevice.Get(),
+            mCommandList.Get(), &counterResetVal, sizeof(PhotonBeamCounter), resetValuploadBuffer);
     }
 
     uint32_t photonBeamHeapIndex{};

@@ -228,7 +228,7 @@ private:
     void BuildRayTracingShaderTables();
 
     void CreateRayTracingOutputResource();
-    void CreateBeamBuffers();
+    void CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& resetValuploadBuffer);
 
     void BuildFrameResources();
     void BuildRenderItems();
@@ -237,7 +237,7 @@ private:
     void SetDefaults();
 
     void Rasterize(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc);
-    void LightTrace(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc);
+    void LightTrace();
     void RayTrace();
     void drawPost(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc);
 
@@ -302,6 +302,7 @@ private:
 
     Microsoft::WRL::ComPtr<ID3D12Resource> m_raytracingOutput = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounter = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounterReset = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounterRead = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamData = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamAsInstanceDescData = nullptr;
