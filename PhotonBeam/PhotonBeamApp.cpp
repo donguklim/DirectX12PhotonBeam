@@ -161,6 +161,8 @@ bool PhotonBeamApp::Initialize()
 
     ComPtr<ID3D12Resource> resetValuploadBuffer = nullptr;
     CreateBeamBuffers(resetValuploadBuffer);
+    BuildBeamTracingShaderTables();
+    BuildRayTracingShaderTables();
 
     // Execute the initialization commands.
     ThrowIfFailed(mCommandList->Close());
@@ -442,9 +444,36 @@ void PhotonBeamApp::Rasterize()
 
 void PhotonBeamApp::LightTrace()
 {
+    // Reset beam counter to zero
+    {
+        // this barrier may not necessary
+        auto resourceBarrierCopy = CD3DX12_RESOURCE_BARRIER::Transition(
+            m_beamCounter.Get(),
+            D3D12_RESOURCE_STATE_COMMON,
+            D3D12_RESOURCE_STATE_COPY_DEST
+        );
 
-    // Copy Buffer to GPU
-    /*
+        mCommandList->ResourceBarrier(1, &resourceBarrierCopy);
+
+        mCommandList->CopyBufferRegion(
+            m_beamCounter.Get(),
+            0,
+            m_beamCounterReset.Get(),
+            0,
+            sizeof(uint32_t) * 2
+        );
+
+        auto resourceBarrierRead = CD3DX12_RESOURCE_BARRIER::Transition(
+            m_beamCounter.Get(),
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            D3D12_RESOURCE_STATE_GENERIC_READ
+        );
+
+        mCommandList->ResourceBarrier(1, &resourceBarrierRead);
+
+        OutputDebugString(L"beam counter reset\n");
+    }
+    
     {
         using namespace RootSignatueEnums::BeamTrace;
 
@@ -454,39 +483,8 @@ void PhotonBeamApp::LightTrace()
         mCommandList->SetComputeRootSignature(globalRootSignature.Get());
         mCommandList->SetComputeRootConstantBufferView(to_underlying(EGlobalParams::SceneConstantSlot), pcBeam->GetGPUVirtualAddress());
     }
-    */
-    // Reset counter to zero
 
-    // this barrier may not necessary
-    auto resourceBarrierCopy = CD3DX12_RESOURCE_BARRIER::Transition(
-        m_beamCounter.Get(),
-        D3D12_RESOURCE_STATE_COMMON,
-        D3D12_RESOURCE_STATE_COPY_DEST
-    );
 
-    mCommandList->ResourceBarrier(1, &resourceBarrierCopy);
-    
-    mCommandList->CopyBufferRegion(
-        m_beamCounter.Get(),
-        0,
-        m_beamCounterReset.Get(),
-        0,
-        sizeof(uint32_t) * 2
-    );
-
-    auto resourceBarrierRead = CD3DX12_RESOURCE_BARRIER::Transition(
-        m_beamCounter.Get(),
-        D3D12_RESOURCE_STATE_COPY_DEST,
-        D3D12_RESOURCE_STATE_GENERIC_READ
-    );
-
-    mCommandList->ResourceBarrier(1, &resourceBarrierRead);
-
-    OutputDebugString(L"beam counter reset\n");
-
-    
-
-    /*
     mCommandList->SetDescriptorHeaps(1, m_beamTracingDescriptorHeap.GetAddressOf());
 
     D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
@@ -506,7 +504,7 @@ void PhotonBeamApp::LightTrace()
     mCommandList->SetPipelineState1(m_beamStateObject.Get());
 
     mCommandList->DispatchRays(&dispatchDesc);
-    */
+
 }
 
 void PhotonBeamApp::RayTrace()
