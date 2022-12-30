@@ -435,7 +435,36 @@ void PhotonBeamApp::Rasterize(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmd
 
 void PhotonBeamApp::LightTrace(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc)
 {
+    // Copy Buffer to GPU
+    {
+        using namespace RootSignatueEnums::BeamTrace;
 
+        auto pcBeam = mCurrFrameResource->PcBeam->Resource();
+        auto& globalRootSignature = m_beamRootSignatures[to_underlying(ERootSignatures::Global)];
+
+        mCommandList->SetComputeRootSignature(globalRootSignature.Get());
+        mCommandList->SetComputeRootConstantBufferView(to_underlying(EGlobalParams::SceneConstantSlot), pcBeam->GetGPUVirtualAddress());
+    }
+    
+    mCommandList->SetDescriptorHeaps(1, m_beamTracingDescriptorHeap.GetAddressOf());
+
+    D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
+   
+    dispatchDesc.HitGroupTable.StartAddress = m_beamHitGroupShaderTable->GetGPUVirtualAddress();
+    dispatchDesc.HitGroupTable.SizeInBytes = m_beamHitGroupShaderTable->GetDesc().Width;
+    dispatchDesc.HitGroupTable.StrideInBytes = m_beamHitGroupShaderTableStrideInBytes;
+    dispatchDesc.MissShaderTable.StartAddress = m_beamMissShaderTable->GetGPUVirtualAddress();
+    dispatchDesc.MissShaderTable.SizeInBytes = m_beamMissShaderTable->GetDesc().Width;
+    dispatchDesc.MissShaderTable.StrideInBytes = m_beamMissShaderTableStrideInBytes;
+    dispatchDesc.RayGenerationShaderRecord.StartAddress = m_beamGenShaderTable->GetGPUVirtualAddress();
+    dispatchDesc.RayGenerationShaderRecord.SizeInBytes = m_beamGenShaderTable->GetDesc().Width;
+    dispatchDesc.Width = 4;
+    dispatchDesc.Height = 4;
+    dispatchDesc.Depth = (m_numBeamSamples > m_numPhotonSamples ? m_numBeamSamples : m_numPhotonSamples) / 16;
+
+    mCommandList->SetPipelineState1(m_beamStateObject.Get());
+
+    mCommandList->DispatchRays(&dispatchDesc);
 }
 
 void PhotonBeamApp::RayTrace()
