@@ -1814,7 +1814,7 @@ void PhotonBeamApp::RenderUI()
 
 void PhotonBeamApp::CreateBottomLevelSurfaceAS()
 {
-    nv_helpers_dx12::BottomLevelASGenerator bottomLevelAS{};
+    ASBuilder::BottomLevelASGenerator generator{};
     // Adding all vertex buffers and not transforming their position. 
 
     auto geo = mGeometries["cornellBox"].get();
@@ -1823,7 +1823,7 @@ void PhotonBeamApp::CreateBottomLevelSurfaceAS()
     const auto& primMeshes = m_gltfScene.GetPrimMeshes();
     for (const auto& mesh : primMeshes)
     {
-        bottomLevelAS.AddVertexBuffer(
+        generator.AddVertexBuffer(
             geo->VertexBufferGPU.Get(),
             static_cast<UINT64>(mesh.vertexOffset) * vertexBufferView.StrideInBytes,
             vertexBufferView.SizeInBytes / vertexBufferView.StrideInBytes - mesh.vertexOffset,
@@ -1838,7 +1838,7 @@ void PhotonBeamApp::CreateBottomLevelSurfaceAS()
 
     UINT64 scratchSizeInBytes = 0;
     UINT64 resultSizeInBytes = 0;
-    bottomLevelAS.ComputeASBufferSizes(md3dDevice.Get(), false, &scratchSizeInBytes, &resultSizeInBytes);
+    generator.ComputeASBufferSizes(md3dDevice.Get(), false, &scratchSizeInBytes, &resultSizeInBytes);
 
     m_bottomLevelASBuffers.pScratch = raytrace_helper::CreateBuffer(
         md3dDevice.Get(),
@@ -1855,7 +1855,7 @@ void PhotonBeamApp::CreateBottomLevelSurfaceAS()
         raytrace_helper::pmDefaultHeapProps
     );
 
-    bottomLevelAS.Generate(
+    generator.Generate(
         mCommandList.Get(),
         m_bottomLevelASBuffers.pScratch.Get(),
         m_bottomLevelASBuffers.pResult.Get(),
