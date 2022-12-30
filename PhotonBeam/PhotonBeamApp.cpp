@@ -175,6 +175,10 @@ bool PhotonBeamApp::Initialize()
     m_beamBlasBuffers.pScratch.Reset();
     m_photonBlasBuffers.pScratch.Reset();
     m_surfaceTlasBuffers.pScratch.Reset();
+    for (auto& blasBuffers : m_surfaceBlasBuffers)
+    {
+        blasBuffers.pScratch.Reset();
+    }
 
     return true;
 }
