@@ -228,7 +228,7 @@ private:
     void BuildRayTracingShaderTables();
 
     void CreateRayTracingOutputResource();
-    void CreateBeamResource();
+    void CreateBeamBuffers();
 
     void BuildFrameResources();
     void BuildRenderItems();
@@ -241,8 +241,10 @@ private:
     void RayTrace();
     void drawPost(Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc);
 
-    void CreateBottomLevelAS();
-    void CreateTopLevelAS();
+    void CreateBottomLevelSurfaceAS();
+    void CreateTopLevelSurfaceAS();
+
+    void CreateBottomLevelBeamAS();
 
     static const CD3DX12_STATIC_SAMPLER_DESC& GetLinearSampler();
 

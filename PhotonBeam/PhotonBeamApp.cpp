@@ -149,10 +149,10 @@ bool PhotonBeamApp::Initialize()
 
     BuildPSOs();
 
-    CreateBottomLevelAS();
-    CreateTopLevelAS();
+    CreateBottomLevelSurfaceAS();
+    CreateTopLevelSurfaceAS();
     CreateRayTracingOutputResource();
-    CreateBeamResource();
+    CreateBeamBuffers();
 
     // Execute the initialization commands.
     ThrowIfFailed(mCommandList->Close());
@@ -1812,8 +1812,8 @@ void PhotonBeamApp::RenderUI()
 }
 
 
-void PhotonBeamApp::CreateBottomLevelAS() {
-
+void PhotonBeamApp::CreateBottomLevelSurfaceAS()
+{
     nv_helpers_dx12::BottomLevelASGenerator bottomLevelAS{};
     // Adding all vertex buffers and not transforming their position. 
 
@@ -1864,9 +1864,8 @@ void PhotonBeamApp::CreateBottomLevelAS() {
     );
 }
 
-void PhotonBeamApp::CreateTopLevelAS() {
-
-
+void PhotonBeamApp::CreateTopLevelSurfaceAS()
+{
     for (auto& node : m_gltfScene.GetNodes())
     {
         m_topLevelASGenerator.AddInstance(
@@ -1919,6 +1918,11 @@ void PhotonBeamApp::CreateTopLevelAS() {
     );
 
     return;
+}
+
+void PhotonBeamApp::CreateBottomLevelBeamAS()
+{
+
 }
 
 uint32_t PhotonBeamApp::AllocateRayTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE* cpuDescriptor, UINT descriptorIndexToUse)
@@ -2005,7 +2009,7 @@ void PhotonBeamApp::CreateRayTracingOutputResource()
 }
 
 
-void PhotonBeamApp::CreateBeamResource()
+void PhotonBeamApp::CreateBeamBuffers()
 {
     uint32_t photonBeamHeapIndex{};
     // Buffer for beam data
