@@ -1369,12 +1369,10 @@ void PhotonBeamApp::BuildBeamTracingPSOs()
         hitGroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
     }
 
-
     auto shaderConfig = beamTracingPipeline.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
     UINT payloadSize = sizeof(BeamHitPayload);
     UINT attributeSize = sizeof(BeamHitAttributes);
     shaderConfig->Config(payloadSize, attributeSize);
-
 
     {
         using namespace RootSignatueEnums::BeamTrace;
@@ -1430,7 +1428,6 @@ void PhotonBeamApp::BuildBeamTracingPSOs()
 void PhotonBeamApp::BuildRayTracingPSOs()
 {
     CD3DX12_STATE_OBJECT_DESC rayTracingPipeline{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
-
 
     for (size_t i = 0; i < to_underlying(ERayTracingShaders::Count); i++)
     {
