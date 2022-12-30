@@ -306,6 +306,8 @@ private:
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounterRead = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamData = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamAsInstanceDescData = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Fence> m_beamCounterFence = nullptr;
+    uint64_t m_currentBeamCounterFence = 0;
     
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;

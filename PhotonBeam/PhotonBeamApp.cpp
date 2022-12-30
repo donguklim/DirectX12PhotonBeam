@@ -137,6 +137,9 @@ bool PhotonBeamApp::Initialize()
     mCamera.LookAt(XMFLOAT3{ 0.0f, 0.0f, 15.0f }, XMFLOAT3{ 0.0f, 0.0f, 0.0f }, XMFLOAT3{ 0.0f, 1.0f, 0.0f });
     mCamera.UpdateViewMatrix();
 
+    ThrowIfFailed(md3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE,
+        IID_PPV_ARGS(&m_beamCounterFence)));
+
     LoadScene();
     CreateTextures();
     BuildRasterizeRootSignature();
@@ -437,37 +440,8 @@ void PhotonBeamApp::BeamTrace()
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc = mCurrFrameResource->CmdListAlloc;
     ThrowIfFailed(cmdListAlloc->Reset());
     ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));
-
-    // Reset beam counter to zero
-    {
-        // this barrier may not necessary
-        auto resourceBarrierCopy = CD3DX12_RESOURCE_BARRIER::Transition(
-            m_beamCounter.Get(),
-            D3D12_RESOURCE_STATE_COMMON,
-            D3D12_RESOURCE_STATE_COPY_DEST
-        );
-
-        mCommandList->ResourceBarrier(1, &resourceBarrierCopy);
-
-        mCommandList->CopyBufferRegion(
-            m_beamCounter.Get(),
-            0,
-            m_beamCounterReset.Get(),
-            0,
-            sizeof(uint32_t) * 2
-        );
-
-        auto resourceBarrierRead = CD3DX12_RESOURCE_BARRIER::Transition(
-            m_beamCounter.Get(),
-            D3D12_RESOURCE_STATE_COPY_DEST,
-            D3D12_RESOURCE_STATE_GENERIC_READ
-        );
-
-        mCommandList->ResourceBarrier(1, &resourceBarrierRead);
-
-        OutputDebugString(L"beam counter reset\n");
-    }
     
+    // do beam tracing
     {
         using namespace RootSignatueEnums::BeamTrace;
 
@@ -476,36 +450,121 @@ void PhotonBeamApp::BeamTrace()
 
         mCommandList->SetComputeRootSignature(globalRootSignature.Get());
         mCommandList->SetComputeRootConstantBufferView(to_underlying(EGlobalParams::SceneConstantSlot), pcBeam->GetGPUVirtualAddress());
+    
+        mCommandList->SetDescriptorHeaps(1, m_beamTracingDescriptorHeap.GetAddressOf());
+
+        // Reset beam counter to zero
+        {
+            mCommandList->CopyBufferRegion(
+                m_beamCounter.Get(),
+                0,
+                m_beamCounterReset.Get(),
+                0,
+                sizeof(uint32_t) * 2
+            );
+
+            auto resourceBarrierRead = CD3DX12_RESOURCE_BARRIER::Transition(
+                m_beamCounter.Get(),
+                D3D12_RESOURCE_STATE_COPY_DEST,
+                D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE
+            );
+
+            mCommandList->ResourceBarrier(1, &resourceBarrierRead);
+
+            OutputDebugString(L"beam counter reset\n");
+        }
+
+        D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
+
+        dispatchDesc.HitGroupTable.StartAddress = m_beamHitGroupShaderTable->GetGPUVirtualAddress();
+        dispatchDesc.HitGroupTable.SizeInBytes = m_beamHitGroupShaderTable->GetDesc().Width;
+        dispatchDesc.HitGroupTable.StrideInBytes = m_beamHitGroupShaderTableStrideInBytes;
+        dispatchDesc.MissShaderTable.StartAddress = m_beamMissShaderTable->GetGPUVirtualAddress();
+        dispatchDesc.MissShaderTable.SizeInBytes = m_beamMissShaderTable->GetDesc().Width;
+        dispatchDesc.MissShaderTable.StrideInBytes = m_beamMissShaderTableStrideInBytes;
+        dispatchDesc.RayGenerationShaderRecord.StartAddress = m_beamGenShaderTable->GetGPUVirtualAddress();
+        dispatchDesc.RayGenerationShaderRecord.SizeInBytes = m_beamGenShaderTable->GetDesc().Width;
+        dispatchDesc.Width = 4;
+        dispatchDesc.Height = 4;
+        dispatchDesc.Depth = (m_numBeamSamples > m_numPhotonSamples ? m_numBeamSamples : m_numPhotonSamples) / 16;
+
+        mCommandList->SetPipelineState1(m_beamStateObject.Get());
+
+        mCommandList->DispatchRays(&dispatchDesc);
     }
 
+    // copy beam counter to read buffer
+    {
+        auto resourceBarrierRead = CD3DX12_RESOURCE_BARRIER::Transition(
+            m_beamCounter.Get(),
+            D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+            D3D12_RESOURCE_STATE_COPY_SOURCE
+        );
 
-    mCommandList->SetDescriptorHeaps(1, m_beamTracingDescriptorHeap.GetAddressOf());
+        mCommandList->ResourceBarrier(1, &resourceBarrierRead);
 
-    D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
-   
-    dispatchDesc.HitGroupTable.StartAddress = m_beamHitGroupShaderTable->GetGPUVirtualAddress();
-    dispatchDesc.HitGroupTable.SizeInBytes = m_beamHitGroupShaderTable->GetDesc().Width;
-    dispatchDesc.HitGroupTable.StrideInBytes = m_beamHitGroupShaderTableStrideInBytes;
-    dispatchDesc.MissShaderTable.StartAddress = m_beamMissShaderTable->GetGPUVirtualAddress();
-    dispatchDesc.MissShaderTable.SizeInBytes = m_beamMissShaderTable->GetDesc().Width;
-    dispatchDesc.MissShaderTable.StrideInBytes = m_beamMissShaderTableStrideInBytes;
-    dispatchDesc.RayGenerationShaderRecord.StartAddress = m_beamGenShaderTable->GetGPUVirtualAddress();
-    dispatchDesc.RayGenerationShaderRecord.SizeInBytes = m_beamGenShaderTable->GetDesc().Width;
-    dispatchDesc.Width = 4;
-    dispatchDesc.Height = 4;
-    dispatchDesc.Depth = (m_numBeamSamples > m_numPhotonSamples ? m_numBeamSamples : m_numPhotonSamples) / 16;
-
-    mCommandList->SetPipelineState1(m_beamStateObject.Get());
-
-    mCommandList->DispatchRays(&dispatchDesc);
+        mCommandList->CopyBufferRegion(
+            m_beamCounterRead.Get(),
+            0,
+            m_beamCounter.Get(),
+            0,
+            sizeof(uint32_t)
+        );
+    }
 
     ThrowIfFailed(mCommandList->Close());
     ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
     mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
-    // Wait until initialization is complete.
-    FlushCommandQueue();
+    // wait until counting is finished
+    ++m_currentBeamCounterFence;
+    mCommandQueue->Signal(m_beamCounterFence.Get(), m_currentBeamCounterFence);
+
+    if (m_beamCounterFence->GetCompletedValue() < m_currentBeamCounterFence)
+    {
+        HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
+        ThrowIfFailed(m_beamCounterFence->SetEventOnCompletion(m_currentBeamCounterFence, eventHandle));
+
+        if (eventHandle != 0)
+        {
+            WaitForSingleObject(eventHandle, INFINITE);
+            CloseHandle(eventHandle);
+        }
+    }
+
+    // read the counter
+    uint32_t numSubbeams = 0;
+    {
+        D3D12_RANGE readbackBufferRange{ 0, sizeof(uint32_t) };
+        uint32_t* pReadBack = nullptr;
+
+        m_beamCounterRead->Map(
+            0,
+            &readbackBufferRange,
+            reinterpret_cast<void**>(&pReadBack)
+        );
+
+        numSubbeams = *pReadBack;
+
+        D3D12_RANGE emptyRange{ 0, 0 };
+        m_beamCounterRead->Unmap
+        (
+            0,
+            &emptyRange
+        );
+
+    }
+
     //ThrowIfFailed(cmdListAlloc->Reset());
+    //ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));
+    
+    {
+
+    }
+    
+    //ThrowIfFailed(mCommandList->Close());
+    //ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
+    //mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
 }
 
