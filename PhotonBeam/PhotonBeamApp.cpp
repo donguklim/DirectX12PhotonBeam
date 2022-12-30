@@ -1007,7 +1007,6 @@ void PhotonBeamApp::BuildRayTracingRootSignatures()
             rootParameters[to_underlying(EGenParams::SurfaceASSlot)].InitAsShaderResourceView(1);
             rootParameters[to_underlying(EGenParams::ReadBuffersSlot)].InitAsDescriptorTable(1,&buffersRange);
             rootParameters[to_underlying(EGenParams::TextureMapsSlot)].InitAsDescriptorTable(1,&textureMapsRange);
-            rootParameters[to_underlying(EGenParams::CameraConstantSlot)].InitAsConstantBufferView(1);
 
             CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters, 1, &GetLinearSampler());
             desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
@@ -2271,7 +2270,6 @@ void PhotonBeamApp::BuildRayTracingShaderTables()
             D3D12_GPU_VIRTUAL_ADDRESS surfaceAsAddress;
             D3D12_GPU_DESCRIPTOR_HANDLE geometryDescriptorTable;
             D3D12_GPU_DESCRIPTOR_HANDLE textureDescriptorTable;
-            D3D12_GPU_VIRTUAL_ADDRESS cameraConstantBuffer;
         } rootArgs;
 
         rootArgs.outputImageDescriptorTable = m_rayTracingOutputDescriptorHandle;;
@@ -2279,7 +2277,6 @@ void PhotonBeamApp::BuildRayTracingShaderTables()
         rootArgs.surfaceAsAddress = m_topLevelASBuffers.pResult->GetGPUVirtualAddress();
         rootArgs.geometryDescriptorTable = m_rayTracingNormalDescriptorHandle;
         rootArgs.textureDescriptorTable = m_rayTracingTextureDescriptorHandle;
-        //rootArgs.cameraConstantBuffer =
 
         uint32_t numShaderRecords = 1;
         uint32_t shaderRecordSize = shaderIDSize; // No root arguments

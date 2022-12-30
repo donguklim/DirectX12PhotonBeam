@@ -17,7 +17,7 @@ void BeamAnyHit(inout RayHitPayload prd, RayHitAttributes attrs) {
 
     if (pc_ray.showDirectColor == 1)
     {
-        prd.hitValue = beam.lightColor / max(max(pc_ray.sourceLight.x, pc_ray.sourceLight.y), pc_ray.sourceLight.z);
+        prd.hitValue = beam.lightColor / max(max(beam.lightColor.x, beam.lightColor.y), beam.lightColor.z);
         return;
     }
 

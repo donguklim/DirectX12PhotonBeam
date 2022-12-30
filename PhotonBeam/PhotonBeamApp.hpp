@@ -88,8 +88,6 @@ namespace RootSignatueEnums
             SurfaceASSlot,
             ReadBuffersSlot,
             TextureMapsSlot,
-            CameraConstantSlot,
-            
             Count
         };
 
