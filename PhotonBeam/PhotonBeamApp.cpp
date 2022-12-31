@@ -579,15 +579,15 @@ void PhotonBeamApp::BeamTrace()
         buildDesc.Inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE;
 
         // Build the top-level AS
-        //mCommandList->BuildRaytracingAccelerationStructure(&buildDesc, 0, nullptr);
+        mCommandList->BuildRaytracingAccelerationStructure(&buildDesc, 0, nullptr);
 
         // Wait for the builder to complete by setting a barrier on the resulting
         // buffer. This can be important in case the rendering is triggered
         // immediately afterwards, without executing the command list
-        D3D12_RESOURCE_BARRIER uavBarrier{};
-        uavBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-        uavBarrier.UAV.pResource = m_beamTlasBuffers.pResult.Get();
-        uavBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+        //D3D12_RESOURCE_BARRIER uavBarrier{};
+        //uavBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+        //uavBarrier.UAV.pResource = m_beamTlasBuffers.pResult.Get();
+        //uavBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
         //mCommandList->ResourceBarrier(1, &uavBarrier);
     }
     
