@@ -137,8 +137,12 @@ bool PhotonBeamApp::Initialize()
     mCamera.LookAt(XMFLOAT3{ 0.0f, 0.0f, 15.0f }, XMFLOAT3{ 0.0f, 0.0f, 0.0f }, XMFLOAT3{ 0.0f, 1.0f, 0.0f });
     mCamera.UpdateViewMatrix();
 
-    ThrowIfFailed(md3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE,
-        IID_PPV_ARGS(&m_beamCounterFence)));
+    ThrowIfFailed(
+        md3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_beamCounterFence))
+    );
+    ThrowIfFailed(
+        md3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_beamTlasFence))
+    );
 
     LoadScene();
     CreateTextures();
@@ -590,6 +594,22 @@ void PhotonBeamApp::BeamTrace()
     ThrowIfFailed(mCommandList->Close());
     ID3D12CommandList* cmdsLists2[] = { mCommandList.Get() };
     mCommandQueue->ExecuteCommandLists(_countof(cmdsLists2), cmdsLists2);
+
+    // wait until Tlas creation is finished
+    ++m_currentBeamTlasFence;
+    mCommandQueue->Signal(m_beamTlasFence.Get(), m_currentBeamTlasFence);
+
+    if (m_beamTlasFence->GetCompletedValue() < m_currentBeamTlasFence)
+    {
+        HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
+        ThrowIfFailed(m_beamTlasFence->SetEventOnCompletion(m_currentBeamTlasFence, eventHandle));
+
+        if (eventHandle != 0)
+        {
+            WaitForSingleObject(eventHandle, INFINITE);
+            CloseHandle(eventHandle);
+        }
+    }
 
 }
 
