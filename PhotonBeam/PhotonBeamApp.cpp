@@ -277,6 +277,10 @@ void PhotonBeamApp::OnResize()
 {
     D3DApp::OnResize();
 
+    m_raytracingOutput.Reset();
+    if(m_raytracingOutputResourceUAVDescriptorHeapIndex < UINT32_MAX)
+        CreateRayTracingOutputResource();
+
     mCamera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
 
 }
@@ -302,9 +306,6 @@ void PhotonBeamApp::Update(const GameTimer& gt)
             CloseHandle(eventHandle);
         }
     }
-
-    m_raytracingOutput.Reset();
-    CreateRayTracingOutputResource();
 
     UpdateObjectCBs(gt);
     UpdateMainPassCB(gt);
@@ -716,16 +717,15 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList.Get());
 
         mCommandList->EndRenderPass();
+
+        // Indicate a state transition on the resource usage.
+        auto presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+            CurrentBackBuffer(),
+            D3D12_RESOURCE_STATE_RENDER_TARGET,
+            D3D12_RESOURCE_STATE_PRESENT
+        );
+        mCommandList->ResourceBarrier(1, &presentBarrier);
     }
-
-
-    // Indicate a state transition on the resource usage.
-    auto presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-        CurrentBackBuffer(),
-        D3D12_RESOURCE_STATE_RENDER_TARGET,
-        D3D12_RESOURCE_STATE_PRESENT
-    );
-    mCommandList->ResourceBarrier(1, &presentBarrier);
 
     // Done recording commands.
     ThrowIfFailed(mCommandList->Close());
