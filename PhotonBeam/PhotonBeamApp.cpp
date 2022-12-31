@@ -617,13 +617,13 @@ void PhotonBeamApp::RayTrace()
 {
     using namespace RootSignatueEnums::RayTrace;
 
-    auto pcBeam = mCurrFrameResource->PcRay->Resource();
-    auto& globalRootSignature = m_beamRootSignatures[to_underlying(ERootSignatures::Global)];
+    auto pcRay = mCurrFrameResource->PcRay->Resource();
+    auto& globalRootSignature = m_rayRootSignatures[to_underlying(ERootSignatures::Global)];
 
     mCommandList->SetComputeRootSignature(globalRootSignature.Get());
     mCommandList->SetComputeRootConstantBufferView(
         to_underlying(EGlobalParams::SceneConstantSlot), 
-        pcBeam->GetGPUVirtualAddress()
+        pcRay->GetGPUVirtualAddress()
     );
 
     mCommandList->SetDescriptorHeaps(1, m_rayTracingDescriptorHeap.GetAddressOf());
@@ -642,7 +642,7 @@ void PhotonBeamApp::RayTrace()
     dispatchDesc.Height = mClientHeight;
     dispatchDesc.Depth = 1;
 
-    mCommandList->SetPipelineState1(m_beamStateObject.Get());
+    mCommandList->SetPipelineState1(m_rayStateObject.Get());
 
     mCommandList->DispatchRays(&dispatchDesc);
 }
@@ -700,6 +700,7 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
     if (m_useRayTracer)
     {
         RayTrace();
+
         CopyRaytracingOutputToBackbuffer();
 
         ID3D12DescriptorHeap* guiDescriptorHeaps[] = { mGuiDescriptorHeap.Get() };
