@@ -107,6 +107,7 @@ enum class ERayTracingShaders : uint16_t
     BeamAnyHit,
     SurfaceInt,
     SurfaceAnyHit,
+    Miss,
     Count
 };
 
@@ -300,6 +301,9 @@ private:
     Microsoft::WRL::ComPtr<ID3D12Resource> m_rayGenShaderTable;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_rayHitGroupShaderTable;
     uint32_t m_rayHitGroupShaderTableStrideInBytes = 0;
+    Microsoft::WRL::ComPtr<ID3D12Resource> m_rayMissShaderTable;
+    uint32_t m_rayMissShaderTableStrideInBytes = 0;
+
 
     Microsoft::WRL::ComPtr<ID3D12Resource> m_raytracingOutput = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounter = nullptr;
