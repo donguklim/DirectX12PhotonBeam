@@ -615,7 +615,54 @@ void PhotonBeamApp::BeamTrace()
 
 void PhotonBeamApp::RayTrace()
 {
-    mCommandList->ClearRenderTargetView(CurrentBackBufferView(), m_clearColor, 0, nullptr);
+    using namespace RootSignatueEnums::RayTrace;
+
+    auto pcBeam = mCurrFrameResource->PcRay->Resource();
+    auto& globalRootSignature = m_beamRootSignatures[to_underlying(ERootSignatures::Global)];
+
+    mCommandList->SetComputeRootSignature(globalRootSignature.Get());
+    mCommandList->SetComputeRootConstantBufferView(
+        to_underlying(EGlobalParams::SceneConstantSlot), 
+        pcBeam->GetGPUVirtualAddress()
+    );
+
+    mCommandList->SetDescriptorHeaps(1, m_rayTracingDescriptorHeap.GetAddressOf());
+
+    D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
+
+    dispatchDesc.HitGroupTable.StartAddress = m_rayHitGroupShaderTable->GetGPUVirtualAddress();
+    dispatchDesc.HitGroupTable.SizeInBytes = m_rayHitGroupShaderTable->GetDesc().Width;
+    dispatchDesc.HitGroupTable.StrideInBytes = m_rayHitGroupShaderTableStrideInBytes;
+    dispatchDesc.MissShaderTable.StartAddress = 0;
+    dispatchDesc.MissShaderTable.SizeInBytes = 0;
+    dispatchDesc.MissShaderTable.StrideInBytes = 0;
+    dispatchDesc.RayGenerationShaderRecord.StartAddress = m_rayGenShaderTable->GetGPUVirtualAddress();
+    dispatchDesc.RayGenerationShaderRecord.SizeInBytes = m_rayGenShaderTable->GetDesc().Width;
+    dispatchDesc.Width = mClientWidth;
+    dispatchDesc.Height = mClientHeight;
+    dispatchDesc.Depth = 1;
+
+    mCommandList->SetPipelineState1(m_beamStateObject.Get());
+
+    mCommandList->DispatchRays(&dispatchDesc);
+}
+
+void PhotonBeamApp::CopyRaytracingOutputToBackbuffer()
+{
+    auto renderTarget = mSwapChainBuffer[mCurrBackBuffer].Get();
+
+    D3D12_RESOURCE_BARRIER preCopyBarriers[2];
+    preCopyBarriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
+    preCopyBarriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(m_raytracingOutput.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+    mCommandList->ResourceBarrier(ARRAYSIZE(preCopyBarriers), preCopyBarriers);
+
+    mCommandList->CopyResource(renderTarget, m_raytracingOutput.Get());
+
+    D3D12_RESOURCE_BARRIER postCopyBarriers[2];
+    postCopyBarriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT);
+    postCopyBarriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(m_raytracingOutput.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+
+    mCommandList->ResourceBarrier(ARRAYSIZE(postCopyBarriers), postCopyBarriers);
 }
 
 void PhotonBeamApp::Draw(const GameTimer& gt)
@@ -650,8 +697,11 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
     );
     mCommandList->ResourceBarrier(1, &resourceBarrierRender);
 
-    if (m_useRayTracer && false)
+    if (m_useRayTracer)
     {
+        RayTrace();
+        CopyRaytracingOutputToBackbuffer();
+
         ID3D12DescriptorHeap* guiDescriptorHeaps[] = { mGuiDescriptorHeap.Get() };
         mCommandList->SetDescriptorHeaps(_countof(guiDescriptorHeaps), guiDescriptorHeaps);
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList.Get());

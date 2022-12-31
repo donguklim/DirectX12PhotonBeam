@@ -239,6 +239,7 @@ private:
     void Rasterize();
     void BeamTrace();
     void RayTrace();
+    void CopyRaytracingOutputToBackbuffer();
     void drawPost();
 
     void CreateSurfaceBlas();
