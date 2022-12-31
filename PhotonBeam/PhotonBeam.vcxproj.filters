@@ -126,17 +126,14 @@
     <ClInclude Include="..\third-party\tiny-gltf\tiny_gltf.h">
       <Filter>Third Party Libraries\tiny gltf</Filter>
     </ClInclude>
-    <ClInclude Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\BottomLevelASGenerator.h">
-      <Filter>Third Party Libraries\Nvidia DXR Helpers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\ShaderBindingTableGenerator.h">
-      <Filter>Third Party Libraries\Nvidia DXR Helpers</Filter>
-    </ClInclude>
     <ClInclude Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\TopLevelASGenerator.h">
       <Filter>Third Party Libraries\Nvidia DXR Helpers</Filter>
     </ClInclude>
     <ClInclude Include="..\third-party\microsoft-directx-graphics-samples\DirectXRaytracingHelper.h">
       <Filter>Third Party Libraries\Microsoft DirecX Samples</Filter>
+    </ClInclude>
+    <ClInclude Include="AS-Builders\BlasGenerator.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -197,14 +194,11 @@
     <ClCompile Include="..\third-party\imgui\imgui_widgets.cpp">
       <Filter>Third Party Libraries\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\BottomLevelASGenerator.cpp">
-      <Filter>Third Party Libraries\Nvidia DXR Helpers</Filter>
-    </ClCompile>
-    <ClCompile Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\ShaderBindingTableGenerator.cpp">
-      <Filter>Third Party Libraries\Nvidia DXR Helpers</Filter>
-    </ClCompile>
     <ClCompile Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\TopLevelASGenerator.cpp">
       <Filter>Third Party Libraries\Nvidia DXR Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="AS-Builders\BlasGenerator.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -236,6 +230,9 @@
       <Filter>Shaders\Ray Tracing</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\RayTracing\RaySurfaceInt.hlsl">
+      <Filter>Shaders\Ray Tracing</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\RayTracing\RayMiss.hlsl">
       <Filter>Shaders\Ray Tracing</Filter>
     </FxCompile>
   </ItemGroup>
