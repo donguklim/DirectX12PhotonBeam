@@ -612,8 +612,6 @@ void PhotonBeamApp::BeamTrace()
             CloseHandle(eventHandle);
         }
     }
-
-    m_beamTlasBuffers.pScratch.Reset();
 }
 
 void PhotonBeamApp::RayTrace()
