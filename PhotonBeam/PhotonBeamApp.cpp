@@ -555,16 +555,41 @@ void PhotonBeamApp::BeamTrace()
 
     }
 
-    //ThrowIfFailed(cmdListAlloc->Reset());
-    //ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));
+    ThrowIfFailed(cmdListAlloc->Reset());
+    ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));
     
     {
+        
+        // Create a descriptor of the requested builder work, to generate a top-level
+        // AS from the input parameters
+        D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildDesc = {};
+        buildDesc.Inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
+        buildDesc.Inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
+        buildDesc.Inputs.InstanceDescs = m_beamAsInstanceDescData->GetGPUVirtualAddress();
+        buildDesc.Inputs.NumDescs = numSubbeams;
+        buildDesc.DestAccelerationStructureData = { m_beamTlasBuffers.pResult->GetGPUVirtualAddress()
+        };
+        buildDesc.ScratchAccelerationStructureData = { m_beamTlasBuffers.pScratch->GetGPUVirtualAddress()
+        };
+        buildDesc.SourceAccelerationStructureData = 0;
+        buildDesc.Inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE;
 
+        // Build the top-level AS
+        //mCommandList->BuildRaytracingAccelerationStructure(&buildDesc, 0, nullptr);
+
+        // Wait for the builder to complete by setting a barrier on the resulting
+        // buffer. This can be important in case the rendering is triggered
+        // immediately afterwards, without executing the command list
+        D3D12_RESOURCE_BARRIER uavBarrier{};
+        uavBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+        uavBarrier.UAV.pResource = m_beamTlasBuffers.pResult.Get();
+        uavBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+        //mCommandList->ResourceBarrier(1, &uavBarrier);
     }
     
-    //ThrowIfFailed(mCommandList->Close());
-    //ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
-    //mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+    ThrowIfFailed(mCommandList->Close());
+    ID3D12CommandList* cmdsLists2[] = { mCommandList.Get() };
+    mCommandQueue->ExecuteCommandLists(_countof(cmdsLists2), cmdsLists2);
 
 }
 
@@ -2469,6 +2494,37 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
             &UAVDesc,
             uavDescriptorHandle
         );
+    }
+
+    // Create scratch buffer for beam TLAS
+    {
+        nv_helpers_dx12::TopLevelASGenerator generator;
+
+        UINT64 scratchSize, resultSize, instanceDescsSize;
+        generator.ComputeASBufferSizes(
+            md3dDevice.Get(),
+            true,
+            &scratchSize,
+            &resultSize,
+            &instanceDescsSize,
+            m_maxNumSubBeamInfo
+        );
+
+        m_beamTlasBuffers.pScratch = raytrace_helper::CreateBuffer(
+            md3dDevice.Get(),
+            scratchSize,
+            D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+            D3D12_RESOURCE_STATE_COMMON,
+            raytrace_helper::pmDefaultHeapProps
+        );
+        m_beamTlasBuffers.pResult = raytrace_helper::CreateBuffer(
+            md3dDevice.Get(),
+            resultSize,
+            D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS,
+            D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
+            raytrace_helper::pmDefaultHeapProps
+        );
+
     }
 }
 
