@@ -2191,12 +2191,16 @@ void PhotonBeamApp::CreateSurfaceBlas()
 
 void PhotonBeamApp::CreateSurfaceTlas()
 {
+    auto identity = MathHelper::Identity4x4();
     for (auto& node : m_gltfScene.GetNodes())
     {
+        XMFLOAT4X4 worldMat{};
+        XMStoreFloat4x4(&worldMat, XMMatrixTranspose(XMLoadFloat4x4(&node.worldMatrix)));
+
         auto blasAddress = m_surfaceBlasBuffers[node.primMesh].pResult.Get();
         m_topLevelASGenerator.AddInstance(
             blasAddress,
-            XMLoadFloat4x4(&node.worldMatrix),
+            worldMat,
             0,
             0
         );
