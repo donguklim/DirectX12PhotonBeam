@@ -660,7 +660,7 @@ void PhotonBeamApp::CopyRaytracingOutputToBackbuffer()
     mCommandList->CopyResource(renderTarget, m_raytracingOutput.Get());
 
     D3D12_RESOURCE_BARRIER postCopyBarriers[2];
-    postCopyBarriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT);
+    postCopyBarriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET);
     postCopyBarriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(m_raytracingOutput.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
     mCommandList->ResourceBarrier(ARRAYSIZE(postCopyBarriers), postCopyBarriers);
@@ -720,15 +720,15 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList.Get());
 
         mCommandList->EndRenderPass();
-
-        // Indicate a state transition on the resource usage.
-        auto presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-            CurrentBackBuffer(),
-            D3D12_RESOURCE_STATE_RENDER_TARGET,
-            D3D12_RESOURCE_STATE_PRESENT
-        );
-        mCommandList->ResourceBarrier(1, &presentBarrier);
     }
+
+    // Indicate a state transition on the resource usage.
+    auto presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+        CurrentBackBuffer(),
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        D3D12_RESOURCE_STATE_PRESENT
+    );
+    mCommandList->ResourceBarrier(1, &presentBarrier);
 
     // Done recording commands.
     ThrowIfFailed(mCommandList->Close());
