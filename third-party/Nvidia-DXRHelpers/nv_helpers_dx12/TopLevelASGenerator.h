@@ -114,6 +114,20 @@ public:
                                      /// indices etc.
   );
 
+  void ComputeASBufferSizes(
+      ID3D12Device5* device, /// Device on which the build will be performed
+      bool allowUpdate,              /// If true, the resulting acceleration structure will
+      /// allow iterative updates
+      UINT64* scratchSizeInBytes,    /// Required scratch memory on the GPU to
+      /// build the acceleration structure
+      UINT64* resultSizeInBytes,     /// Required GPU memory to store the
+      /// acceleration structure
+      UINT64* descriptorsSizeInBytes, /// Required GPU memory to store instance
+      /// descriptors, containing the matrices,
+      /// indices etc.
+      UINT numInstances
+  );
+
   /// Enqueue the construction of the acceleration structure on a command list,
   /// using application-provided buffers and possibly a pointer to the previous
   /// acceleration structure in case of iterative updates. Note that the update
