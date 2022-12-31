@@ -64,7 +64,7 @@ struct HLSL_PAYLOAD_STRUCT RayHitPayload
 
 struct RayHitAttributes
 {
-	XMFLOAT2 beamHit;
+	XMFLOAT3 beamHit;
 };
 
 // Scene buffer addresses
