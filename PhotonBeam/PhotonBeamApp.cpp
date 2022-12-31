@@ -705,6 +705,9 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
         CopyRaytracingOutputToBackbuffer();
 
         ID3D12DescriptorHeap* guiDescriptorHeaps[] = { mGuiDescriptorHeap.Get() };
+
+        auto currentOutputView = CurrentBackBufferView();
+        mCommandList->OMSetRenderTargets(1, &currentOutputView, false, nullptr);
         mCommandList->SetDescriptorHeaps(_countof(guiDescriptorHeaps), guiDescriptorHeaps);
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList.Get());
     }
