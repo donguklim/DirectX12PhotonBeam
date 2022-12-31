@@ -613,6 +613,7 @@ void PhotonBeamApp::BeamTrace()
         }
     }
 
+    m_beamTlasBuffers.pScratch.Reset();
 }
 
 void PhotonBeamApp::RayTrace()
@@ -653,14 +654,14 @@ void PhotonBeamApp::CopyRaytracingOutputToBackbuffer()
 {
     auto renderTarget = mSwapChainBuffer[mCurrBackBuffer].Get();
 
-    D3D12_RESOURCE_BARRIER preCopyBarriers[2];
+    D3D12_RESOURCE_BARRIER preCopyBarriers[2] = {};
     preCopyBarriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
     preCopyBarriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(m_raytracingOutput.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
     mCommandList->ResourceBarrier(ARRAYSIZE(preCopyBarriers), preCopyBarriers);
 
     mCommandList->CopyResource(renderTarget, m_raytracingOutput.Get());
 
-    D3D12_RESOURCE_BARRIER postCopyBarriers[2];
+    D3D12_RESOURCE_BARRIER postCopyBarriers[2] = {};
     postCopyBarriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET);
     postCopyBarriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(m_raytracingOutput.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
@@ -844,7 +845,6 @@ void PhotonBeamApp::OnKeyboardInput(const GameTimer& gt)
 
     mCamera.UpdateViewMatrix();
 }
-
 
 void PhotonBeamApp::UpdateObjectCBs(const GameTimer& gt)
 {
@@ -1194,9 +1194,6 @@ void PhotonBeamApp::BuildRayTracingDescriptorHeaps()
     }
 
 }
-    
-
-    
 
 void PhotonBeamApp::BuildRasterizeRootSignature()
 {    
@@ -1341,7 +1338,10 @@ void PhotonBeamApp::BuildRayTracingRootSignatures()
         {
             CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EAnyHitAndIntParams::Count)] = {};
 
-            rootParameters[to_underlying(EAnyHitAndIntParams::BeamBufferSlot)].InitAsShaderResourceView(0);
+            CD3DX12_DESCRIPTOR_RANGE beamBufferRange{};
+            beamBufferRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+
+            rootParameters[to_underlying(EAnyHitAndIntParams::BeamBufferSlot)].InitAsDescriptorTable(1, &beamBufferRange);
 
             CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters);
             desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
@@ -2472,8 +2472,7 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
         NAME_D3D12_OBJECT(m_beamData);
 
         // set descriptor handle for beam tracing
-
-        D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
+        D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc{};
         UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
         UAVDesc.Format = DXGI_FORMAT_UNKNOWN;
         UAVDesc.Buffer.CounterOffsetInBytes = 0;
@@ -2494,6 +2493,31 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
         m_beamTracingBeamDataDescriptorHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(
             m_beamTracingDescriptorHeap->GetGPUDescriptorHandleForHeapStart(),
             photonBeamHeapIndex,
+            mCbvSrvUavDescriptorSize
+        );
+
+        // set descriptor handle for ray tracing
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+        srvDesc.Buffer.FirstElement = 0;
+        srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+        srvDesc.Buffer.NumElements = m_maxNumBeamData;
+        srvDesc.Buffer.StructureByteStride = sizeof(PhotonBeam);
+
+        D3D12_CPU_DESCRIPTOR_HANDLE srvDescriptorHandle;
+        uint32_t rayTracingHeapIndex = AllocateRayTracingDescriptor(&srvDescriptorHandle);
+
+        md3dDevice->CreateShaderResourceView(
+            m_beamData.Get(),
+            &srvDesc,
+            srvDescriptorHandle
+        );
+
+        m_rayTracingBeamDataDescriptorHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(
+            m_rayTracingDescriptorHeap->GetGPUDescriptorHandleForHeapStart(),
+            rayTracingHeapIndex,
             mCbvSrvUavDescriptorSize
         );
     }
@@ -2769,10 +2793,10 @@ void PhotonBeamApp::BuildRayTracingShaderTables()
     // Hit group shader table.
     {
         struct {
-            D3D12_GPU_VIRTUAL_ADDRESS beamDataAddress;
+            D3D12_GPU_DESCRIPTOR_HANDLE beamDataDescriptorTable;
         } rootArgs{};
 
-        rootArgs.beamDataAddress = m_beamData->GetGPUVirtualAddress();
+        rootArgs.beamDataDescriptorTable = m_rayTracingBeamDataDescriptorHandle;
 
         UINT numShaderRecords = 2;
         UINT shaderRecordSize = shaderIDSize;

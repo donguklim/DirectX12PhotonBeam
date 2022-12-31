@@ -275,6 +275,8 @@ private:
     D3D12_GPU_DESCRIPTOR_HANDLE m_rayTracingOutputDescriptorHandle{};
     D3D12_GPU_DESCRIPTOR_HANDLE m_rayTracingNormalDescriptorHandle{};
     D3D12_GPU_DESCRIPTOR_HANDLE m_rayTracingTextureDescriptorHandle{};
+    D3D12_GPU_DESCRIPTOR_HANDLE m_rayTracingBeamDataDescriptorHandle{};
+
 
     std::vector<std::unique_ptr<Texture>> m_textures;
     std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> mGeometries;
