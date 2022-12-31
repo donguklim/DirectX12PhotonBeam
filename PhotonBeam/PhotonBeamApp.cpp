@@ -2738,7 +2738,7 @@ void PhotonBeamApp::BuildRayTracingShaderTables()
         } rootArgs{};
 
         rootArgs.outputImageDescriptorTable = m_rayTracingOutputDescriptorHandle;
-        rootArgs.beamAsAddress = m_beamBlasBuffers.pResult->GetGPUVirtualAddress();
+        rootArgs.beamAsAddress = m_beamTlasBuffers.pResult->GetGPUVirtualAddress();
         rootArgs.surfaceAsAddress = m_surfaceTlasBuffers.pResult->GetGPUVirtualAddress();
         rootArgs.geometryDescriptorTable = m_rayTracingNormalDescriptorHandle;
         rootArgs.textureDescriptorTable = m_rayTracingTextureDescriptorHandle;
