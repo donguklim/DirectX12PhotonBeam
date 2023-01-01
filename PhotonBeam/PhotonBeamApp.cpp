@@ -2128,7 +2128,6 @@ void PhotonBeamApp::RenderUI()
     ImGuiH::Panel::End();
 }
 
-
 void PhotonBeamApp::CreateSurfaceBlas()
 {
     // Adding all vertex buffers and not transforming their position. 
@@ -2413,7 +2412,7 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
 
     // Buffer for reading beam counter
     {
-        auto counterDesc = CD3DX12_RESOURCE_DESC::Buffer(
+        auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(
             sizeof(PhotonBeamCounter),
             D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE
         );
@@ -2424,7 +2423,7 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
             md3dDevice->CreateCommittedResource(
                 &defaultHeapProperties,
                 D3D12_HEAP_FLAG_NONE,
-                &counterDesc,
+                &bufferDesc,
                 D3D12_RESOURCE_STATE_COPY_DEST,
                 nullptr,
                 IID_PPV_ARGS(&m_beamCounterRead)
@@ -2442,7 +2441,7 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
     uint32_t photonBeamHeapIndex{};
     // Buffer for beam data
     {
-        auto counterDesc = CD3DX12_RESOURCE_DESC::Buffer(
+        auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(
             sizeof(PhotonBeam) * m_maxNumBeamData, 
             D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
         );
@@ -2461,8 +2460,8 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
             md3dDevice->CreateCommittedResource(
                 &defaultHeapProperties,
                 D3D12_HEAP_FLAG_NONE,
-                &counterDesc,
-                D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                &bufferDesc,
+                D3D12_RESOURCE_STATE_COMMON,
                 nullptr,
                 IID_PPV_ARGS(&m_beamData)
             )
@@ -2522,7 +2521,7 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
 
     //Buffer for storing sub beam Accelerated Structure instance info
     {
-        auto counterDesc = CD3DX12_RESOURCE_DESC::Buffer(
+        auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(
             sizeof(ShaderRayTracingTopASInstanceDesc) * m_maxNumSubBeamInfo,
             D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
         );
@@ -2532,7 +2531,7 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
             md3dDevice->CreateCommittedResource(
                 &defaultHeapProperties,
                 D3D12_HEAP_FLAG_NONE,
-                &counterDesc,
+                &bufferDesc,
                 D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                 nullptr,
                 IID_PPV_ARGS(m_beamAsInstanceDescData.GetAddressOf())
@@ -2561,7 +2560,7 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
 
     // Create beam counter Buffer
     {
-        auto counterDesc = CD3DX12_RESOURCE_DESC::Buffer(
+        auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(
             sizeof(PhotonBeamCounter),
             D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
         );
@@ -2571,7 +2570,7 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
             md3dDevice->CreateCommittedResource(
                 &defaultHeapProperties,
                 D3D12_HEAP_FLAG_ALLOW_SHADER_ATOMICS,
-                &counterDesc,
+                &bufferDesc,
                 D3D12_RESOURCE_STATE_UNORDERED_ACCESS | D3D12_RESOURCE_STATE_COPY_SOURCE,
                 nullptr,
                 IID_PPV_ARGS(&m_beamCounter)
