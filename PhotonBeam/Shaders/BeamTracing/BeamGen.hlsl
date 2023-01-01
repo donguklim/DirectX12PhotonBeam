@@ -72,13 +72,8 @@ void BeamGen() {
         // newBeam.radius = pc_beam.beamRadius;
         newBeam.radius = 0;
         newBeam.lightColor = beamColor;
+        newBeam.lightColor = float3(1, 1, 1);
         newBeam.hitInstanceID = prd.instanceID;
-
-        InterlockedAdd(g_photonBeamCounters[0].beamCount, 1, beamIndex);
-        if (beamIndex >= pc_beam.maxNumBeams)
-            return;
-
-        g_photonBeams[beamIndex] = newBeam;
 
         float3 beamVec = newBeam.endPos - newBeam.startPos;
         float beamLength = sqrt(dot(beamVec, beamVec));
@@ -99,15 +94,21 @@ void BeamGen() {
         if (numSurfacePhoton + num_split < 1)
             return;
 
+        InterlockedAdd(g_photonBeamCounters[0].beamCount, 1, beamIndex);
+        if (beamIndex >= pc_beam.maxNumBeams)
+            return;
+
+        g_photonBeams[beamIndex] = newBeam;
+
         InterlockedAdd(g_photonBeamCounters[0].subBeamCount, num_split + numSurfacePhoton, subBeamIndex);
 
         // Not using min function with subtraction operator to simplify the if statement
         // because subtraction between unsinged integer values can cause overflow.
-        if (subBeamIndex >= pc_beam.maxNumBeams)
+        if (subBeamIndex >= pc_beam.maxNumSubBeams)
         {
             return;
         }
-        else if (subBeamIndex + numSurfacePhoton >= pc_beam.maxNumBeams)
+        else if (subBeamIndex + numSurfacePhoton >= pc_beam.maxNumSubBeams)
         {
             num_split = 0;
         }
