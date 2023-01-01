@@ -1746,6 +1746,12 @@ void PhotonBeamApp::BuildRayTracingPSOs()
 
     for (size_t i = 0; i < to_underlying(ERayTracingShaders::Count); i++)
     {
+        if (i == to_underlying(ERayTracingShaders::SurfaceAnyHit))
+            continue;
+
+        if (i == to_underlying(ERayTracingShaders::SurfaceInt))
+            continue;
+
         auto& shaderBlob = m_rayShaders[i];
         auto lib = rayTracingPipeline.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
         D3D12_SHADER_BYTECODE libdxil{
@@ -1759,6 +1765,7 @@ void PhotonBeamApp::BuildRayTracingPSOs()
     {
         auto hitGroup = rayTracingPipeline.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
 
+        //hitGroup->SetClosestHitShaderImport(nullptr);
         hitGroup->SetIntersectionShaderImport(c_rayShadersExportNames[to_underlying(ERayTracingShaders::BeamInt)]);
         hitGroup->SetAnyHitShaderImport(c_rayShadersExportNames[to_underlying(ERayTracingShaders::BeamAnyHit)]);
         hitGroup->SetHitGroupExport(c_rayHitGroupNames[to_underlying(ERayHitTypes::Beam)]);
@@ -1767,12 +1774,13 @@ void PhotonBeamApp::BuildRayTracingPSOs()
 
     // Surface hit group
     {
-        auto hitGroup = rayTracingPipeline.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
+        //auto hitGroup = rayTracingPipeline.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
 
-        hitGroup->SetIntersectionShaderImport(c_rayShadersExportNames[to_underlying(ERayTracingShaders::SurfaceInt)]);
-        hitGroup->SetAnyHitShaderImport(c_rayShadersExportNames[to_underlying(ERayTracingShaders::SurfaceAnyHit)]);
-        hitGroup->SetHitGroupExport(c_rayHitGroupNames[to_underlying(ERayHitTypes::Surface)]);
-        hitGroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_PROCEDURAL_PRIMITIVE);
+        //hitGroup->SetClosestHitShaderImport(nullptr);
+        //hitGroup->SetIntersectionShaderImport(c_rayShadersExportNames[to_underlying(ERayTracingShaders::SurfaceInt)]);
+        //hitGroup->SetAnyHitShaderImport(c_rayShadersExportNames[to_underlying(ERayTracingShaders::SurfaceAnyHit)]);
+        //hitGroup->SetHitGroupExport(c_rayHitGroupNames[to_underlying(ERayHitTypes::Surface)]);
+        //hitGroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_PROCEDURAL_PRIMITIVE);
     }
 
 
@@ -1814,7 +1822,8 @@ void PhotonBeamApp::BuildRayTracingPSOs()
             // Shader association
             auto rootSignatureAssociation = rayTracingPipeline.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
             rootSignatureAssociation->SetSubobjectToAssociate(*localRootSignature);
-            rootSignatureAssociation->AddExports(c_rayHitGroupNames);
+            //rootSignatureAssociation->AddExports(c_rayHitGroupNames);
+            rootSignatureAssociation->AddExport(L"HitGroup_Beam");
         }
 
     }
@@ -2714,7 +2723,7 @@ void PhotonBeamApp::BuildRayTracingShaderTables()
     void* rayGenShaderID;
     void* missShaderID;
     void* beamHitGroupShaderID;
-    void* surfaceHitGroupShaderID;
+    //void* surfaceHitGroupShaderID;
 
     // A shader name look-up table for shader table debug print out.
     std::unordered_map<void*, std::wstring> shaderIdToStringMap;
@@ -2733,8 +2742,8 @@ void PhotonBeamApp::BuildRayTracingShaderTables()
         shaderIdToStringMap[beamHitGroupShaderID] = beamHitGroupName;
 
         auto& surfaceHitGroupName = c_rayHitGroupNames[to_underlying(ERayHitTypes::Surface)];
-        surfaceHitGroupShaderID = stateObjectProperties->GetShaderIdentifier(surfaceHitGroupName);
-        shaderIdToStringMap[surfaceHitGroupShaderID] = surfaceHitGroupName;
+        //surfaceHitGroupShaderID = stateObjectProperties->GetShaderIdentifier(surfaceHitGroupName);
+        //shaderIdToStringMap[surfaceHitGroupShaderID] = surfaceHitGroupName;
 
         auto& missShaderName = c_rayShadersExportNames[to_underlying(ERayTracingShaders::Miss)];
         missShaderID = stateObjectProperties->GetShaderIdentifier(missShaderName);
@@ -2795,7 +2804,7 @@ void PhotonBeamApp::BuildRayTracingShaderTables()
         raytrace_helper::ShaderTable rayHitGroupShaderTable(md3dDevice.Get(), numShaderRecords, shaderRecordSize, L"RayHitGroupShaderTable");
 
         rayHitGroupShaderTable.push_back(raytrace_helper::ShaderRecord(beamHitGroupShaderID, shaderIDSize, &rootArgs, sizeof(rootArgs)));
-        rayHitGroupShaderTable.push_back(raytrace_helper::ShaderRecord(surfaceHitGroupShaderID, shaderIDSize, &rootArgs, sizeof(rootArgs)));
+        //rayHitGroupShaderTable.push_back(raytrace_helper::ShaderRecord(surfaceHitGroupShaderID, shaderIDSize, &rootArgs, sizeof(rootArgs)));
 
         rayHitGroupShaderTable.DebugPrint(shaderIdToStringMap);
         m_rayHitGroupShaderTableStrideInBytes = rayHitGroupShaderTable.GetShaderRecordSize();
