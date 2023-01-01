@@ -2716,7 +2716,7 @@ void PhotonBeamApp::BuildRayTracingShaderTables()
     void* rayGenShaderID;
     void* missShaderID;
     void* beamHitGroupShaderID;
-    //void* surfaceHitGroupShaderID;
+    void* surfaceHitGroupShaderID;
 
     // A shader name look-up table for shader table debug print out.
     std::unordered_map<void*, std::wstring> shaderIdToStringMap;
@@ -2735,8 +2735,8 @@ void PhotonBeamApp::BuildRayTracingShaderTables()
         shaderIdToStringMap[beamHitGroupShaderID] = beamHitGroupName;
 
         auto& surfaceHitGroupName = c_rayHitGroupNames[to_underlying(ERayHitTypes::Surface)];
-        //surfaceHitGroupShaderID = stateObjectProperties->GetShaderIdentifier(surfaceHitGroupName);
-        //shaderIdToStringMap[surfaceHitGroupShaderID] = surfaceHitGroupName;
+        surfaceHitGroupShaderID = stateObjectProperties->GetShaderIdentifier(surfaceHitGroupName);
+        shaderIdToStringMap[surfaceHitGroupShaderID] = surfaceHitGroupName;
 
         auto& missShaderName = c_rayShadersExportNames[to_underlying(ERayTracingShaders::Miss)];
         missShaderID = stateObjectProperties->GetShaderIdentifier(missShaderName);
