@@ -541,7 +541,7 @@ void PhotonBeamApp::BeamTrace()
     // read the counter
     uint32_t numSubbeams = 0;
     {
-        D3D12_RANGE readbackBufferRange{ 0, sizeof(uint32_t) };
+        D3D12_RANGE readbackBufferRange{ 0, sizeof(PhotonBeamCounter) };
         PhotonBeamCounter* pReadBack = nullptr;
 
         m_beamCounterRead->Map(
@@ -550,16 +550,10 @@ void PhotonBeamApp::BeamTrace()
             reinterpret_cast<void**>(&pReadBack)
         );
 
-        numSubbeams = pReadBack->subBeamCount;
+        numSubbeams = static_cast<uint32_t>(pReadBack->subBeamCount);
         auto numBeams = pReadBack->beamCount;
 
-        D3D12_RANGE emptyRange{ 0, 0 };
-        m_beamCounterRead->Unmap
-        (
-            0,
-            &emptyRange
-        );
-
+        m_beamCounterRead->Unmap(0, nullptr);
     }
 
     ThrowIfFailed(cmdListAlloc->Reset());
