@@ -1746,12 +1746,6 @@ void PhotonBeamApp::BuildRayTracingPSOs()
 
     for (size_t i = 0; i < to_underlying(ERayTracingShaders::Count); i++)
     {
-        if (i == to_underlying(ERayTracingShaders::SurfaceAnyHit))
-            continue;
-
-        if (i == to_underlying(ERayTracingShaders::SurfaceInt))
-            continue;
-
         auto& shaderBlob = m_rayShaders[i];
         auto lib = rayTracingPipeline.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
         D3D12_SHADER_BYTECODE libdxil{
@@ -1774,13 +1768,13 @@ void PhotonBeamApp::BuildRayTracingPSOs()
 
     // Surface hit group
     {
-        //auto hitGroup = rayTracingPipeline.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
+        auto hitGroup = rayTracingPipeline.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
 
-        //hitGroup->SetClosestHitShaderImport(nullptr);
-        //hitGroup->SetIntersectionShaderImport(c_rayShadersExportNames[to_underlying(ERayTracingShaders::SurfaceInt)]);
-        //hitGroup->SetAnyHitShaderImport(c_rayShadersExportNames[to_underlying(ERayTracingShaders::SurfaceAnyHit)]);
-        //hitGroup->SetHitGroupExport(c_rayHitGroupNames[to_underlying(ERayHitTypes::Surface)]);
-        //hitGroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_PROCEDURAL_PRIMITIVE);
+        hitGroup->SetClosestHitShaderImport(nullptr);
+        hitGroup->SetIntersectionShaderImport(c_rayShadersExportNames[to_underlying(ERayTracingShaders::SurfaceInt)]);
+        hitGroup->SetAnyHitShaderImport(c_rayShadersExportNames[to_underlying(ERayTracingShaders::SurfaceAnyHit)]);
+        hitGroup->SetHitGroupExport(c_rayHitGroupNames[to_underlying(ERayHitTypes::Surface)]);
+        hitGroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_PROCEDURAL_PRIMITIVE);
     }
 
 
@@ -1822,8 +1816,7 @@ void PhotonBeamApp::BuildRayTracingPSOs()
             // Shader association
             auto rootSignatureAssociation = rayTracingPipeline.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
             rootSignatureAssociation->SetSubobjectToAssociate(*localRootSignature);
-            //rootSignatureAssociation->AddExports(c_rayHitGroupNames);
-            rootSignatureAssociation->AddExport(c_rayHitGroupNames[to_underlying(ERayHitTypes::Beam)]);
+            rootSignatureAssociation->AddExports(c_rayHitGroupNames);
         }
 
     }
