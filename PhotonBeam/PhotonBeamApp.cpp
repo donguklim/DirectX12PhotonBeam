@@ -922,6 +922,7 @@ void PhotonBeamApp::UpdateRayTracingPushConstants()
     m_pcRay.photonRadius = m_photonRadius;
     m_pcRay.numBeamSources = m_numBeamSamples;
     m_pcRay.numPhotonSources = m_numPhotonSamples;
+    m_pcRay.showDirectColor = m_showDirectColor ? 1 : 0;
     m_pcRay.seed = 231;
 
     m_pcBeam.seed = 1017;
@@ -936,11 +937,63 @@ void PhotonBeamApp::UpdateRayTracingPushConstants()
     m_pcBeam.maxNumBeams = m_maxNumBeamData;
     m_pcBeam.maxNumSubBeams = m_maxNumSubBeamInfo;
 
+
+    // Bellow sets scatter and extinct cofficients and source light power, 
+  // given the distance from the light source, 
+  // the color near the light source
+  // the color a unit distance away from the light soruce,
+  // and the value of scatter/extinct cofficent
+  // the method is based on the following article 
+  // A Programmable System for Artistic Volumetric Lighting(2011) Derek Nowrouzezahrai
+    const float minimumUnitDistantAlbedo = 0.1f;
+
+  
+    XMVECTOR beamNearColor = m_beamNearColor;
+    XMVECTOR beamUnitDistantColor = m_beamUnitDistantColor;
+    beamNearColor *= m_beamNearColor[3];
+    beamUnitDistantColor *= m_beamUnitDistantColor[3];
+
+    XMVECTOR unitDistantMinColor = beamNearColor * minimumUnitDistantAlbedo;
+    beamUnitDistantColor = XMVectorClamp(beamUnitDistantColor, unitDistantMinColor, beamNearColor);
+
+    XMFLOAT3 beamColor;
+    XMStoreFloat3(&beamColor, beamUnitDistantColor);
+
+    m_beamUnitDistantColor = XMVECTORF32{beamColor.x, beamColor.y, beamColor.z, 1.0};
+
+    const XMFLOAT3 oneVal = XMFLOAT3(1, 1, 1);
+    const XMFLOAT3 zeroVal = XMFLOAT3(0, 0, 0);
+
+    XMVECTOR unitDistantAlbedoInverse = beamNearColor / beamUnitDistantColor;
+
+    auto notZero = XMVectorNotEqual(XMLoadFloat3(&zeroVal), beamUnitDistantColor);
+
+    // if there is division by zero, substitute to value one
+    unitDistantAlbedoInverse = XMVectorSelect(XMLoadFloat3(&oneVal), unitDistantAlbedoInverse, notZero);
+
+    float beamSourceDist = 15.0f;  //use fixed distance between eye and camera
+
+    auto extinctCoff = XMVectorLogE(unitDistantAlbedoInverse);
+    XMStoreFloat3(&m_pcRay.airExtinctCoff, extinctCoff);
+    m_pcBeam.airExtinctCoff = m_pcRay.airExtinctCoff;
+    m_airExtinctCoff = XMVECTORF32{ m_pcRay.airExtinctCoff.x, m_pcRay.airExtinctCoff.y, m_pcRay.airExtinctCoff.z };
+
+    XMStoreFloat3(&m_pcRay.airScatterCoff, m_airAlbedo * extinctCoff);
+    m_pcBeam.airScatterCoff = m_pcRay.airScatterCoff;
+    m_airExtinctCoff = XMVECTORF32{ m_pcRay.airScatterCoff.x, m_pcRay.airScatterCoff.y, m_pcRay.airScatterCoff.z };
+
+
     auto currPcRay = mCurrFrameResource->PcRay.get();
     currPcRay->CopyData(0, m_pcRay);
 
     auto currPcBeam = mCurrFrameResource->PcBeam.get();
     currPcBeam->CopyData(0, m_pcBeam);
+
+    auto beamSourceDistVec = XMFLOAT3(beamSourceDist, beamSourceDist, beamSourceDist);
+    auto lightPower = beamNearColor * XMVectorPow(unitDistantAlbedoInverse, XMLoadFloat3(&beamSourceDistVec)) * m_beamIntensity;
+
+    XMStoreFloat3(&m_pcBeam.sourceLight, lightPower);
+    m_sourceLight = XMVECTORF32{ m_pcBeam.sourceLight.x, m_pcBeam.sourceLight.y, m_pcBeam.sourceLight.z };
 }
 
 void PhotonBeamApp::BuildDescriptorHeaps()
