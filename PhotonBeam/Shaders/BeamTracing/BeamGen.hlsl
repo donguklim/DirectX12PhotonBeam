@@ -44,8 +44,8 @@ void BeamGen() {
 
     float minmumLightIntensitySquare = 0.0001;
 
-    uint beamIndex;
-    uint subBeamIndex;
+    uint64_t beamIndex;
+    uint64_t subBeamIndex;
     float3 beamColor = pc_beam.sourceLight;
     
     bool keepTracing = true;

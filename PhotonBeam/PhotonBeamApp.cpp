@@ -466,7 +466,7 @@ void PhotonBeamApp::BeamTrace()
                 0,
                 m_beamCounterReset.Get(),
                 0,
-                sizeof(uint32_t) * 2
+                sizeof(PhotonBeamCounter)
             );
 
             auto resourceBarrierRead = CD3DX12_RESOURCE_BARRIER::Transition(
@@ -514,7 +514,7 @@ void PhotonBeamApp::BeamTrace()
             0,
             m_beamCounter.Get(),
             0,
-            sizeof(uint32_t)
+            sizeof(PhotonBeamCounter)
         );
     }
 
@@ -542,7 +542,7 @@ void PhotonBeamApp::BeamTrace()
     uint32_t numSubbeams = 0;
     {
         D3D12_RANGE readbackBufferRange{ 0, sizeof(uint32_t) };
-        uint32_t* pReadBack = nullptr;
+        PhotonBeamCounter* pReadBack = nullptr;
 
         m_beamCounterRead->Map(
             0,
@@ -550,7 +550,8 @@ void PhotonBeamApp::BeamTrace()
             reinterpret_cast<void**>(&pReadBack)
         );
 
-        numSubbeams = *pReadBack;
+        numSubbeams = pReadBack->subBeamCount;
+        auto numBeams = pReadBack->beamCount;
 
         D3D12_RANGE emptyRange{ 0, 0 };
         m_beamCounterRead->Unmap
@@ -2408,7 +2409,7 @@ void PhotonBeamApp::CreateRayTracingOutputResource()
 
 void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& resetValuploadBuffer)
 {
-    static const PhotonBeamCounter counterResetVal = { 0, 0, 0, 0 };
+    static const PhotonBeamCounter counterResetVal = { 0, 0 };
 
     // Buffer for reading beam counter
     {
