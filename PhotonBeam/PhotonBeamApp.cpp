@@ -1823,7 +1823,7 @@ void PhotonBeamApp::BuildRayTracingPSOs()
             auto rootSignatureAssociation = rayTracingPipeline.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
             rootSignatureAssociation->SetSubobjectToAssociate(*localRootSignature);
             //rootSignatureAssociation->AddExports(c_rayHitGroupNames);
-            rootSignatureAssociation->AddExport(L"HitGroup_Beam");
+            rootSignatureAssociation->AddExport(c_rayHitGroupNames[to_underlying(ERayHitTypes::Beam)]);
         }
 
     }
