@@ -1285,7 +1285,7 @@ void PhotonBeamApp::BuildRayTracingRootSignatures()
     {
         using namespace RootSignatueEnums::RayTrace;
 
-        // Camera ray trace global 
+        // Ray trace global 
         {
             CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EGlobalParams::Count)] = {};
 
@@ -1298,7 +1298,7 @@ void PhotonBeamApp::BuildRayTracingRootSignatures()
             );
         }
 
-        // Camera ray trace generation
+        // Ray trace generation
         {
             CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EGenParams::Count)] = {};
 
@@ -1327,7 +1327,7 @@ void PhotonBeamApp::BuildRayTracingRootSignatures()
             );
         }
 
-        // Camera ray trace any hit nad intersection
+        // Ray trace any hit nad intersection
         {
             CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EAnyHitAndIntParams::Count)] = {};
 
