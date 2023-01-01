@@ -2762,10 +2762,10 @@ void PhotonBeamApp::BuildRayTracingShaderTables()
         rootArgs.textureDescriptorTable = m_rayTracingTextureDescriptorHandle;
 
         uint32_t numShaderRecords = 1;
-        uint32_t shaderRecordSize = shaderIDSize;
+        uint32_t shaderRecordSize = shaderIDSize + sizeof(rootArgs);
 
         raytrace_helper::ShaderTable rayGenShaderTable(md3dDevice.Get(), numShaderRecords, shaderRecordSize, L"RayGenShaderTable");
-        rayGenShaderTable.push_back(raytrace_helper::ShaderRecord(rayGenShaderID, shaderRecordSize, &rootArgs, sizeof(rootArgs)));
+        rayGenShaderTable.push_back(raytrace_helper::ShaderRecord(rayGenShaderID, shaderIDSize, &rootArgs, sizeof(rootArgs)));
         rayGenShaderTable.DebugPrint(shaderIdToStringMap);
         m_rayGenShaderTable = rayGenShaderTable.GetResource();
     }
