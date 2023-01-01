@@ -985,7 +985,7 @@ void PhotonBeamApp::UpdateRayTracingPushConstants()
     auto beamSourceDistVec = XMFLOAT3(beamSourceDist, beamSourceDist, beamSourceDist);
     auto lightPower = beamNearColor * XMVectorPow(unitDistantAlbedoInverse, XMLoadFloat3(&beamSourceDistVec)) ;
 
-    const static XMFLOAT3 minVal = XMFLOAT3(0.00001, 0.00001, 0.00001);
+    const static XMFLOAT3 minVal = XMFLOAT3(0.00001f, 0.00001f, 0.00001f);
     auto greater = XMVectorGreater(extinctCoff, XMLoadFloat3(&minVal));
 
     lightPower = XMVectorSelect(beamNearColor, lightPower/ scatterCoff, greater) * m_beamIntensity;
