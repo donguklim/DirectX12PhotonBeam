@@ -88,7 +88,7 @@ public:
   void
   AddInstance(ID3D12Resource* bottomLevelAS, /// Bottom-level acceleration structure containing the
                                              /// actual geometric data of the instance
-              const DirectX::XMMATRIX& transform, /// Transform matrix to apply to the instance,
+              const DirectX::XMFLOAT4X4& transform, /// Transform matrix to apply to the instance,
                                                   /// allowing the same bottom-level AS to be used
                                                   /// at several world-space positions
               UINT instanceID,   /// Instance ID, which can be used in the shaders to
@@ -149,11 +149,11 @@ private:
   /// Helper struct storing the instance data
   struct Instance
   {
-    Instance(ID3D12Resource* blAS, const DirectX::XMMATRIX& tr, UINT iID, UINT hgId);
+    Instance(ID3D12Resource* blAS, const DirectX::XMFLOAT4X4& tr, UINT iID, UINT hgId);
     /// Bottom-level AS
     ID3D12Resource* bottomLevelAS;
     /// Transform matrix
-    const DirectX::XMMATRIX& transform;
+    const DirectX::XMFLOAT4X4 transform;
     /// Instance ID visible in the shader
     UINT instanceID;
     /// Hit group index used to fetch the shaders from the SBT

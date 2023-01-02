@@ -65,7 +65,7 @@ namespace nv_helpers_dx12
 void TopLevelASGenerator::AddInstance(
     ID3D12Resource* bottomLevelAS,      // Bottom-level acceleration structure containing the
                                         // actual geometric data of the instance
-    const DirectX::XMMATRIX& transform, // Transform matrix to apply to the instance, allowing the
+    const DirectX::XMFLOAT4X4& transform, // Transform matrix to apply to the instance, allowing the
                                         // same bottom-level AS to be used at several world-space
                                         // positions
     UINT instanceID,                    // Instance ID, which can be used in the shaders to
@@ -246,9 +246,8 @@ void TopLevelASGenerator::Generate(
     // be accessible from outside
     instanceDescs[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
     // Instance transform matrix
-    DirectX::XMMATRIX m = XMMatrixTranspose(
-        m_instances[i].transform); // GLM is column major, the INSTANCE_DESC is row major
-    memcpy(instanceDescs[i].Transform, &m, sizeof(instanceDescs[i].Transform));
+
+    memcpy(instanceDescs[i].Transform, &m_instances[i].transform, sizeof(instanceDescs[i].Transform));
     // Get access to the bottom level
     instanceDescs[i].AccelerationStructure = m_instances[i].bottomLevelAS->GetGPUVirtualAddress();
     // Visibility mask, always visible here - TODO: should be accessible from
@@ -310,7 +309,7 @@ void TopLevelASGenerator::Generate(
 //--------------------------------------------------------------------------------------------------
 //
 //
-TopLevelASGenerator::Instance::Instance(ID3D12Resource* blAS, const DirectX::XMMATRIX& tr, UINT iID,
+TopLevelASGenerator::Instance::Instance(ID3D12Resource* blAS, const DirectX::XMFLOAT4X4& tr, UINT iID,
                                         UINT hgId)
     : bottomLevelAS(blAS), transform(tr), instanceID(iID), hitGroupIndex(hgId)
 {

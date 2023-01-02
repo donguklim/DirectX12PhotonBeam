@@ -64,7 +64,7 @@ struct HLSL_PAYLOAD_STRUCT RayHitPayload
 
 struct RayHitAttributes
 {
-	XMFLOAT2 beamHit;
+	XMFLOAT3 beamHit;
 };
 
 // Scene buffer addresses
@@ -112,24 +112,26 @@ struct PushConstantBeam
 {
 
 	XMFLOAT3  lightPosition;
-	uint32_t    maxNumBeams;
+	uint32_t numBeamSources;
 
 	XMFLOAT3     airScatterCoff;
 	float beamRadius;
 
 	XMFLOAT3     airExtinctCoff;
-	uint32_t maxNumSubBeams;
+	uint32_t numPhotonSources;
 
 	XMFLOAT3     sourceLight;
 	uint32_t seed;
 
 	uint64_t beamBlasAddress;
 	uint64_t photonBlasAddress;
+	
+	uint64_t maxNumSubBeams;
+	uint64_t    maxNumBeams;
 
 	float    airHGAssymFactor;
 	float    photonRadius;
-	uint32_t numBeamSources;
-	uint32_t numPhotonSources;
+	uint64_t padding;
 
 };
 
@@ -139,13 +141,16 @@ struct PrimMeshInfo
 	uint32_t indexOffset;
 	uint32_t vertexOffset;
 	int  materialIndex;
+	uint32_t padding;
 };
 
 struct GltfShadeMaterial
 {
 	XMFLOAT4 pbrBaseColorFactor;
+
 	XMFLOAT3 emissiveFactor;
 	int  pbrBaseColorTexture;
+
 	float metallic;
 	float roughness;
 	uint64_t   padding;
@@ -156,24 +161,25 @@ struct PhotonBeam
 {
 	XMFLOAT3  startPos;
 	uint32_t mediaIndex;
+
 	XMFLOAT3  endPos;
 	float radius;
+	
 	XMFLOAT3  lightColor;
 	int   hitInstanceID;
 };
 
 struct PhotonBeamCounter
 {
-	uint32_t subBeamCount;
-	uint32_t beamCount;
-	uint32_t padding1;
-	uint32_t padding2;
+	uint64_t subBeamCount;
+	uint64_t beamCount;
 };
 
 
 struct ShaderRayTracingTopASInstanceDesc
 {
 	XMFLOAT4 transform[3];
+
 	uint32_t instanceCustomIndexAndmask;
 	uint32_t instanceShaderBindingTableRecordOffsetAndflags;
 	uint64_t accelerationStructureReference;

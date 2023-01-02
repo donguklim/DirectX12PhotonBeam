@@ -107,6 +107,7 @@ enum class ERayTracingShaders : uint16_t
     BeamAnyHit,
     SurfaceInt,
     SurfaceAnyHit,
+    Miss,
     Count
 };
 
@@ -239,6 +240,7 @@ private:
     void Rasterize();
     void BeamTrace();
     void RayTrace();
+    void CopyRaytracingOutputToBackbuffer();
     void drawPost();
 
     void CreateSurfaceBlas();
@@ -273,6 +275,8 @@ private:
     D3D12_GPU_DESCRIPTOR_HANDLE m_rayTracingOutputDescriptorHandle{};
     D3D12_GPU_DESCRIPTOR_HANDLE m_rayTracingNormalDescriptorHandle{};
     D3D12_GPU_DESCRIPTOR_HANDLE m_rayTracingTextureDescriptorHandle{};
+    D3D12_GPU_DESCRIPTOR_HANDLE m_rayTracingBeamDataDescriptorHandle{};
+
 
     std::vector<std::unique_ptr<Texture>> m_textures;
     std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> mGeometries;
@@ -299,6 +303,9 @@ private:
     Microsoft::WRL::ComPtr<ID3D12Resource> m_rayGenShaderTable;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_rayHitGroupShaderTable;
     uint32_t m_rayHitGroupShaderTableStrideInBytes = 0;
+    Microsoft::WRL::ComPtr<ID3D12Resource> m_rayMissShaderTable;
+    uint32_t m_rayMissShaderTableStrideInBytes = 0;
+
 
     Microsoft::WRL::ComPtr<ID3D12Resource> m_raytracingOutput = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounter = nullptr;

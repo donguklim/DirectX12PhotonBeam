@@ -37,11 +37,14 @@ void RayGen() {
     uint seed = tea(launchIndex, pc_ray.seed);
 
     const float2 pixelCenter = float2(dispatchIndex.xy) + (float2)(0.5);
-    const float2 inUV = pixelCenter / float2(dispatchDimensionSize.xy) * 2.0 - 1.0;
+    float2 inUV = pixelCenter / float2(dispatchDimensionSize.xy) * 2.0 - 1.0;
 
-    float4 origin = mul(pc_ray.viewInverse, float4(0, 0, 0, 1));
-    float4 target = mul(pc_ray.projInverse, float4(inUV, 1, 1));
-    float4 direction = mul(pc_ray.viewInverse, float4(normalize(target.xyz), 0));
+    // Invert Y for DirectX-style coordinates
+    inUV.y = -inUV.y;
+
+    float4 origin = mul(float4(0, 0, 0, 1), pc_ray.viewInverse);
+    float4 target = mul(float4(inUV, 1, 1), pc_ray.projInverse);
+    float4 direction = mul(float4(normalize(target.xyz), 0), pc_ray.viewInverse);
 
     RayHitPayload prd;
 

@@ -44,7 +44,8 @@ const wchar_t* PhotonBeamApp::c_rayShadersExportNames[to_underlying(ERayTracingS
     L"BeamInt",
     L"BeamAnyHit",
     L"SurfaceInt",
-    L"SurfaceAnyHit"
+    L"SurfaceAnyHit",
+    L"Miss"
 };
 
 const wchar_t* PhotonBeamApp::c_beamShadersExportNames[to_underlying(EBeamTracingShaders::Count)] = {
@@ -277,6 +278,10 @@ void PhotonBeamApp::OnResize()
 {
     D3DApp::OnResize();
 
+    m_raytracingOutput.Reset();
+    if(m_raytracingOutputResourceUAVDescriptorHeapIndex < UINT32_MAX)
+        CreateRayTracingOutputResource();
+
     mCamera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
 
 }
@@ -302,9 +307,6 @@ void PhotonBeamApp::Update(const GameTimer& gt)
             CloseHandle(eventHandle);
         }
     }
-
-    m_raytracingOutput.Reset();
-    CreateRayTracingOutputResource();
 
     UpdateObjectCBs(gt);
     UpdateMainPassCB(gt);
@@ -464,7 +466,7 @@ void PhotonBeamApp::BeamTrace()
                 0,
                 m_beamCounterReset.Get(),
                 0,
-                sizeof(uint32_t) * 2
+                sizeof(PhotonBeamCounter)
             );
 
             auto resourceBarrierRead = CD3DX12_RESOURCE_BARRIER::Transition(
@@ -512,7 +514,7 @@ void PhotonBeamApp::BeamTrace()
             0,
             m_beamCounter.Get(),
             0,
-            sizeof(uint32_t)
+            sizeof(PhotonBeamCounter)
         );
     }
 
@@ -539,8 +541,8 @@ void PhotonBeamApp::BeamTrace()
     // read the counter
     uint32_t numSubbeams = 0;
     {
-        D3D12_RANGE readbackBufferRange{ 0, sizeof(uint32_t) };
-        uint32_t* pReadBack = nullptr;
+        D3D12_RANGE readbackBufferRange{ 0, sizeof(PhotonBeamCounter) };
+        PhotonBeamCounter* pReadBack = nullptr;
 
         m_beamCounterRead->Map(
             0,
@@ -548,15 +550,10 @@ void PhotonBeamApp::BeamTrace()
             reinterpret_cast<void**>(&pReadBack)
         );
 
-        numSubbeams = *pReadBack;
+        numSubbeams = static_cast<uint32_t>(pReadBack->subBeamCount);
+        auto numBeams = pReadBack->beamCount;
 
-        D3D12_RANGE emptyRange{ 0, 0 };
-        m_beamCounterRead->Unmap
-        (
-            0,
-            &emptyRange
-        );
-
+        m_beamCounterRead->Unmap(0, nullptr);
     }
 
     ThrowIfFailed(cmdListAlloc->Reset());
@@ -610,12 +607,58 @@ void PhotonBeamApp::BeamTrace()
             CloseHandle(eventHandle);
         }
     }
-
 }
 
 void PhotonBeamApp::RayTrace()
 {
-    mCommandList->ClearRenderTargetView(CurrentBackBufferView(), m_clearColor, 0, nullptr);
+    using namespace RootSignatueEnums::RayTrace;
+
+    auto pcRay = mCurrFrameResource->PcRay->Resource();
+    auto& globalRootSignature = m_rayRootSignatures[to_underlying(ERootSignatures::Global)];
+
+    mCommandList->SetComputeRootSignature(globalRootSignature.Get());
+    mCommandList->SetComputeRootConstantBufferView(
+        to_underlying(EGlobalParams::SceneConstantSlot), 
+        pcRay->GetGPUVirtualAddress()
+    );
+
+    mCommandList->SetDescriptorHeaps(1, m_rayTracingDescriptorHeap.GetAddressOf());
+
+    D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
+
+    dispatchDesc.HitGroupTable.StartAddress = m_rayHitGroupShaderTable->GetGPUVirtualAddress();
+    dispatchDesc.HitGroupTable.SizeInBytes = m_rayHitGroupShaderTable->GetDesc().Width;
+    dispatchDesc.HitGroupTable.StrideInBytes = m_rayHitGroupShaderTableStrideInBytes;
+    dispatchDesc.MissShaderTable.StartAddress = m_rayMissShaderTable->GetGPUVirtualAddress();
+    dispatchDesc.MissShaderTable.SizeInBytes = m_rayMissShaderTable->GetDesc().Width;
+    dispatchDesc.MissShaderTable.StrideInBytes = m_rayMissShaderTableStrideInBytes;
+    dispatchDesc.RayGenerationShaderRecord.StartAddress = m_rayGenShaderTable->GetGPUVirtualAddress();
+    dispatchDesc.RayGenerationShaderRecord.SizeInBytes = m_rayGenShaderTable->GetDesc().Width;
+    dispatchDesc.Width = mClientWidth;
+    dispatchDesc.Height = mClientHeight;
+    dispatchDesc.Depth = 1;
+
+    mCommandList->SetPipelineState1(m_rayStateObject.Get());
+
+    mCommandList->DispatchRays(&dispatchDesc);
+}
+
+void PhotonBeamApp::CopyRaytracingOutputToBackbuffer()
+{
+    auto renderTarget = mSwapChainBuffer[mCurrBackBuffer].Get();
+
+    D3D12_RESOURCE_BARRIER preCopyBarriers[2] = {};
+    preCopyBarriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
+    preCopyBarriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(m_raytracingOutput.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+    mCommandList->ResourceBarrier(ARRAYSIZE(preCopyBarriers), preCopyBarriers);
+
+    mCommandList->CopyResource(renderTarget, m_raytracingOutput.Get());
+
+    D3D12_RESOURCE_BARRIER postCopyBarriers[2] = {};
+    postCopyBarriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    postCopyBarriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(m_raytracingOutput.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+
+    mCommandList->ResourceBarrier(ARRAYSIZE(postCopyBarriers), postCopyBarriers);
 }
 
 void PhotonBeamApp::Draw(const GameTimer& gt)
@@ -650,9 +693,16 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
     );
     mCommandList->ResourceBarrier(1, &resourceBarrierRender);
 
-    if (m_useRayTracer && false)
+    if (m_useRayTracer)
     {
+        RayTrace();
+
+        CopyRaytracingOutputToBackbuffer();
+
         ID3D12DescriptorHeap* guiDescriptorHeaps[] = { mGuiDescriptorHeap.Get() };
+
+        auto currentOutputView = CurrentBackBufferView();
+        mCommandList->OMSetRenderTargets(1, &currentOutputView, false, nullptr);
         mCommandList->SetDescriptorHeaps(_countof(guiDescriptorHeaps), guiDescriptorHeaps);
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList.Get());
     }
@@ -666,7 +716,6 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
 
         mCommandList->EndRenderPass();
     }
-
 
     // Indicate a state transition on the resource usage.
     auto presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
@@ -790,7 +839,6 @@ void PhotonBeamApp::OnKeyboardInput(const GameTimer& gt)
     mCamera.UpdateViewMatrix();
 }
 
-
 void PhotonBeamApp::UpdateObjectCBs(const GameTimer& gt)
 {
     auto currObjectCB = mCurrFrameResource->ObjectCB.get();
@@ -874,6 +922,7 @@ void PhotonBeamApp::UpdateRayTracingPushConstants()
     m_pcRay.photonRadius = m_photonRadius;
     m_pcRay.numBeamSources = m_numBeamSamples;
     m_pcRay.numPhotonSources = m_numPhotonSamples;
+    m_pcRay.showDirectColor = m_showDirectColor ? 1 : 0;
     m_pcRay.seed = 231;
 
     m_pcBeam.seed = 1017;
@@ -888,11 +937,70 @@ void PhotonBeamApp::UpdateRayTracingPushConstants()
     m_pcBeam.maxNumBeams = m_maxNumBeamData;
     m_pcBeam.maxNumSubBeams = m_maxNumSubBeamInfo;
 
+
+    // Bellow sets scatter and extinct cofficients and source light power, 
+  // given the distance from the light source, 
+  // the color near the light source
+  // the color a unit distance away from the light soruce,
+  // and the value of scatter/extinct cofficent
+  // the method is based on the following article 
+  // A Programmable System for Artistic Volumetric Lighting(2011) Derek Nowrouzezahrai
+    const float minimumUnitDistantAlbedo = 0.1f;
+
+    XMVECTOR beamNearColor = m_beamNearColor;
+    XMVECTOR beamUnitDistantColor = m_beamUnitDistantColor;
+    beamNearColor *= m_beamNearColor[3];
+    beamUnitDistantColor *= m_beamUnitDistantColor[3];
+
+    XMVECTOR unitDistantMinColor = beamNearColor * minimumUnitDistantAlbedo;
+    beamUnitDistantColor = XMVectorClamp(beamUnitDistantColor, unitDistantMinColor, beamNearColor);
+
+    XMFLOAT3 beamColor;
+    XMStoreFloat3(&beamColor, beamUnitDistantColor);
+
+    m_beamUnitDistantColor = XMVECTORF32{beamColor.x, beamColor.y, beamColor.z, 1.0};
+
+    const static XMFLOAT3 oneVal = XMFLOAT3(1, 1, 1);
+    const static XMFLOAT3 zeroVal = XMFLOAT3(0, 0, 0);
+
+    XMVECTOR unitDistantAlbedoInverse = beamNearColor / beamUnitDistantColor;
+
+    auto notZero = XMVectorNotEqual(XMLoadFloat3(&zeroVal), beamUnitDistantColor);
+
+    // if there is division by zero, substitute to value one
+    unitDistantAlbedoInverse = XMVectorSelect(XMLoadFloat3(&oneVal), unitDistantAlbedoInverse, notZero);
+
+    float beamSourceDist = 15.0f;  //use fixed distance between eye and camera
+
+    auto extinctCoff = XMVectorLogE(unitDistantAlbedoInverse);
+    XMStoreFloat3(&m_pcRay.airExtinctCoff, extinctCoff);
+    m_pcBeam.airExtinctCoff = m_pcRay.airExtinctCoff;
+    m_airExtinctCoff = XMVECTORF32{ m_pcRay.airExtinctCoff.x, m_pcRay.airExtinctCoff.y, m_pcRay.airExtinctCoff.z };
+
+    auto scatterCoff = m_airAlbedo * extinctCoff;
+    XMStoreFloat3(&m_pcRay.airScatterCoff, scatterCoff);
+    m_pcBeam.airScatterCoff = m_pcRay.airScatterCoff;
+    m_airScatterCoff = XMVECTORF32{ m_pcRay.airScatterCoff.x, m_pcRay.airScatterCoff.y, m_pcRay.airScatterCoff.z };
+
+    auto beamSourceDistVec = XMFLOAT3(beamSourceDist, beamSourceDist, beamSourceDist);
+    auto lightPower = beamNearColor * XMVectorPow(unitDistantAlbedoInverse, XMLoadFloat3(&beamSourceDistVec)) ;
+
+    const static XMFLOAT3 minVal = XMFLOAT3(0.00001f, 0.00001f, 0.00001f);
+    auto greater = XMVectorGreater(extinctCoff, XMLoadFloat3(&minVal));
+
+    lightPower = XMVectorSelect(beamNearColor, lightPower/ scatterCoff, greater) * m_beamIntensity;
+
+    XMStoreFloat3(&m_pcBeam.sourceLight, lightPower);
+    m_sourceLight = XMVECTORF32{ m_pcBeam.sourceLight.x, m_pcBeam.sourceLight.y, m_pcBeam.sourceLight.z };
+
+
     auto currPcRay = mCurrFrameResource->PcRay.get();
     currPcRay->CopyData(0, m_pcRay);
 
     auto currPcBeam = mCurrFrameResource->PcBeam.get();
     currPcBeam->CopyData(0, m_pcBeam);
+
+    
 }
 
 void PhotonBeamApp::BuildDescriptorHeaps()
@@ -1139,9 +1247,6 @@ void PhotonBeamApp::BuildRayTracingDescriptorHeaps()
     }
 
 }
-    
-
-    
 
 void PhotonBeamApp::BuildRasterizeRootSignature()
 {    
@@ -1240,7 +1345,7 @@ void PhotonBeamApp::BuildRayTracingRootSignatures()
     {
         using namespace RootSignatueEnums::RayTrace;
 
-        // Camera ray trace global 
+        // Ray trace global 
         {
             CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EGlobalParams::Count)] = {};
 
@@ -1253,7 +1358,7 @@ void PhotonBeamApp::BuildRayTracingRootSignatures()
             );
         }
 
-        // Camera ray trace generation
+        // Ray trace generation
         {
             CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EGenParams::Count)] = {};
 
@@ -1282,11 +1387,14 @@ void PhotonBeamApp::BuildRayTracingRootSignatures()
             );
         }
 
-        // Camera ray trace any hit nad intersection
+        // Ray trace any hit nad intersection
         {
             CD3DX12_ROOT_PARAMETER rootParameters[to_underlying(EAnyHitAndIntParams::Count)] = {};
 
-            rootParameters[to_underlying(EAnyHitAndIntParams::BeamBufferSlot)].InitAsShaderResourceView(0);
+            CD3DX12_DESCRIPTOR_RANGE beamBufferRange{};
+            beamBufferRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+
+            rootParameters[to_underlying(EAnyHitAndIntParams::BeamBufferSlot)].InitAsDescriptorTable(1, &beamBufferRange);
 
             CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters);
             desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
@@ -1365,6 +1473,7 @@ void PhotonBeamApp::BuildShadersAndInputLayout()
     m_beamShaders[to_underlying(EBeamTracingShaders::CloseHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamClosestHit.hlsl", L"lib_6_6");
     m_beamShaders[to_underlying(EBeamTracingShaders::Gen)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamGen.hlsl", L"lib_6_6");
 
+    m_rayShaders[to_underlying(ERayTracingShaders::Miss)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RayMiss.hlsl", L"lib_6_6");
     m_rayShaders[to_underlying(ERayTracingShaders::BeamAnyHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RayBeamAnyHit.hlsl", L"lib_6_6");
     m_rayShaders[to_underlying(ERayTracingShaders::BeamInt)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RayBeamInt.hlsl", L"lib_6_6");
     m_rayShaders[to_underlying(ERayTracingShaders::SurfaceAnyHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RaySurfaceAnyHit.hlsl", L"lib_6_6");
@@ -1710,6 +1819,7 @@ void PhotonBeamApp::BuildRayTracingPSOs()
     {
         auto hitGroup = rayTracingPipeline.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
 
+        //hitGroup->SetClosestHitShaderImport(nullptr);
         hitGroup->SetIntersectionShaderImport(c_rayShadersExportNames[to_underlying(ERayTracingShaders::BeamInt)]);
         hitGroup->SetAnyHitShaderImport(c_rayShadersExportNames[to_underlying(ERayTracingShaders::BeamAnyHit)]);
         hitGroup->SetHitGroupExport(c_rayHitGroupNames[to_underlying(ERayHitTypes::Beam)]);
@@ -1720,6 +1830,7 @@ void PhotonBeamApp::BuildRayTracingPSOs()
     {
         auto hitGroup = rayTracingPipeline.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
 
+        hitGroup->SetClosestHitShaderImport(nullptr);
         hitGroup->SetIntersectionShaderImport(c_rayShadersExportNames[to_underlying(ERayTracingShaders::SurfaceInt)]);
         hitGroup->SetAnyHitShaderImport(c_rayShadersExportNames[to_underlying(ERayTracingShaders::SurfaceAnyHit)]);
         hitGroup->SetHitGroupExport(c_rayHitGroupNames[to_underlying(ERayHitTypes::Surface)]);
@@ -2074,7 +2185,6 @@ void PhotonBeamApp::RenderUI()
     ImGuiH::Panel::End();
 }
 
-
 void PhotonBeamApp::CreateSurfaceBlas()
 {
     // Adding all vertex buffers and not transforming their position. 
@@ -2135,12 +2245,16 @@ void PhotonBeamApp::CreateSurfaceBlas()
 
 void PhotonBeamApp::CreateSurfaceTlas()
 {
+    auto identity = MathHelper::Identity4x4();
     for (auto& node : m_gltfScene.GetNodes())
     {
+        XMFLOAT4X4 worldMat{};
+        XMStoreFloat4x4(&worldMat, XMMatrixTranspose(XMLoadFloat4x4(&node.worldMatrix)));
+
         auto blasAddress = m_surfaceBlasBuffers[node.primMesh].pResult.Get();
         m_topLevelASGenerator.AddInstance(
             blasAddress,
-            XMLoadFloat4x4(&node.worldMatrix),
+            worldMat,
             0,
             0
         );
@@ -2351,11 +2465,11 @@ void PhotonBeamApp::CreateRayTracingOutputResource()
 
 void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& resetValuploadBuffer)
 {
-    static const PhotonBeamCounter counterResetVal = { 0, 0, 0, 0 };
+    static const PhotonBeamCounter counterResetVal = { 0, 0 };
 
     // Buffer for reading beam counter
     {
-        auto counterDesc = CD3DX12_RESOURCE_DESC::Buffer(
+        auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(
             sizeof(PhotonBeamCounter),
             D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE
         );
@@ -2366,7 +2480,7 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
             md3dDevice->CreateCommittedResource(
                 &defaultHeapProperties,
                 D3D12_HEAP_FLAG_NONE,
-                &counterDesc,
+                &bufferDesc,
                 D3D12_RESOURCE_STATE_COPY_DEST,
                 nullptr,
                 IID_PPV_ARGS(&m_beamCounterRead)
@@ -2384,7 +2498,7 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
     uint32_t photonBeamHeapIndex{};
     // Buffer for beam data
     {
-        auto counterDesc = CD3DX12_RESOURCE_DESC::Buffer(
+        auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(
             sizeof(PhotonBeam) * m_maxNumBeamData, 
             D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
         );
@@ -2403,8 +2517,8 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
             md3dDevice->CreateCommittedResource(
                 &defaultHeapProperties,
                 D3D12_HEAP_FLAG_NONE,
-                &counterDesc,
-                D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+                &bufferDesc,
+                D3D12_RESOURCE_STATE_COMMON,
                 nullptr,
                 IID_PPV_ARGS(&m_beamData)
             )
@@ -2412,8 +2526,7 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
         NAME_D3D12_OBJECT(m_beamData);
 
         // set descriptor handle for beam tracing
-
-        D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
+        D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc{};
         UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
         UAVDesc.Format = DXGI_FORMAT_UNKNOWN;
         UAVDesc.Buffer.CounterOffsetInBytes = 0;
@@ -2436,11 +2549,36 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
             photonBeamHeapIndex,
             mCbvSrvUavDescriptorSize
         );
+
+        // set descriptor handle for ray tracing
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+        srvDesc.Buffer.FirstElement = 0;
+        srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+        srvDesc.Buffer.NumElements = m_maxNumBeamData;
+        srvDesc.Buffer.StructureByteStride = sizeof(PhotonBeam);
+
+        D3D12_CPU_DESCRIPTOR_HANDLE srvDescriptorHandle;
+        uint32_t rayTracingHeapIndex = AllocateRayTracingDescriptor(&srvDescriptorHandle);
+
+        md3dDevice->CreateShaderResourceView(
+            m_beamData.Get(),
+            &srvDesc,
+            srvDescriptorHandle
+        );
+
+        m_rayTracingBeamDataDescriptorHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(
+            m_rayTracingDescriptorHeap->GetGPUDescriptorHandleForHeapStart(),
+            rayTracingHeapIndex,
+            mCbvSrvUavDescriptorSize
+        );
     }
 
     //Buffer for storing sub beam Accelerated Structure instance info
     {
-        auto counterDesc = CD3DX12_RESOURCE_DESC::Buffer(
+        auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(
             sizeof(ShaderRayTracingTopASInstanceDesc) * m_maxNumSubBeamInfo,
             D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
         );
@@ -2450,7 +2588,7 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
             md3dDevice->CreateCommittedResource(
                 &defaultHeapProperties,
                 D3D12_HEAP_FLAG_NONE,
-                &counterDesc,
+                &bufferDesc,
                 D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
                 nullptr,
                 IID_PPV_ARGS(m_beamAsInstanceDescData.GetAddressOf())
@@ -2479,7 +2617,7 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
 
     // Create beam counter Buffer
     {
-        auto counterDesc = CD3DX12_RESOURCE_DESC::Buffer(
+        auto bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(
             sizeof(PhotonBeamCounter),
             D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
         );
@@ -2489,7 +2627,7 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
             md3dDevice->CreateCommittedResource(
                 &defaultHeapProperties,
                 D3D12_HEAP_FLAG_ALLOW_SHADER_ATOMICS,
-                &counterDesc,
+                &bufferDesc,
                 D3D12_RESOURCE_STATE_UNORDERED_ACCESS | D3D12_RESOURCE_STATE_COPY_SOURCE,
                 nullptr,
                 IID_PPV_ARGS(&m_beamCounter)
@@ -2572,7 +2710,7 @@ void PhotonBeamApp::BuildBeamTracingShaderTables()
 
         auto& missShaderName = c_beamShadersExportNames[to_underlying(EBeamTracingShaders::Miss)];
         missShaderID = stateObjectProperties->GetShaderIdentifier(missShaderName);
-        shaderIdToStringMap[hitGroupShaderID] = missShaderName;
+        shaderIdToStringMap[missShaderID] = missShaderName;
 
         shaderIDSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
     }
@@ -2589,7 +2727,7 @@ void PhotonBeamApp::BuildBeamTracingShaderTables()
         
 
         uint32_t numShaderRecords = 1;
-        uint32_t shaderRecordSize = shaderIDSize; // No root arguments
+        uint32_t shaderRecordSize = shaderIDSize + sizeof(rootArgs);
 
         raytrace_helper::ShaderTable beamGenShaderTable(md3dDevice.Get(), numShaderRecords, shaderRecordSize, L"BeamGenShaderTable");
         beamGenShaderTable.push_back(raytrace_helper::ShaderRecord(beamGenShaderID, shaderIDSize, &rootArgs, sizeof(rootArgs)));
@@ -2622,7 +2760,7 @@ void PhotonBeamApp::BuildBeamTracingShaderTables()
         rootArgs.textureDescriptorTable = m_beamTracingTextureDescriptorHandle;
 
         UINT numShaderRecords = 1;
-        UINT shaderRecordSize = shaderIDSize;
+        UINT shaderRecordSize = shaderIDSize + sizeof(rootArgs);
         raytrace_helper::ShaderTable beamHitGroupShaderTable(md3dDevice.Get(), numShaderRecords, shaderRecordSize, L"BeamHitGroupShaderTable");
 
         beamHitGroupShaderTable.push_back(raytrace_helper::ShaderRecord(hitGroupShaderID, shaderIDSize, &rootArgs, sizeof(rootArgs)));
@@ -2636,6 +2774,7 @@ void PhotonBeamApp::BuildBeamTracingShaderTables()
 void PhotonBeamApp::BuildRayTracingShaderTables()
 {
     void* rayGenShaderID;
+    void* missShaderID;
     void* beamHitGroupShaderID;
     void* surfaceHitGroupShaderID;
 
@@ -2659,6 +2798,10 @@ void PhotonBeamApp::BuildRayTracingShaderTables()
         surfaceHitGroupShaderID = stateObjectProperties->GetShaderIdentifier(surfaceHitGroupName);
         shaderIdToStringMap[surfaceHitGroupShaderID] = surfaceHitGroupName;
 
+        auto& missShaderName = c_rayShadersExportNames[to_underlying(ERayTracingShaders::Miss)];
+        missShaderID = stateObjectProperties->GetShaderIdentifier(missShaderName);
+        shaderIdToStringMap[missShaderID] = missShaderName;
+
         shaderIDSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
     }
 
@@ -2673,30 +2816,44 @@ void PhotonBeamApp::BuildRayTracingShaderTables()
         } rootArgs{};
 
         rootArgs.outputImageDescriptorTable = m_rayTracingOutputDescriptorHandle;
-        rootArgs.beamAsAddress = m_beamBlasBuffers.pResult->GetGPUVirtualAddress();
+        rootArgs.beamAsAddress = m_beamTlasBuffers.pResult->GetGPUVirtualAddress();
         rootArgs.surfaceAsAddress = m_surfaceTlasBuffers.pResult->GetGPUVirtualAddress();
         rootArgs.geometryDescriptorTable = m_rayTracingNormalDescriptorHandle;
         rootArgs.textureDescriptorTable = m_rayTracingTextureDescriptorHandle;
 
         uint32_t numShaderRecords = 1;
-        uint32_t shaderRecordSize = shaderIDSize; // No root arguments
+        uint32_t shaderRecordSize = shaderIDSize + sizeof(rootArgs);
 
         raytrace_helper::ShaderTable rayGenShaderTable(md3dDevice.Get(), numShaderRecords, shaderRecordSize, L"RayGenShaderTable");
-        rayGenShaderTable.push_back(raytrace_helper::ShaderRecord(rayGenShaderID, shaderRecordSize, &rootArgs, sizeof(rootArgs)));
+        rayGenShaderTable.push_back(raytrace_helper::ShaderRecord(rayGenShaderID, shaderIDSize, &rootArgs, sizeof(rootArgs)));
         rayGenShaderTable.DebugPrint(shaderIdToStringMap);
         m_rayGenShaderTable = rayGenShaderTable.GetResource();
+    }
+
+    // Miss shader table.
+    {
+
+        UINT numShaderRecords = 1;
+        UINT shaderRecordSize = shaderIDSize; // No root arguments
+
+        raytrace_helper::ShaderTable rayMissShaderTable(md3dDevice.Get(), numShaderRecords, shaderRecordSize, L"RayMissShaderTable");
+        rayMissShaderTable.push_back(raytrace_helper::ShaderRecord(missShaderID, shaderIDSize, nullptr, 0));
+
+        rayMissShaderTable.DebugPrint(shaderIdToStringMap);
+        m_rayMissShaderTableStrideInBytes = rayMissShaderTable.GetShaderRecordSize();
+        m_rayMissShaderTable = rayMissShaderTable.GetResource();
     }
 
     // Hit group shader table.
     {
         struct {
-            D3D12_GPU_VIRTUAL_ADDRESS beamDataAddress;
+            D3D12_GPU_DESCRIPTOR_HANDLE beamDataDescriptorTable;
         } rootArgs{};
 
-        rootArgs.beamDataAddress = m_beamData->GetGPUVirtualAddress();
+        rootArgs.beamDataDescriptorTable = m_rayTracingBeamDataDescriptorHandle;
 
         UINT numShaderRecords = 2;
-        UINT shaderRecordSize = shaderIDSize;
+        UINT shaderRecordSize = shaderIDSize + sizeof(rootArgs);
         raytrace_helper::ShaderTable rayHitGroupShaderTable(md3dDevice.Get(), numShaderRecords, shaderRecordSize, L"RayHitGroupShaderTable");
 
         rayHitGroupShaderTable.push_back(raytrace_helper::ShaderRecord(beamHitGroupShaderID, shaderIDSize, &rootArgs, sizeof(rootArgs)));
