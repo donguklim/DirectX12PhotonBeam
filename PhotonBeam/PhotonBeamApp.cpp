@@ -1756,7 +1756,7 @@ void PhotonBeamApp::BuildRenderItems()
         rItem->Geo = mGeometries["cornellBox"].get();
         rItem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
         rItem->IndexCount = primitive.indexCount;
-        rItem->StartIndexLocation = primitive.firstIndex;
+        rItem->StartIndexLocation = primitive.firstIndex ;
         rItem->BaseVertexLocation = primitive.vertexOffset;
         mAllRitems.push_back(std::move(rItem));
     }

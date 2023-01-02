@@ -15,7 +15,7 @@ ConstantBuffer<PushConstantBeam> pc_beam : register(b0);
 Buffer<float3> g_vertices : register(t0, space0);
 Buffer<float3> g_normals : register(t1, space0);
 Buffer<float2> g_texCoords : register(t2, space0);
-Buffer<uint3> g_indices : register(t3, space0);
+Buffer<uint> g_indices : register(t3, space0);
 
 
 StructuredBuffer<GltfShadeMaterial> g_materials : register(t4, space0);
@@ -68,13 +68,13 @@ void ClosestHit(inout BeamHitPayload prd, BuiltInTriangleIntersectionAttributes 
     prd.isHit = 1;
 
     // Getting the 'first index' for this mesh (offset of the mesh + offset of the triangle)
-    uint indexOffset = (meshInfo.indexOffset / 3) + PrimitiveIndex();
+    uint indexOffset = meshInfo.indexOffset + PrimitiveIndex() * 3;
     uint vertexOffset = meshInfo.vertexOffset;           // Vertex offset as defined in glTF
     uint materialIndex = max(0, meshInfo.materialIndex);  // material of primitive mesh
 
     // Getting the 3 indices of the triangle (local)
-    uint3 triangleIndex = g_indices[indexOffset];
-    triangleIndex += uint3(vertexOffset, vertexOffset, vertexOffset);  // (global)
+    uint3 triangleIndex = uint3(g_indices[indexOffset], g_indices[indexOffset + 1], g_indices[indexOffset + 2]);
+    triangleIndex += vertexOffset;  // (global)
 
     const float3 barycentrics = float3(1.0 - attribs.barycentrics.x - attribs.barycentrics.y, attribs.barycentrics.x, attribs.barycentrics.y);
 
@@ -93,8 +93,9 @@ void ClosestHit(inout BeamHitPayload prd, BuiltInTriangleIntersectionAttributes 
 
     rayLength2 = RayTCurrent();
 
-    prd.rayOrigin = prd.rayOrigin + prd.rayDirection * rayLength2;
-    prd.isHit = 0;
+    prd.rayOrigin = prd.rayOrigin + world_position * 100;
+    prd.isHit = PrimitiveIndex();
+    prd.rayDirection = float3(RayTCurrent(), world_position.x,0);
     return;
 
     // if random scatter occured in media before hitting a surface, return

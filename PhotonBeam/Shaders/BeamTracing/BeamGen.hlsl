@@ -31,6 +31,7 @@ void BeamGen() {
     float3 rayOrigin = pc_beam.lightPosition;
     //float3 rayDirection = uniformSamplingSphere(seed);
     float3 rayDirection = float3(1, 0, 0);
+    rayDirection = normalize(float3(1, 0, 0));
 
     BeamHitPayload prd;
     prd.rayOrigin = rayOrigin;
@@ -73,8 +74,9 @@ void BeamGen() {
         newBeam.endPos = prd.rayOrigin;
         newBeam.mediaIndex = 0;
         // newBeam.radius = pc_beam.beamRadius;
-        newBeam.radius = 0;
+        newBeam.radius = prd.isHit;
         newBeam.lightColor = beamColor;
+        newBeam.lightColor = prd.rayDirection;
         newBeam.hitInstanceID = prd.instanceID;
 
         float3 beamVec = newBeam.endPos - newBeam.startPos;
