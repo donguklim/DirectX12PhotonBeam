@@ -25,7 +25,7 @@ Texture2D g_texturesMap[] : register(t0, space1);
 
 SamplerState gsamLinearWrap  : register(s0);
 
-bool randomScatterOccured(inout BeamHitPayload prd, const in float3 world_position) {
+bool randomScatterOccured(inout BeamHitPayload prd, const in float3 rayLength) {
     float min_extinct = min(min(pc_beam.airExtinctCoff.x, pc_beam.airExtinctCoff.y), pc_beam.airExtinctCoff.z);
     
     if (min_extinct <= 0.001)
@@ -34,7 +34,6 @@ bool randomScatterOccured(inout BeamHitPayload prd, const in float3 world_positi
     float max_extinct = max(max(pc_beam.airExtinctCoff.x, pc_beam.airExtinctCoff.y), pc_beam.airExtinctCoff.z);
 
     // random walk within participating media(air) scattering
-    float rayLength = length(prd.rayOrigin - world_position);
     float airScatterAt = -log(1.0 - rnd(prd.seed)) / max_extinct;
 
     if (rayLength < airScatterAt) {
@@ -67,7 +66,6 @@ void ClosestHit(inout BeamHitPayload prd, BuiltInTriangleIntersectionAttributes 
     prd.instanceID = InstanceID();
     prd.isHit = 1;
 
-    // Getting the 'first index' for this mesh (offset of the mesh + offset of the triangle)
     uint indexOffset = meshInfo.indexOffset + PrimitiveIndex() * 3;
     uint vertexOffset = meshInfo.vertexOffset;           // Vertex offset as defined in glTF
     uint materialIndex = max(0, meshInfo.materialIndex);  // material of primitive mesh
@@ -79,33 +77,23 @@ void ClosestHit(inout BeamHitPayload prd, BuiltInTriangleIntersectionAttributes 
     const float3 barycentrics = float3(1.0 - attribs.barycentrics.x - attribs.barycentrics.y, attribs.barycentrics.x, attribs.barycentrics.y);
 
     // Vertex of the triangle
-    const float3 pos0 = g_vertices[triangleIndex.x];
-    const float3 pos1 = g_vertices[triangleIndex.y];
-    const float3 pos2 = g_vertices[triangleIndex.z];
-    const float3 position = pos0 * barycentrics.x + pos1 * barycentrics.y + pos2 * barycentrics.z;
+    //const float3 pos0 = g_vertices[triangleIndex.x];
+    //const float3 pos1 = g_vertices[triangleIndex.y];
+    //const float3 pos2 = g_vertices[triangleIndex.z];
+    //const float3 position = pos0 * barycentrics.x + pos1 * barycentrics.y + pos2 * barycentrics.z;
 
-    float3 world_position = mul(ObjectToWorld3x4(), float4(position, 1.0f));
+    //float3 world_position = mul(ObjectToWorld3x4(), float4(position, 1.0f));
 
-    //float3 world_position2 = prd.rayOrigin + RayTCurrent() * prd.rayDirection;
+    const float rayLength = RayTCurrent();
+    float3 world_position = prd.rayOrigin + rayLength * prd.rayDirection;
 
-
-    float rayLength2 = length(prd.rayOrigin - world_position);
-
-    rayLength2 = RayTCurrent();
-
-    prd.rayOrigin = prd.rayOrigin + world_position * 100;
-    prd.isHit = PrimitiveIndex();
-    prd.rayDirection = float3(RayTCurrent(), world_position.x,0);
-    return;
 
     // if random scatter occured in media before hitting a surface, return
-    if (randomScatterOccured(prd, world_position))
+    if (randomScatterOccured(prd, rayLength))
     {
         return;
     }
         
-    
-
     // Normal
     const float3 nrm0 = g_normals[triangleIndex.x];
     const float3 nrm1 = g_normals[triangleIndex.y];
