@@ -1186,10 +1186,9 @@ void PhotonBeamApp::BuildRayTracingDescriptorHeaps()
     // ray tracing
     {
         D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
-        // Allocate a heap for  5 + (number of textures) descriptors:
-        // 5 - indice buffer,  normal buffer, text coordinate buffer, material buffer, mesh buffer
-        // number of textures
-        descriptorHeapDesc.NumDescriptors = 5 + static_cast<UINT>(m_textures.size());
+        // Allocate a heap for  7 + (number of textures) descriptors:
+        // 7 - indice buffer, normal buffer, text coordinate buffer, material buffer, mesh buffer, raytracing output bubffer, beam data buffer
+        descriptorHeapDesc.NumDescriptors = 7 + static_cast<UINT>(m_textures.size());
         descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         descriptorHeapDesc.NodeMask = 0;
