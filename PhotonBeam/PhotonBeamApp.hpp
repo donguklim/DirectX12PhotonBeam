@@ -311,6 +311,9 @@ private:
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounter = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounterReset = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounterRead = nullptr;
+
+    Microsoft::WRL::ComPtr<ID3D12Resource> m_beamReadDebug = nullptr;
+
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamData = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamAsInstanceDescData = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Fence> m_beamCounterFence = nullptr;

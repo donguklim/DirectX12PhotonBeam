@@ -2488,6 +2488,26 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
             )
         );
         NAME_D3D12_OBJECT(m_beamCounterRead);
+
+
+        auto bufferDesc2 = CD3DX12_RESOURCE_DESC::Buffer(
+            sizeof(PhotonBeam),
+            D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE
+        );
+
+        auto defaultHeapProperties2 = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
+
+        ThrowIfFailed(
+            md3dDevice->CreateCommittedResource(
+                &defaultHeapProperties2,
+                D3D12_HEAP_FLAG_NONE,
+                &bufferDesc2,
+                D3D12_RESOURCE_STATE_COPY_DEST,
+                nullptr,
+                IID_PPV_ARGS(&m_beamReadDebug)
+            )
+        );
+        NAME_D3D12_OBJECT(m_beamReadDebug);
     }
 
     //upload buffer  for resetting beam counter
@@ -2685,6 +2705,8 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
         );
 
     }
+
+
 }
 
 void PhotonBeamApp::BuildBeamTracingShaderTables()
