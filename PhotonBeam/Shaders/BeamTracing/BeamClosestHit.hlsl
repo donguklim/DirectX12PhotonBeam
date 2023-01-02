@@ -26,8 +26,7 @@ Texture2D g_texturesMap[] : register(t0, space1);
 SamplerState gsamLinearWrap  : register(s0);
 
 bool randomScatterOccured(inout BeamHitPayload prd, const in float3 world_position) {
-    
-    prd.isHit = 0;
+    prd.isHit = 1;
     float min_extinct = min(min(pc_beam.airExtinctCoff.x, pc_beam.airExtinctCoff.y), pc_beam.airExtinctCoff.z);
     
     if (min_extinct <= 0.001)
@@ -44,7 +43,7 @@ bool randomScatterOccured(inout BeamHitPayload prd, const in float3 world_positi
     }
 
     prd.rayOrigin = prd.rayOrigin + prd.rayDirection * airScatterAt;
-    prd.isHit = 1;
+    prd.isHit = 0;
 
     float3 albedo = pc_beam.airScatterCoff / pc_beam.airExtinctCoff;
     float absorptionProb = 1.0 - max(max(albedo.x, albedo.y), albedo.z);
@@ -91,6 +90,7 @@ void ClosestHit(inout BeamHitPayload prd, BeamHitAttributes attribs)
     if (randomScatterOccured(prd, world_position))
         return;
 
+    return;
     // Normal
     const float3 nrm0 = g_normals[triangleIndex.x];
     const float3 nrm1 = g_normals[triangleIndex.y];
@@ -125,7 +125,7 @@ void ClosestHit(inout BeamHitPayload prd, BeamHitAttributes attribs)
         prd.rayDirection, 
         world_normal, 
         material.roughness
-);
+    );
 
     // rays reflected toward inside of the surface are considered to be absorbd
     if (dot(world_normal, rayDirection) <= 0)
