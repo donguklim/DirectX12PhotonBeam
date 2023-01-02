@@ -1,6 +1,13 @@
 
 #include "PhotonBeamApp.hpp"
 
+// bellow is required if imgui header files are included in the project
+#pragma comment(lib, "dxgi.lib")
+
+// bellow is required for Microsoft Direc-X header d3dx12.h. Without bellow link, running on Release mode fails. 
+// However running on Debug mode works without bellow link
+#pragma comment(lib, "dxguid.lib")
+
 int main(int, char**)
 {
     // Enable run-time memory check for debug builds.
