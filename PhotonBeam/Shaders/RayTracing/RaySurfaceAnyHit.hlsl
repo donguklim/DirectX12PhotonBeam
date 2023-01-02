@@ -9,11 +9,29 @@
 ConstantBuffer<PushConstantRay> pc_ray : register(b0);
 StructuredBuffer<PhotonBeam> g_photonBeams: register(t0);
 
+bool getIntersection(float tMax, in PhotonBeam beam)
+{
+    const float3 rayEnd = WorldRayOrigin() + WorldRayDirection() * tMax;
+
+    if (length(beam.endPos - rayEnd) > pc_ray.photonRadius)
+    {
+        return false;
+    }
+
+    return true;
+}
+
 
 [shader("anyhit")]
 void SurfaceAnyHit(inout RayHitPayload prd, RayHitAttributes attrs) {
     
     PhotonBeam beam = g_photonBeams[InstanceID()];
+
+    if (!getIntersection(prd.tMax, beam))
+    {
+        IgnoreHit();
+        return;
+    }
 
     if (prd.instanceID != beam.hitInstanceID)
     {

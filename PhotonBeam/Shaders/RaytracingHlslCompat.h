@@ -57,6 +57,7 @@ struct HLSL_PAYLOAD_STRUCT RayHitPayload
 	XMFLOAT3 hitNormal HLSL_PAYLOAD_READ(anyhit) HLSL_PAYLOAD_WRITE(caller);
 	uint32_t isHit HLSL_PAYLOAD_READ(anyhit) HLSL_PAYLOAD_WRITE(caller);
 	XMFLOAT3 hitAlbedo HLSL_PAYLOAD_READ(anyhit) HLSL_PAYLOAD_WRITE(caller);
+	float tMax HLSL_PAYLOAD_READ(anyhit) HLSL_PAYLOAD_WRITE(caller);
 	XMFLOAT3 hitRoughness HLSL_PAYLOAD_READ(anyhit) HLSL_PAYLOAD_WRITE(caller);
 	XMFLOAT3  weight HLSL_PAYLOAD_READ(anyhit, caller) HLSL_PAYLOAD_WRITE(caller);
 	XMFLOAT3 hitMetallic HLSL_PAYLOAD_READ(anyhit) HLSL_PAYLOAD_WRITE(caller);

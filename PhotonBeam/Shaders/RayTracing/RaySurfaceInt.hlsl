@@ -13,18 +13,15 @@ StructuredBuffer<PhotonBeam> g_photonBeams: register(t0);
 [shader("intersection")]
 void SurfaceInt()
 {
-    const float3 rayEnd = WorldRayOrigin() + WorldRayDirection() * RayTCurrent();
 
-    PhotonBeam beam = g_photonBeams[InstanceID()];
-
-    if (length(beam.endPos - rayEnd) > pc_ray.photonRadius)
-    {
-        return;
-    }
+    float3 rayOrigin = WorldRayOrigin();
+    float3 rayDirection = WorldRayDirection();
+    float3 rayEnd = rayOrigin + rayDirection * RayTCurrent();
 
     RayHitAttributes attrs;
-    attrs.beamHit = beam.endPos;
+    attrs.beamHit = rayEnd;
     ReportHit(RayTCurrent(), 0, attrs);
+
 }
 
 #endif
