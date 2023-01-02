@@ -29,6 +29,7 @@ void BeamGen() {
     // Initialize the random number
     uint seed = tea(launchIndex, pc_beam.seed);
     prd.rayDirection = uniformSamplingSphere(seed);
+    prd.rayDirection = float3(0, 0, 1);
     prd.seed = seed;
     prd.rayOrigin = pc_beam.lightPosition;
    
@@ -72,7 +73,6 @@ void BeamGen() {
         // newBeam.radius = pc_beam.beamRadius;
         newBeam.radius = 0;
         newBeam.lightColor = beamColor;
-        newBeam.lightColor = float3(1, 1, 1);
         newBeam.hitInstanceID = prd.instanceID;
 
         float3 beamVec = newBeam.endPos - newBeam.startPos;
