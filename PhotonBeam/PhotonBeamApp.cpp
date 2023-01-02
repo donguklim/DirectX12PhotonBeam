@@ -915,8 +915,8 @@ void PhotonBeamApp::UpdateRayTracingPushConstants()
     m_pcRay.airHGAssymFactor = m_hgAssymFactor;
     m_pcRay.photonRadius = m_photonRadius;
     m_pcRay.beamRadius = m_beamRadius;
-    m_pcRay.numBeamSources = m_numBeamSamples;
-    m_pcRay.numPhotonSources = m_numPhotonSamples;
+    m_pcRay.numBeamSources = m_usePhotonBeam ? m_numBeamSamples : 0;
+    m_pcRay.numPhotonSources = m_usePhotonMapping ? m_numPhotonSamples : 0;
     m_pcRay.showDirectColor = m_showDirectColor ? 1 : 0;
     m_pcRay.seed = 231;
 
@@ -926,9 +926,10 @@ void PhotonBeamApp::UpdateRayTracingPushConstants()
     m_pcBeam.airExtinctCoff = m_pcRay.airExtinctCoff;
     m_pcBeam.airHGAssymFactor = m_hgAssymFactor;
     m_pcBeam.beamRadius = m_beamRadius;
+    m_pcBeam.photonRadius = m_photonRadius;
     m_pcBeam.sourceLight = XMFLOAT3(m_sourceLight[0], m_sourceLight[1], m_sourceLight[2]);
-    m_pcBeam.numBeamSources = m_numBeamSamples;
-    m_pcBeam.numPhotonSources = m_numPhotonSamples;
+    m_pcBeam.numBeamSources = m_usePhotonBeam ? m_numBeamSamples : 0;
+    m_pcBeam.numPhotonSources = m_usePhotonMapping ? m_numPhotonSamples : 0;
     m_pcBeam.maxNumBeams = m_maxNumBeamData;
     m_pcBeam.maxNumSubBeams = m_maxNumSubBeamInfo;
 
