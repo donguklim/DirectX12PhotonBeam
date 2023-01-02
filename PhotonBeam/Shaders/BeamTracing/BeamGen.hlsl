@@ -132,7 +132,7 @@ void BeamGen() {
                     tangent * pc_beam.beamRadius,
                     rayDirection * pc_beam.beamRadius,
                     splitStart
-                    )
+                )
             );
             asInfo.transform[0] = transformMat[0];
             asInfo.transform[1] = transformMat[1];
@@ -156,7 +156,7 @@ void BeamGen() {
                     prd.hitNormal * pc_beam.photonRadius,
                     tangent,
                     boxStart
-                    )
+                )
             );
 
             asInfo.transform[0] = transformMat[0];
