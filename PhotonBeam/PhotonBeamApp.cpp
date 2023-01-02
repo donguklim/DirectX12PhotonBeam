@@ -2016,7 +2016,6 @@ void PhotonBeamApp::SetDefaults()
     m_numBeamSamples = 1024;
     m_numPhotonSamples = 4 * 4 * 2048;
 
-    m_numBeamSamples = 1;
     m_numPhotonSamples = 16;
 
     m_lightPosition = XMVECTORF32{ 0.0f, 0.0f, 0.0f };
