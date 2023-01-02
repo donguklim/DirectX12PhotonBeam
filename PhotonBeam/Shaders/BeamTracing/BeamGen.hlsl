@@ -69,9 +69,8 @@ void BeamGen() {
         newBeam.endPos = prd.rayOrigin;
         newBeam.mediaIndex = 0;
         // newBeam.radius = pc_beam.beamRadius;
-        newBeam.radius = prd.isHit;
+        newBeam.radius = 0;
         newBeam.lightColor = beamColor;
-        newBeam.lightColor = prd.rayDirection;
         newBeam.hitInstanceID = prd.instanceID;
 
         float3 beamVec = newBeam.endPos - newBeam.startPos;

@@ -484,8 +484,8 @@ void PhotonBeamApp::BeamTrace()
         dispatchDesc.MissShaderTable.StrideInBytes = m_beamMissShaderTableStrideInBytes;
         dispatchDesc.RayGenerationShaderRecord.StartAddress = m_beamGenShaderTable->GetGPUVirtualAddress();
         dispatchDesc.RayGenerationShaderRecord.SizeInBytes = m_beamGenShaderTable->GetDesc().Width;
-        dispatchDesc.Width = 1;
-        dispatchDesc.Height = 1;
+        dispatchDesc.Width = 4;
+        dispatchDesc.Height = 4;
         dispatchDesc.Depth = (m_numBeamSamples > m_numPhotonSamples ? m_numBeamSamples : m_numPhotonSamples) / 16;
 
         mCommandList->SetPipelineState1(m_beamStateObject.Get());
@@ -1755,7 +1755,7 @@ void PhotonBeamApp::BuildRenderItems()
         rItem->Geo = mGeometries["cornellBox"].get();
         rItem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
         rItem->IndexCount = primitive.indexCount;
-        rItem->StartIndexLocation = primitive.firstIndex ;
+        rItem->StartIndexLocation = primitive.firstIndex;
         rItem->BaseVertexLocation = primitive.vertexOffset;
         mAllRitems.push_back(std::move(rItem));
     }
@@ -2753,10 +2753,7 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
             D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
             raytrace_helper::pmDefaultHeapProps
         );
-
     }
-
-
 }
 
 void PhotonBeamApp::BuildBeamTracingShaderTables()
