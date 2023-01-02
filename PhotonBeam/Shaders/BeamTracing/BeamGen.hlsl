@@ -17,6 +17,8 @@ void BeamGen() {
 
     const uint HitTypeAir = 0;
     const uint HitTypeSolid = 1;
+    const float tMin = 0.001;
+    const float tMax = 10000.0;
 
     uint3 dispatchDimensionSize = DispatchRaysDimensions();
     uint3 dispatchIndex = DispatchRaysIndex();
@@ -24,23 +26,21 @@ void BeamGen() {
         + dispatchDimensionSize.z * dispatchIndex.y
         + dispatchIndex.z;
 
-    BeamHitPayload prd;
-
     // Initialize the random number
     uint seed = tea(launchIndex, pc_beam.seed);
-    prd.rayDirection = uniformSamplingSphere(seed);
-    prd.seed = seed;
-    prd.rayOrigin = pc_beam.lightPosition;
-   
-    prd.weight = float3(0, 0, 0);
+    float3 rayOrigin = pc_beam.lightPosition;
+    float3 rayDirection = uniformSamplingSphere(seed);
 
-    float3 rayOrigin = prd.rayOrigin;
-    float3 rayDirection = prd.rayDirection;
+    BeamHitPayload prd;
+    prd.rayOrigin = rayOrigin;
+    prd.rayDirection = rayDirection;
+    prd.seed = seed;
+    prd.weight = float3(0, 0, 0);
 
     uint  rayFlags = RAY_FLAG_FORCE_OPAQUE;
     RayDesc rayDesc;
-    rayDesc.TMin = 0.001;
-    rayDesc.TMax = 10000.0;
+    rayDesc.TMin = tMin;
+    rayDesc.TMax = tMax;
 
     float minmumLightIntensitySquare = 0.0001;
 
@@ -53,7 +53,6 @@ void BeamGen() {
     {
         rayDesc.Direction = prd.rayDirection;
         rayDesc.Origin = prd.rayOrigin;
-
         TraceRay(
             g_scene,
             rayFlags,
@@ -72,11 +71,10 @@ void BeamGen() {
         // newBeam.radius = pc_beam.beamRadius;
         newBeam.radius = 0;
         newBeam.lightColor = beamColor;
-        newBeam.lightColor = float3(1, 1, 1);
         newBeam.hitInstanceID = prd.instanceID;
 
         float3 beamVec = newBeam.endPos - newBeam.startPos;
-        float beamLength = sqrt(dot(beamVec, beamVec));
+        float beamLength = length(beamVec);
 
         uint num_split = uint(beamLength / (pc_beam.beamRadius * 2.0f) + 1.0f);
         if (num_split * pc_beam.beamRadius * 2.0 <= beamLength)
@@ -134,7 +132,7 @@ void BeamGen() {
                     tangent * pc_beam.beamRadius,
                     rayDirection * pc_beam.beamRadius,
                     splitStart
-                    )
+                )
             );
             asInfo.transform[0] = transformMat[0];
             asInfo.transform[1] = transformMat[1];
@@ -158,7 +156,7 @@ void BeamGen() {
                     prd.hitNormal * pc_beam.photonRadius,
                     tangent,
                     boxStart
-                    )
+                )
             );
 
             asInfo.transform[0] = transformMat[0];

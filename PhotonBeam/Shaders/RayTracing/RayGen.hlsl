@@ -65,6 +65,7 @@ void RayGen() {
     rayDesc.TMax = tMaxDefault;
     rayDesc.Direction = rayDirection;
     rayDesc.Origin = rayOrigin;
+    prd.tMax = tMaxDefault;
 
     uint num_iteration = 2;
     for (int i = 0; i < num_iteration; i++)
@@ -82,6 +83,7 @@ void RayGen() {
         query.Proceed();
 
         rayDesc.TMax = query.CommittedRayT();
+        prd.tMax = rayDesc.TMax;
 
         // Examine and act on the result of the traversal.
         // Was a hit not committed?
@@ -183,6 +185,7 @@ void RayGen() {
             material.metallic
         );
         rayDesc.TMax = tMaxDefault;
+        prd.tMax = tMaxDefault;
 
     }
 
