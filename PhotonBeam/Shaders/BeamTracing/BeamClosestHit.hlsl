@@ -25,7 +25,8 @@ Texture2D g_texturesMap[] : register(t0, space1);
 
 SamplerState gsamLinearWrap  : register(s0);
 
-bool randomScatterOccured(inout BeamHitPayload prd, const in float3 rayLength) {
+bool randomScatterOccured(inout BeamHitPayload prd, const in float rayLength) 
+{
     float min_extinct = min(min(pc_beam.airExtinctCoff.x, pc_beam.airExtinctCoff.y), pc_beam.airExtinctCoff.z);
     
     if (min_extinct <= 0.001)
@@ -155,7 +156,6 @@ void ClosestHit(inout BeamHitPayload prd, BuiltInTriangleIntersectionAttributes 
         material.roughness, 
         material.metallic
     );
-    float rayLength = length(prd.rayOrigin - world_position);
 
     prd.rayOrigin = rayOrigin;
     prd.rayDirection = rayDirection;

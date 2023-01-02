@@ -486,7 +486,7 @@ void PhotonBeamApp::BeamTrace()
         dispatchDesc.RayGenerationShaderRecord.SizeInBytes = m_beamGenShaderTable->GetDesc().Width;
         dispatchDesc.Width = 1;
         dispatchDesc.Height = 1;
-        dispatchDesc.Depth = 1;
+        dispatchDesc.Depth = (m_numBeamSamples > m_numPhotonSamples ? m_numBeamSamples : m_numPhotonSamples) / 16;
 
         mCommandList->SetPipelineState1(m_beamStateObject.Get());
 
@@ -579,7 +579,6 @@ void PhotonBeamApp::BeamTrace()
             &readbackBufferRange2,
             reinterpret_cast<void**>(&pReadBack2)
         );
-
 
         m_beamReadDebug->Unmap(0, nullptr);
     }
@@ -2065,10 +2064,7 @@ void PhotonBeamApp::SetDefaults()
     m_numBeamSamples = 1024;
     m_numPhotonSamples = 4 * 4 * 2048;
 
-    m_numBeamSamples = 1;
-    m_numPhotonSamples = 1;
-
-    m_numPhotonSamples = 16;
+    //m_numPhotonSamples = 16;
 
     m_lightPosition = XMVECTORF32{ 0.0f, 0.0f, 0.0f };
     m_lightIntensity = 10.0f;

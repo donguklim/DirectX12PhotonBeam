@@ -29,9 +29,7 @@ void BeamGen() {
     // Initialize the random number
     uint seed = tea(launchIndex, pc_beam.seed);
     float3 rayOrigin = pc_beam.lightPosition;
-    //float3 rayDirection = uniformSamplingSphere(seed);
-    float3 rayDirection = float3(1, 0, 0);
-    rayDirection = normalize(float3(1, 0, 0));
+    float3 rayDirection = uniformSamplingSphere(seed);
 
     BeamHitPayload prd;
     prd.rayOrigin = rayOrigin;
@@ -65,9 +63,6 @@ void BeamGen() {
             rayDesc,
             prd
         );
-
-
-        
 
         PhotonBeam newBeam;
         newBeam.startPos = rayOrigin;
@@ -138,7 +133,7 @@ void BeamGen() {
                     tangent * pc_beam.beamRadius,
                     rayDirection * pc_beam.beamRadius,
                     splitStart
-                    )
+                )
             );
             asInfo.transform[0] = transformMat[0];
             asInfo.transform[1] = transformMat[1];
@@ -162,7 +157,7 @@ void BeamGen() {
                     prd.hitNormal * pc_beam.photonRadius,
                     tangent,
                     boxStart
-                    )
+                )
             );
 
             asInfo.transform[0] = transformMat[0];
@@ -183,7 +178,6 @@ void BeamGen() {
         if (max(max(beamColor.x, beamColor.y), beamColor.z) < minmumLightIntensitySquare)
             return;
 
-        break;
     }
 }
 
