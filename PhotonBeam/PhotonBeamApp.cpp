@@ -484,9 +484,9 @@ void PhotonBeamApp::BeamTrace()
         dispatchDesc.MissShaderTable.StrideInBytes = m_beamMissShaderTableStrideInBytes;
         dispatchDesc.RayGenerationShaderRecord.StartAddress = m_beamGenShaderTable->GetGPUVirtualAddress();
         dispatchDesc.RayGenerationShaderRecord.SizeInBytes = m_beamGenShaderTable->GetDesc().Width;
-        dispatchDesc.Width = 4;
-        dispatchDesc.Height = 4;
-        dispatchDesc.Depth = (m_numBeamSamples > m_numPhotonSamples ? m_numBeamSamples : m_numPhotonSamples) / 16;
+        dispatchDesc.Width = 1;
+        dispatchDesc.Height = 1;
+        dispatchDesc.Depth = 1;
 
         mCommandList->SetPipelineState1(m_beamStateObject.Get());
 
@@ -2016,6 +2016,9 @@ void PhotonBeamApp::SetDefaults()
     m_numBeamSamples = 1024;
     m_numPhotonSamples = 4 * 4 * 2048;
 
+    m_numBeamSamples = 1;
+    m_numPhotonSamples = 1;
+
     m_numPhotonSamples = 16;
 
     m_lightPosition = XMVECTORF32{ 0.0f, 0.0f, 0.0f };
@@ -2253,7 +2256,7 @@ void PhotonBeamApp::CreateSurfaceTlas()
         m_topLevelASGenerator.AddInstance(
             blasAddress,
             worldMat,
-            0,
+            node.primMesh,
             0
         );
     }

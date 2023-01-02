@@ -12,10 +12,10 @@ ConstantBuffer<PushConstantBeam> pc_beam : register(b0);
 
 // Triangle resources
 
-StructuredBuffer<float3> g_vertices : register(t0, space0);
-StructuredBuffer<float3> g_normals : register(t1, space0);
-StructuredBuffer<float2> g_texCoords : register(t2, space0);
-StructuredBuffer<uint3> g_indices : register(t3, space0);
+Buffer<float3> g_vertices : register(t0, space0);
+Buffer<float3> g_normals : register(t1, space0);
+Buffer<float2> g_texCoords : register(t2, space0);
+Buffer<uint3> g_indices : register(t3, space0);
 
 
 StructuredBuffer<GltfShadeMaterial> g_materials : register(t4, space0);
@@ -26,7 +26,6 @@ Texture2D g_texturesMap[] : register(t0, space1);
 SamplerState gsamLinearWrap  : register(s0);
 
 bool randomScatterOccured(inout BeamHitPayload prd, const in float3 world_position) {
-    prd.isHit = 1;
     float min_extinct = min(min(pc_beam.airExtinctCoff.x, pc_beam.airExtinctCoff.y), pc_beam.airExtinctCoff.z);
     
     if (min_extinct <= 0.001)
@@ -62,10 +61,11 @@ bool randomScatterOccured(inout BeamHitPayload prd, const in float3 world_positi
 
 
 [shader("closesthit")] 
-void ClosestHit(inout BeamHitPayload prd, BeamHitAttributes attribs)
+void ClosestHit(inout BeamHitPayload prd, BuiltInTriangleIntersectionAttributes attribs)
 {
     PrimMeshInfo meshInfo = g_meshInfos[InstanceID()];
     prd.instanceID = InstanceID();
+    prd.isHit = 1;
 
     // Getting the 'first index' for this mesh (offset of the mesh + offset of the triangle)
     uint indexOffset = (meshInfo.indexOffset / 3) + PrimitiveIndex();
@@ -76,7 +76,7 @@ void ClosestHit(inout BeamHitPayload prd, BeamHitAttributes attribs)
     uint3 triangleIndex = g_indices[indexOffset];
     triangleIndex += uint3(vertexOffset, vertexOffset, vertexOffset);  // (global)
 
-    const float3 barycentrics = float3(1.0 - attribs.bary.x - attribs.bary.y, attribs.bary.x, attribs.bary.y);
+    const float3 barycentrics = float3(1.0 - attribs.barycentrics.x - attribs.barycentrics.y, attribs.barycentrics.x, attribs.barycentrics.y);
 
     // Vertex of the triangle
     const float3 pos0 = g_vertices[triangleIndex.x];
@@ -86,11 +86,25 @@ void ClosestHit(inout BeamHitPayload prd, BeamHitAttributes attribs)
 
     float3 world_position = mul(ObjectToWorld3x4(), float4(position, 1.0f));
 
+    //float3 world_position2 = prd.rayOrigin + RayTCurrent() * prd.rayDirection;
+
+
+    float rayLength2 = length(prd.rayOrigin - world_position);
+
+    rayLength2 = RayTCurrent();
+
+    prd.rayOrigin = prd.rayOrigin + prd.rayDirection * rayLength2;
+    prd.isHit = 0;
+    return;
+
     // if random scatter occured in media before hitting a surface, return
     if (randomScatterOccured(prd, world_position))
+    {
         return;
+    }
+        
+    
 
-    return;
     // Normal
     const float3 nrm0 = g_normals[triangleIndex.x];
     const float3 nrm1 = g_normals[triangleIndex.y];
