@@ -1,3 +1,9 @@
+#define TINYGLTF_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+// tiny gltf uses sprintf, so bellow define is needed
+#define _CRT_SECURE_NO_WARNINGS
+
 #include "GltfScene.hpp"
 #include <iostream>
 #include <sstream>
