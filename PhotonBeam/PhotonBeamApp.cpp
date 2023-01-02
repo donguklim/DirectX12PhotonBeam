@@ -914,6 +914,7 @@ void PhotonBeamApp::UpdateRayTracingPushConstants()
     m_pcRay.airExtinctCoff = XMFLOAT3(m_airExtinctCoff[0], m_airExtinctCoff[1], m_airExtinctCoff[2]);
     m_pcRay.airHGAssymFactor = m_hgAssymFactor;
     m_pcRay.photonRadius = m_photonRadius;
+    m_pcRay.beamRadius = m_beamRadius;
     m_pcRay.numBeamSources = m_numBeamSamples;
     m_pcRay.numPhotonSources = m_numPhotonSamples;
     m_pcRay.showDirectColor = m_showDirectColor ? 1 : 0;
