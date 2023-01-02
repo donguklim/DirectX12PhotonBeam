@@ -2258,7 +2258,7 @@ void PhotonBeamApp::CreateSurfaceBlas()
             mesh.vertexCount,
             vertexBufferView.StrideInBytes,
             geo->IndexBufferGPU.Get(),
-            mesh.firstIndex * sizeof(UINT16),
+            mesh.firstIndex * sizeof(UINT32),
             mesh.indexCount,
             nullptr,
             0
