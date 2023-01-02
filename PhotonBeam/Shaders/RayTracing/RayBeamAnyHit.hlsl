@@ -10,7 +10,7 @@ ConstantBuffer<PushConstantRay> pc_ray : register(b0);
 StructuredBuffer<PhotonBeam> g_photonBeams: register(t0);
 
 
-bool getIntersection(float tMax, in PhotonBeam beam, out float3 beamPoint)
+bool getIntersection(float tMax, in PhotonBeam beam, out float tCurr, out float3 beamPoint)
 {
     float3 rayOrigin = WorldRayOrigin();
     float3 rayDirection = WorldRayDirection();
@@ -47,6 +47,7 @@ bool getIntersection(float tMax, in PhotonBeam beam, out float3 beamPoint)
             return false;
         }
 
+        tCurr = length(rayPoint - rayOrigin);
         return true;
     }
 
@@ -96,6 +97,8 @@ bool getIntersection(float tMax, in PhotonBeam beam, out float3 beamPoint)
         return false;
     }
 
+    tCurr = length(rayPoint - rayOrigin);
+
     return true;
 }
 
@@ -106,7 +109,8 @@ void BeamAnyHit(inout RayHitPayload prd, RayHitAttributes attrs) {
     PhotonBeam beam = g_photonBeams[InstanceID()];
 
     float3 beamHit;
-    if (!getIntersection(prd.tMax, beam, beamHit))
+    float tCurr;
+    if (!getIntersection(prd.tMax, beam, tCurr, beamHit))
     {
         IgnoreHit();
         return;
@@ -118,10 +122,10 @@ void BeamAnyHit(inout RayHitPayload prd, RayHitAttributes attrs) {
         return;
     }
 
-    float3 worldPos = WorldRayOrigin() + WorldRayDirection() * RayTCurrent();
+    float3 worldPos = WorldRayOrigin() + WorldRayDirection() * tCurr;
     float beamDist = length(beamHit - beam.startPos);
     float3 beamDirection = normalize(beam.endPos - beam.startPos);
-    float rayDist = RayTCurrent();
+    float rayDist = tCurr;
     float3 vewingDirection = normalize(WorldRayDirection()) * -1.0;
 
     // the target radiance direction is -1.0 * WorldRayDirection(), opposite of the camera ray

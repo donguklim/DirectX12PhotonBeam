@@ -45,7 +45,7 @@ void SurfaceAnyHit(inout RayHitPayload prd, RayHitAttributes attrs) {
         return;
     }
 
-    const float rayDist = RayTCurrent();
+    const float rayDist = prd.tMax;
     const float3 worldPos = WorldRayOrigin() + WorldRayDirection() * rayDist;
     const float3 towardLightDirection = normalize(beam.startPos - beam.endPos);
     const float beamDist = length(beam.startPos - beam.endPos);
