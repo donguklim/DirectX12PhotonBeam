@@ -852,10 +852,11 @@ void PhotonBeamApp::UpdateRayTracingPushConstants(const GameTimer& gt)
         m_seedTime = std::fmodf(m_seedTime, seedUPdateInterval);
         //m_pcRay.seed++;
         m_pcBeam.seed++;
-        m_pcRay.nextSeedRatio = 0.0f;
     }
-    else
-        m_pcRay.nextSeedRatio = m_seedTime / seedUPdateInterval;
+
+    m_pcBeam.nextSeedRatio = m_seedTime / seedUPdateInterval;
+
+    //m_pcRay.nextSeedRatio = 0;
 
     if(m_isBeamMotionOn)
         m_pcBeam.lightPosition = getLightMotion(totalTime, m_lightPosition);
