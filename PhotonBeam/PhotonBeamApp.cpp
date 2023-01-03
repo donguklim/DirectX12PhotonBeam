@@ -317,18 +317,14 @@ void PhotonBeamApp::drawPost()
 
     auto renderTarget = CurrentBackBuffer();
 
-    D3D12_RESOURCE_BARRIER barriers[2] = {};
-    barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(
+    D3D12_RESOURCE_BARRIER barrier = {};
+    barrier = CD3DX12_RESOURCE_BARRIER::Transition(
         renderTarget, 
         D3D12_RESOURCE_STATE_PRESENT, 
         D3D12_RESOURCE_STATE_RENDER_TARGET
     );
-    barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(
-        m_offScreenOutput.Get(), 
-        D3D12_RESOURCE_STATE_UNORDERED_ACCESS, 
-        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
-    );
-    mCommandList->ResourceBarrier(2, barriers);
+
+    mCommandList->ResourceBarrier(1, &barrier);
 
 
     CD3DX12_CLEAR_VALUE clearValue{ DXGI_FORMAT_R32G32B32_FLOAT, m_clearColor };
