@@ -13,8 +13,8 @@ RWStructuredBuffer<ShaderRayTracingTopASInstanceDesc> g_photonBeamsTopAsInstance
 RWStructuredBuffer<PhotonBeamCounter> g_photonBeamCounters  : register(u2, space0);
 
 [shader("raygeneration")] 
-void BeamGen() {
-
+void BeamGen()
+{
     const uint HitTypeAir = 0;
     const uint HitTypeSolid = 1;
     const float tMin = 0.001;
