@@ -1491,6 +1491,8 @@ void PhotonBeamApp::BuildShadersAndInputLayout()
     m_rasterizeShaders["postVS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"vs_6_6", L"VS");
     m_rasterizeShaders["postPS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"ps_6_6", L"PS");
 
+    m_AsInstanceBufferResetShader = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\ResetBeamAsInstanceBuffer.hlsl", L"lib_6_6");
+
     m_beamShaders[to_underlying(EBeamTracingShaders::Miss)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamMiss.hlsl", L"lib_6_6");
     m_beamShaders[to_underlying(EBeamTracingShaders::CloseHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamClosestHit.hlsl", L"lib_6_6");
     m_beamShaders[to_underlying(EBeamTracingShaders::Gen)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamGen.hlsl", L"lib_6_6");

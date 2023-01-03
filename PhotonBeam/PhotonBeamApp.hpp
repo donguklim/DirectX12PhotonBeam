@@ -287,6 +287,8 @@ private:
     Microsoft::WRL::ComPtr<ID3D12StateObject> m_beamStateObject = nullptr;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> m_beamRootSignatures[to_underlying(RootSignatueEnums::BeamTrace::ERootSignatures::Count)];
     Microsoft::WRL::ComPtr<IDxcBlob> m_beamShaders[to_underlying(EBeamTracingShaders::Count)];
+    Microsoft::WRL::ComPtr<IDxcBlob> m_AsInstanceBufferResetShader = nullptr;
+
     static const wchar_t* c_beamShadersExportNames[to_underlying(EBeamTracingShaders::Count)];
     static const wchar_t* c_rayHitGroupNames[to_underlying(ERayHitTypes::Count)];
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamGenShaderTable;
