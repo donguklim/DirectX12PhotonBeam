@@ -386,6 +386,8 @@ void PhotonBeamApp::Rasterize()
 
     CD3DX12_CLEAR_VALUE clearValue{ DXGI_FORMAT_R32G32B32_FLOAT, m_clearColor };
 
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(m_offScreenRtvHeap->GetCPUDescriptorHandleForHeapStart());
+
     D3D12_RENDER_PASS_BEGINNING_ACCESS renderPassBeginningAccessClear{ D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR, { clearValue } };
     static const D3D12_RENDER_PASS_ENDING_ACCESS renderPassEndingAccessPreserve{ D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE, {} };
     D3D12_RENDER_PASS_RENDER_TARGET_DESC renderPassRenderTargetDesc{
@@ -1054,7 +1056,6 @@ void PhotonBeamApp::BuildDescriptorHeaps()
     srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSrvDescriptorHeap)));
-
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
@@ -2481,7 +2482,7 @@ void PhotonBeamApp::CreateRayTracingOutputResource()
         1, 
         m4xMsaaState ? 4 : 1,
         m4xMsaaState ? (m4xMsaaQuality - 1) : 0,
-        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS | D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
     );
 
     auto defaultHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
@@ -2515,6 +2516,10 @@ void PhotonBeamApp::CreateRayTracingOutputResource()
         m_offScreenOutputResourceUAVDescriptorHeapIndex, 
         mCbvSrvUavDescriptorSize
     );
+
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(m_offScreenRtvHeap->GetCPUDescriptorHandleForHeapStart());
+    md3dDevice->CreateRenderTargetView(m_offScreenOutput.Get(), nullptr, rtvHeapHandle);
+    
 }
 
 void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& resetValuploadBuffer)
