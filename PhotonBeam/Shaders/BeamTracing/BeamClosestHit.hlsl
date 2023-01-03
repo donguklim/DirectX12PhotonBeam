@@ -51,14 +51,24 @@ bool randomScatterOccured(inout BeamHitPayload prd, const in float rayLength)
     float absorptionProb = 1.0 - max(max(albedo.x, albedo.y), albedo.z);
 
     // use russian roulett to decide whether scatter or absortion occurs
-    if (rnd(prd.seed) * curSeedRatio + rnd(prd.nextSeed) * prd.nextSeedRatio <= absorptionProb) {
+    if (rnd(prd.seed) * curSeedRatio + rnd(prd.nextSeed) * prd.nextSeedRatio <= absorptionProb)
+    {
         prd.weight = float3(0.0, 0.0, 0.0);
         return true;
     }
 
     prd.weight = exp(-pc_beam.airExtinctCoff * airScatterAt);
-    prd.rayDirection = normalize(heneyGreenPhaseFuncSampling(prd.seed, prd.rayDirection, pc_beam.airHGAssymFactor) * curSeedRatio +
-        heneyGreenPhaseFuncSampling(prd.nextSeed, prd.rayDirection, pc_beam.airHGAssymFactor) * prd.nextSeedRatio);
+    float3 rayDirection = heneyGreenPhaseFuncSampling(prd.seed, prd.rayDirection, pc_beam.airHGAssymFactor) * curSeedRatio +
+        heneyGreenPhaseFuncSampling(prd.nextSeed, prd.rayDirection, pc_beam.airHGAssymFactor) * prd.nextSeedRatio;
+
+    // if smoothed direction is zero by any chance, then just make the beam absorbed
+    if (rayDirection.x == 0 && rayDirection.y == 0 && rayDirection.z == 0)
+    {
+        prd.weight = float3(0.0, 0.0, 0.0);
+        return true;
+    }
+
+    prd.rayDirection = normalize(rayDirection);
 
     return true;
 }
