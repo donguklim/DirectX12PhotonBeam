@@ -78,6 +78,8 @@ PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance):
         * SUB_BEAM_INFO_BUFFER_RESET_COMPUTE_SHADER_GROUP_SIZE
     )
 {
+    mClientWidth = 1400;
+    mClientHeight = 800;
     m_pcRay.seed = 231;
     m_pcBeam.seed = 1017;
     m_pcBeam.nextSeedRatio = 0;
@@ -88,6 +90,7 @@ PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance):
     mLastMousePos = POINT{};
     m_useRayTracer = true;
     m_isBeamMotionOn = true;
+    m_isRandomSeedFixed = false;
     m_airScatterCoff = XMVECTORF32{};
     m_airExtinctCoff = XMVECTORF32{};
     m_sourceLight = XMVECTORF32{};
@@ -840,8 +843,13 @@ void PhotonBeamApp::UpdateRayTracingPushConstants(const GameTimer& gt)
     
     auto totalTime = gt.TotalTime();
 
-    m_seedTime += totalTime - m_prevUpdateTime;
+    if (!m_isRandomSeedFixed)
+    {
+        m_seedTime += totalTime - m_prevUpdateTime;
+    }
     m_prevUpdateTime = totalTime;
+
+    
 
     if (m_seedTime < 0)
         m_seedTime = 0;
@@ -850,13 +858,12 @@ void PhotonBeamApp::UpdateRayTracingPushConstants(const GameTimer& gt)
     if (m_seedTime > seedUPdateInterval)
     {
         m_seedTime = std::fmodf(m_seedTime, seedUPdateInterval);
-        //m_pcRay.seed++;
+        m_pcRay.seed++;
         m_pcBeam.seed++;
     }
 
     m_pcBeam.nextSeedRatio = m_seedTime / seedUPdateInterval;
-
-    //m_pcRay.nextSeedRatio = 0;
+    m_pcRay.nextSeedRatio = m_seedTime / seedUPdateInterval;
 
     if(m_isBeamMotionOn)
         m_pcBeam.lightPosition = getLightMotion(totalTime, m_lightPosition);
@@ -1999,7 +2006,7 @@ void PhotonBeamApp::SetDefaults()
     m_clearColor = Colors::LightSteelBlue;
     m_beamNearColor = defaultBeamNearColor;
     m_beamUnitDistantColor = defaultBeamUnitDistantColor;
-    m_beamRadius = 0.6f;
+    m_beamRadius = 0.8f;
     m_photonRadius = 1.0f;
     m_beamIntensity = 15.0f;
     m_usePhotonMapping = true;
@@ -2008,10 +2015,9 @@ void PhotonBeamApp::SetDefaults()
     m_showDirectColor = false;
     m_airAlbedo = 0.06f;
 
-    m_numBeamSamples = 1024;
+    m_numBeamSamples = 1600;
     m_numPhotonSamples = 4 * 4 * 2048;
 
-    //m_numPhotonSamples = 16;
 
     m_lightPosition = XMFLOAT3{ 0.0f, 0.0f, 0.0f };
     m_lightIntensity = 10.0f;
@@ -2022,6 +2028,7 @@ void PhotonBeamApp::SetDefaults()
 
     m_pcRay.seed = 231;
     m_pcBeam.seed = 1017;
+    m_isRandomSeedFixed = false;
 
 }
 
@@ -2172,16 +2179,13 @@ void PhotonBeamApp::RenderUI()
 
         ImGui::Checkbox("Light Motion", &m_isBeamMotionOn);  // Switch between raster and ray tracing
 
+        ImGui::Checkbox("Fix Light Random Seed", &m_isRandomSeedFixed);
+
     } while (false);
 
     if (ImGui::SmallButton("Set Defaults"))
         SetDefaults();
 
-    if (ImGui::SmallButton("Renew Random seed"))
-    {
-        m_pcBeam.seed++;
-        m_pcRay.seed++;
-    }
 
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGuiH::Panel::End();
