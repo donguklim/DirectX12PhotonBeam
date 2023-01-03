@@ -844,17 +844,13 @@ void PhotonBeamApp::UpdateRayTracingPushConstants(const GameTimer& gt)
     auto totalTime = gt.TotalTime();
 
     if (!m_isRandomSeedFixed)
-    {
         m_seedTime += totalTime - m_prevUpdateTime;
-    }
-    m_prevUpdateTime = totalTime;
 
-    
+    m_prevUpdateTime = totalTime;
 
     if (m_seedTime < 0)
         m_seedTime = 0;
 
-    
     if (m_seedTime > seedUPdateInterval)
     {
         m_seedTime = std::fmodf(m_seedTime, seedUPdateInterval);
@@ -882,7 +878,6 @@ void PhotonBeamApp::UpdateRayTracingPushConstants(const GameTimer& gt)
     m_pcBeam.maxNumSubBeams = m_maxNumSubBeamInfo;
 
     
-
 
     // Bellow sets scatter and extinct cofficients and source light power, 
   // given the distance from the light source, 
@@ -946,7 +941,6 @@ void PhotonBeamApp::UpdateRayTracingPushConstants(const GameTimer& gt)
     auto currPcBeam = mCurrFrameResource->PcBeam.get();
     currPcBeam->CopyData(0, m_pcBeam);
 
-    
 }
 
 void PhotonBeamApp::BuildDescriptorHeaps()
