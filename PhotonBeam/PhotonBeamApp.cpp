@@ -1999,7 +1999,7 @@ void PhotonBeamApp::SetDefaults()
     m_beamNearColor = defaultBeamNearColor;
     m_beamUnitDistantColor = defaultBeamUnitDistantColor;
     m_beamRadius = 0.8f;
-    m_photonRadius = 1.0f;
+    m_photonRadius = 1.2f;
     m_beamIntensity = 15.0f;
     m_usePhotonMapping = true;
     m_usePhotonBeam = true;
