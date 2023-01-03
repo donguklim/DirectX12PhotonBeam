@@ -258,6 +258,7 @@ private:
 
     Microsoft::WRL::ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> mPostRootSignature = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_bufferResetRootSignature = nullptr;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_postSrvDescriptorHeap = nullptr;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mGuiDescriptorHeap = nullptr;
@@ -287,6 +288,8 @@ private:
     Microsoft::WRL::ComPtr<ID3D12StateObject> m_beamStateObject = nullptr;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> m_beamRootSignatures[to_underlying(RootSignatueEnums::BeamTrace::ERootSignatures::Count)];
     Microsoft::WRL::ComPtr<IDxcBlob> m_beamShaders[to_underlying(EBeamTracingShaders::Count)];
+    Microsoft::WRL::ComPtr<IDxcBlob> m_AsInstanceBufferResetShader = nullptr;
+
     static const wchar_t* c_beamShadersExportNames[to_underlying(EBeamTracingShaders::Count)];
     static const wchar_t* c_rayHitGroupNames[to_underlying(ERayHitTypes::Count)];
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamGenShaderTable;
@@ -365,7 +368,7 @@ private:
 
     //maximum number of total sub beams allowed. Equivalent to the maximum number of instances in Beam Accelerated Structure.
     // number of beam samples * (expected number of scatter  + surface intersection ) * (expected length of the beam / (radius * 2)) 
-    const uint32_t m_maxNumSubBeamInfo{ m_maxNumBeamSamples * 48 + m_maxNumPhotonSamples };
+    const uint32_t m_maxNumSubBeamInfo;
 
     bool m_useRayTracer;
     DirectX::XMVECTORF32 m_beamNearColor;

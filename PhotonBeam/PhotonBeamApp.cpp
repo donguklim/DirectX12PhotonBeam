@@ -66,7 +66,11 @@ PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance):
     D3DApp(hInstance),
     m_offScreenOutputResourceUAVDescriptorHeapIndex(UINT_MAX),
     m_beamTracingDescriptorsAllocated(0),
-    m_rayTracingDescriptorsAllocated(0)
+    m_rayTracingDescriptorsAllocated(0),
+    m_maxNumSubBeamInfo(
+        ((m_maxNumBeamSamples * 48 + m_maxNumPhotonSamples) / SUB_BEAM_INFO_BUFFER_RESET_COMPUTE_SHADER_GROUP_SIZE)
+        * SUB_BEAM_INFO_BUFFER_RESET_COMPUTE_SHADER_GROUP_SIZE
+    )
 {
     mLastMousePos = POINT{};
     m_useRayTracer = true;
@@ -74,8 +78,6 @@ PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance):
     m_airScatterCoff = XMVECTORF32{};
     m_airExtinctCoff = XMVECTORF32{};
     m_sourceLight = XMVECTORF32{};
-
-    
 
     for (size_t i = 0; i < to_underlying(RootSignatueEnums::BeamTrace::ERootSignatures::Count); i++)
     {
@@ -428,7 +430,26 @@ void PhotonBeamApp::BeamTrace()
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc = mCurrFrameResource->CmdListAlloc;
     ThrowIfFailed(cmdListAlloc->Reset());
     ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));
-    
+
+    // Reset Sub beam info buffer
+    {
+        mCommandList->SetPipelineState(mPSOs["bufferReset"].Get());
+        mCommandList->SetComputeRootSignature(m_bufferResetRootSignature.Get());
+        mCommandList->SetComputeRootUnorderedAccessView(0, m_beamAsInstanceDescData->GetGPUVirtualAddress());
+
+        const auto num_groups = m_maxNumSubBeamInfo / 256;
+        mCommandList->Dispatch(num_groups, 1, 1);
+
+        auto resourceBarrierRead = CD3DX12_RESOURCE_BARRIER::Transition(
+            m_beamAsInstanceDescData.Get(),
+            D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+            D3D12_RESOURCE_STATE_GENERIC_READ
+        );
+
+        //mCommandList->ResourceBarrier(1, &resourceBarrierRead);
+    }
+
+
     // do beam tracing
     {
         using namespace RootSignatueEnums::BeamTrace;
@@ -582,7 +603,7 @@ void PhotonBeamApp::BeamTrace()
         buildDesc.Inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
         buildDesc.Inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
         buildDesc.Inputs.InstanceDescs = m_beamAsInstanceDescData->GetGPUVirtualAddress();
-        buildDesc.Inputs.NumDescs = numSubbeams;
+        buildDesc.Inputs.NumDescs = m_maxNumSubBeamInfo;
         buildDesc.DestAccelerationStructureData = { m_beamTlasBuffers.pResult->GetGPUVirtualAddress()
         };
         buildDesc.ScratchAccelerationStructureData = { m_beamTlasBuffers.pScratch->GetGPUVirtualAddress()
@@ -1297,6 +1318,18 @@ void PhotonBeamApp::BuildRasterizeRootSignature()
 
 void PhotonBeamApp::BuildRayTracingRootSignatures()
 {
+    // sub beam info buffer root signature
+    {
+        CD3DX12_ROOT_PARAMETER rootParameters[1] = {};
+        rootParameters[0].InitAsUnorderedAccessView(0);
+
+        CD3DX12_ROOT_SIGNATURE_DESC desc(1, rootParameters, 1, &GetLinearSampler());
+        SerializeAndCreateRootSignature(
+            desc,
+            m_bufferResetRootSignature.GetAddressOf()
+        );
+    }
+
     // Global Root Signature
     // This is a root signature that is shared across all raytracing shaders invoked during a DispatchRays() call.
     {
@@ -1427,7 +1460,6 @@ void PhotonBeamApp::BuildRayTracingRootSignatures()
         }
 
     }
-
 }
 
 void PhotonBeamApp::BuildPostRootSignature()
@@ -1490,6 +1522,8 @@ void PhotonBeamApp::BuildShadersAndInputLayout()
 
     m_rasterizeShaders["postVS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"vs_6_6", L"VS");
     m_rasterizeShaders["postPS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"ps_6_6", L"PS");
+
+    m_AsInstanceBufferResetShader = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\ResetSubBeamInfoBuffer.hlsl", L"cs_6_6", L"main");
 
     m_beamShaders[to_underlying(EBeamTracingShaders::Miss)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamMiss.hlsl", L"lib_6_6");
     m_beamShaders[to_underlying(EBeamTracingShaders::CloseHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamClosestHit.hlsl", L"lib_6_6");
@@ -1824,6 +1858,21 @@ void PhotonBeamApp::BuildBeamTracingPSOs()
 
 void PhotonBeamApp::BuildRayTracingPSOs()
 {
+    // create buffer reset PSO
+    {
+        D3D12_COMPUTE_PIPELINE_STATE_DESC bufferResetPsoDesc = {};
+        bufferResetPsoDesc.pRootSignature = m_bufferResetRootSignature.Get();
+        bufferResetPsoDesc.CS = {
+            reinterpret_cast<BYTE*>(m_AsInstanceBufferResetShader->GetBufferPointer()),
+            m_AsInstanceBufferResetShader->GetBufferSize()
+        };
+        bufferResetPsoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+
+        ThrowIfFailed(md3dDevice->CreateComputePipelineState(&bufferResetPsoDesc, IID_PPV_ARGS(mPSOs["bufferReset"].GetAddressOf())));
+    }
+
+
+
     CD3DX12_STATE_OBJECT_DESC rayTracingPipeline{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
 
     for (size_t i = 0; i < to_underlying(ERayTracingShaders::Count); i++)
@@ -1945,24 +1994,22 @@ void PhotonBeamApp::BuildPSOs()
     opaquePsoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
     opaquePsoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
     opaquePsoDesc.DSVFormat = mDepthStencilFormat;
-    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&mPSOs["opaque"])));
+    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(mPSOs["opaque"].GetAddressOf())));
 
     // PSO for opaque wireframe objects.
     D3D12_GRAPHICS_PIPELINE_STATE_DESC opaqueWireframePsoDesc = opaquePsoDesc;
     opaqueWireframePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
-    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaqueWireframePsoDesc, IID_PPV_ARGS(&mPSOs["opaque_wireframe"])));
+    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaqueWireframePsoDesc, IID_PPV_ARGS(mPSOs["opaque_wireframe"].GetAddressOf())));
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC postPsoDesc;
     ZeroMemory(&postPsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
     postPsoDesc.InputLayout = { nullptr, 0 };
     postPsoDesc.pRootSignature = mPostRootSignature.Get();
-    postPsoDesc.VS =
-    {
+    postPsoDesc.VS = {
         reinterpret_cast<BYTE*>(m_rasterizeShaders["postVS"]->GetBufferPointer()),
         m_rasterizeShaders["postVS"]->GetBufferSize()
     };
-    postPsoDesc.PS =
-    {
+    postPsoDesc.PS = {
         reinterpret_cast<BYTE*>(m_rasterizeShaders["postPS"]->GetBufferPointer()),
         m_rasterizeShaders["postPS"]->GetBufferSize()
     };
@@ -1977,7 +2024,7 @@ void PhotonBeamApp::BuildPSOs()
     postPsoDesc.RTVFormats[0] = mBackBufferFormat;
     postPsoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
     postPsoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
-    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&postPsoDesc, IID_PPV_ARGS(&mPSOs["post"])));
+    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&postPsoDesc, IID_PPV_ARGS(mPSOs["post"].GetAddressOf())));
 }
 
 void PhotonBeamApp::BuildFrameResources()

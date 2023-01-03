@@ -31,6 +31,8 @@ using namespace DirectX;
 
 #endif
 
+#define SUB_BEAM_INFO_BUFFER_RESET_COMPUTE_SHADER_GROUP_SIZE 256
+
 
 struct HLSL_PAYLOAD_STRUCT BeamHitPayload
 {
