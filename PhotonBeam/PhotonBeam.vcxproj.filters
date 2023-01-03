@@ -235,7 +235,7 @@
     <FxCompile Include="Shaders\RayTracing\RayMiss.hlsl">
       <Filter>Shaders\Ray Tracing</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\BeamTracing\ResetBeamASBuffer.hlsl">
+    <FxCompile Include="Shaders\BeamTracing\ResetBeamAsInstanceBuffer.hlsl">
       <Filter>Shaders\Beam Tracing</Filter>
     </FxCompile>
   </ItemGroup>
