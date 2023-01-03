@@ -27,13 +27,13 @@ void SurfaceAnyHit(inout RayHitPayload prd, RayHitAttributes attrs) {
     
     PhotonBeam beam = g_photonBeams[InstanceID()];
 
-    if (!getIntersection(prd.tMax, beam))
+    if (prd.instanceID != beam.hitInstanceID)
     {
         IgnoreHit();
         return;
     }
 
-    if (prd.instanceID != beam.hitInstanceID)
+    if (prd.isHit == 0)
     {
         IgnoreHit();
         return;
@@ -44,6 +44,13 @@ void SurfaceAnyHit(inout RayHitPayload prd, RayHitAttributes attrs) {
         prd.hitValue = prd.hitAlbedo;
         return;
     }
+
+    if (!getIntersection(prd.tMax, beam))
+    {
+        IgnoreHit();
+        return;
+    }
+
 
     const float rayDist = prd.tMax;
     const float3 worldPos = WorldRayOrigin() + WorldRayDirection() * rayDist;
