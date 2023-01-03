@@ -2496,7 +2496,7 @@ void PhotonBeamApp::CreateOffScreenOutputResource()
             &defaultHeapProperties, 
             D3D12_HEAP_FLAG_NONE, 
             &uavDesc, 
-            D3D12_RESOURCE_STATE_UNORDERED_ACCESS, 
+            D3D12_RESOURCE_STATE_RENDER_TARGET,
             nullptr, 
             IID_PPV_ARGS(&m_offScreenOutput)
         )
