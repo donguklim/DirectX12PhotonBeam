@@ -44,6 +44,8 @@ struct HLSL_PAYLOAD_STRUCT BeamHitPayload
 	XMFLOAT3 weight HLSL_PAYLOAD_READ(caller) HLSL_PAYLOAD_WRITE(caller, closesthit, miss);
 	uint32_t isHit HLSL_PAYLOAD_READ(caller) HLSL_PAYLOAD_WRITE(closesthit, miss);
 	XMFLOAT3 hitNormal HLSL_PAYLOAD_READ(caller) HLSL_PAYLOAD_WRITE(closesthit);
+	uint32_t nextSeed HLSL_PAYLOAD_READ(caller, closesthit) HLSL_PAYLOAD_WRITE(caller, closesthit);
+	float nextSeedRatio HLSL_PAYLOAD_READ(closesthit) HLSL_PAYLOAD_WRITE(caller);
 };
 
 struct BeamHitAttributes
@@ -75,18 +77,6 @@ struct RayHitAttributes
 const static uint32_t MAX_SHADER_MATERIAL_TEXTURES = 16;
 
 
-// Push constant structure for the raster
-struct PushConstantRaster
-{
-	XMFLOAT4X4  modelMatrix;  // matrix of the instance
-	XMFLOAT3  lightPosition;
-	uint32_t  objIndex;
-	float lightIntensity;
-	int   lightType;
-	int   materialId;
-};
-
-
 // Push constant structure for the ray tracer
 struct PushConstantRay
 {
@@ -108,7 +98,9 @@ struct PushConstantRay
 	uint32_t numPhotonSources;
 	
 	uint32_t seed;
-	XMUINT3  padding;
+	float nextSeedRatio;
+	uint32_t padding1;
+	uint32_t padding2;
 };
 
 struct PushConstantBeam
@@ -134,7 +126,8 @@ struct PushConstantBeam
 
 	float    airHGAssymFactor;
 	float    photonRadius;
-	uint64_t padding;
+	float    nextSeedRatio;
+	uint32_t padding;
 
 };
 

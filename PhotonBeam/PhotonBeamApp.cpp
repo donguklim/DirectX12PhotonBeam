@@ -80,6 +80,10 @@ PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance):
 {
     m_pcRay.seed = 231;
     m_pcBeam.seed = 1017;
+    m_pcBeam.nextSeedRatio = 0;
+    m_pcRay.nextSeedRatio = 0;
+    m_seedTime = 0.0f;
+    m_prevUpdateTime = 0.0f;
 
     mLastMousePos = POINT{};
     m_useRayTracer = true;
@@ -831,15 +835,33 @@ void PhotonBeamApp::UpdateRayTracingPushConstants(const GameTimer& gt)
     m_pcRay.numPhotonSources = m_usePhotonMapping ? m_numPhotonSamples : 0;
     m_pcRay.showDirectColor = m_showDirectColor ? 1 : 0;
     
-    
 
+    const static float seedUPdateInterval = 1.0;
+    
     auto totalTime = gt.TotalTime();
 
-    m_pcBeam.seed = 1017;
+    m_seedTime += totalTime - m_prevUpdateTime;
+    m_prevUpdateTime = totalTime;
+
+    if (m_seedTime < 0)
+        m_seedTime = 0;
+
+    
+    if (m_seedTime > seedUPdateInterval)
+    {
+        m_seedTime = std::fmodf(m_seedTime, seedUPdateInterval);
+        //m_pcRay.seed++;
+        m_pcBeam.seed++;
+        m_pcRay.nextSeedRatio = 0.0f;
+    }
+    else
+        m_pcRay.nextSeedRatio = m_seedTime / seedUPdateInterval;
+
     if(m_isBeamMotionOn)
         m_pcBeam.lightPosition = getLightMotion(totalTime, m_lightPosition);
     else
         m_pcBeam.lightPosition = m_lightPosition;
+
     m_pcBeam.airExtinctCoff = m_pcRay.airScatterCoff;
     m_pcBeam.airExtinctCoff = m_pcRay.airExtinctCoff;
     m_pcBeam.airHGAssymFactor = m_hgAssymFactor;
@@ -1997,6 +2019,9 @@ void PhotonBeamApp::SetDefaults()
     m_prevCameraFOV = m_camearaFOV;
     m_isBeamMotionOn = true;
 
+    m_pcRay.seed = 231;
+    m_pcBeam.seed = 1017;
+
 }
 
 // Extra UI
@@ -2150,6 +2175,12 @@ void PhotonBeamApp::RenderUI()
 
     if (ImGui::SmallButton("Set Defaults"))
         SetDefaults();
+
+    if (ImGui::SmallButton("Renew Random seed"))
+    {
+        m_pcBeam.seed++;
+        m_pcRay.seed++;
+    }
 
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
     ImGuiH::Panel::End();

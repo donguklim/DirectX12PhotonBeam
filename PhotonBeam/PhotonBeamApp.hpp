@@ -340,11 +340,11 @@ private:
     float    m_photonRadius{ 0.5f };
 
     // number of beams and photons shot from the light source
-    uint32_t m_numBeamSamples{ 1024 };
+    uint32_t m_numBeamSamples{ 2048 };
     uint32_t m_numPhotonSamples{ 4 * 4 * 1024 };
 
     // maximum number of beam sources or photon sources shot from the light origin
-    const uint32_t m_maxNumBeamSamples{ 2048 };
+    const uint32_t m_maxNumBeamSamples{ 4096 };
     const uint32_t m_maxNumPhotonSamples{ 4 * 4 * 4096 };
 
     // maximum number of beam data allowed. A refraction or reflection of a beam generates a new beam data.
@@ -371,6 +371,9 @@ private:
     bool m_isBeamMotionOn;
     float m_camearaFOV;
     float m_prevCameraFOV;
+
+    float m_prevUpdateTime;
+    float m_seedTime;
 
     std::vector<AccelerationStructureBuffers> m_surfaceBlasBuffers{};
     AccelerationStructureBuffers m_surfaceTlasBuffers{};
