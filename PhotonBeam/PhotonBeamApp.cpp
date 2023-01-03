@@ -2031,6 +2031,13 @@ void PhotonBeamApp::RenderUI()
 
         ImGui::SliderFloat3("Position", (float*)&m_lightPosition, -20.f, 20.f);
 
+        ImGuiH::Control::Info(
+            "",
+            "",
+            "use W,A,S,D key and Q,E key to adjust Camera position. Pressing Shift key adjusts light position",
+            ImGuiH::Control::Flags::Disabled
+        );
+
         if (!m_useRayTracer)
         {
             ImGui::SliderFloat("Intensity", &m_lightIntensity, 0.f, 20.f);
@@ -2137,13 +2144,6 @@ void PhotonBeamApp::RenderUI()
         );
 
         ImGui::Checkbox("Light Motion", &m_isBeamMotionOn);  // Switch between raster and ray tracing
-
-        ImGuiH::Control::Info(
-            "",
-            "",
-            "Click Refresh Beam to fully reflect changed parameters, some parameters do not get fully reflected before the click",
-            ImGuiH::Control::Flags::Disabled
-        );
 
     } while (false);
 
