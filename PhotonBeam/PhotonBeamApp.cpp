@@ -715,7 +715,6 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
     ThrowIfFailed(cmdListAlloc->Reset());
     ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));
 
-
     if (m_useRayTracer)
     {
         RayTrace();
@@ -723,6 +722,13 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
     }
     else
     {
+        auto resourceBarrierRender = CD3DX12_RESOURCE_BARRIER::Transition(
+            m_offScreenOutput.Get(),
+            D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+            D3D12_RESOURCE_STATE_COMMON
+        );
+        //mCommandList->ResourceBarrier(1, &resourceBarrierRender);
+
         Rasterize();
     }
 
