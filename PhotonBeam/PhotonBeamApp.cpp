@@ -135,13 +135,6 @@ bool PhotonBeamApp::Initialize()
     mCamera.LookAt(XMFLOAT3{ 0.0f, 0.0f, 15.0f }, XMFLOAT3{ 0.0f, 0.0f, 0.0f }, XMFLOAT3{ 0.0f, 1.0f, 0.0f });
     mCamera.UpdateViewMatrix();
 
-    ThrowIfFailed(
-        md3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_beamCounterFence))
-    );
-    ThrowIfFailed(
-        md3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_beamTlasFence))
-    );
-
     LoadScene();
     CreateTextures();
     BuildRasterizeRootSignature();
@@ -427,10 +420,6 @@ void PhotonBeamApp::Rasterize()
 
 void PhotonBeamApp::BeamTrace()
 {
-    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc = mCurrFrameResource->CmdListAlloc;
-    ThrowIfFailed(cmdListAlloc->Reset());
-    ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));
-
     // Reset Sub beam info buffer
     {
         mCommandList->SetPipelineState(mPSOs["bufferReset"].Get());
@@ -448,6 +437,9 @@ void PhotonBeamApp::BeamTrace()
 
         //mCommandList->ResourceBarrier(1, &resourceBarrierRead);
     }
+
+    auto subBeamBarrier = CD3DX12_RESOURCE_BARRIER::UAV(m_beamAsInstanceDescData.Get());
+    mCommandList->ResourceBarrier(1, &subBeamBarrier);
 
 
     // do beam tracing
@@ -480,7 +472,6 @@ void PhotonBeamApp::BeamTrace()
 
             mCommandList->ResourceBarrier(1, &resourceBarrierRead);
 
-            OutputDebugString(L"beam counter reset\n");
         }
 
         D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
@@ -502,101 +493,14 @@ void PhotonBeamApp::BeamTrace()
         mCommandList->DispatchRays(&dispatchDesc);
     }
 
-    // copy beam counter to read buffer
-    {
-        auto resourceBarrierRead = CD3DX12_RESOURCE_BARRIER::Transition(
-            m_beamCounter.Get(),
-            D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
-            D3D12_RESOURCE_STATE_COPY_SOURCE
-        );
-
-        mCommandList->ResourceBarrier(1, &resourceBarrierRead);
-
-        mCommandList->CopyBufferRegion(
-            m_beamCounterRead.Get(),
-            0,
-            m_beamCounter.Get(),
-            0,
-            sizeof(PhotonBeamCounter)
-        );
-    }
-
-    // debug read data copy
-    {
-        auto resourceBarrierRead2 = CD3DX12_RESOURCE_BARRIER::Transition(
-            m_beamData.Get(),
-            D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
-            D3D12_RESOURCE_STATE_COPY_SOURCE
-        );
-
-        mCommandList->ResourceBarrier(1, &resourceBarrierRead2);
-
-        mCommandList->CopyBufferRegion(
-            m_beamReadDebug.Get(),
-            0,
-            m_beamData.Get(),
-            0,
-            sizeof(PhotonBeam)
-        );
-    }
-
-
-    ThrowIfFailed(mCommandList->Close());
-    ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
-    mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
-
-    // wait until counting is finished
-    ++m_currentBeamCounterFence;
-    mCommandQueue->Signal(m_beamCounterFence.Get(), m_currentBeamCounterFence);
-
-    if (m_beamCounterFence->GetCompletedValue() < m_currentBeamCounterFence)
-    {
-        HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
-        ThrowIfFailed(m_beamCounterFence->SetEventOnCompletion(m_currentBeamCounterFence, eventHandle));
-
-        if (eventHandle != 0)
-        {
-            WaitForSingleObject(eventHandle, INFINITE);
-            CloseHandle(eventHandle);
-        }
-    }
-
-    // read the counter
-    uint32_t numSubbeams = 0;
-    {
-        D3D12_RANGE readbackBufferRange{ 0, sizeof(PhotonBeamCounter) };
-        PhotonBeamCounter* pReadBack = nullptr;
-
-        m_beamCounterRead->Map(
-            0,
-            &readbackBufferRange,
-            reinterpret_cast<void**>(&pReadBack)
-        );
-
-        numSubbeams = static_cast<uint32_t>(pReadBack->subBeamCount);
-        auto numBeams = pReadBack->beamCount;
-
-        m_beamCounterRead->Unmap(0, nullptr);
-
-
-        D3D12_RANGE readbackBufferRange2{ 0, sizeof(PhotonBeamCounter) };
-
-        PhotonBeam* pReadBack2 = nullptr;
-
-        m_beamReadDebug->Map(
-            0,
-            &readbackBufferRange2,
-            reinterpret_cast<void**>(&pReadBack2)
-        );
-
-        m_beamReadDebug->Unmap(0, nullptr);
-    }
-
-    ThrowIfFailed(cmdListAlloc->Reset());
-    ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));
+    auto resourceBarrierRender = CD3DX12_RESOURCE_BARRIER::Transition(
+        m_beamAsInstanceDescData.Get(),
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE 
+    );
+    mCommandList->ResourceBarrier(1, &resourceBarrierRender);   
     
     {
-        
         // Create a descriptor of the requested builder work, to generate a top-level
         // AS from the input parameters
         D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildDesc = {};
@@ -613,36 +517,10 @@ void PhotonBeamApp::BeamTrace()
 
         // Build the top-level AS
         mCommandList->BuildRaytracingAccelerationStructure(&buildDesc, 0, nullptr);
-
-        // Wait for the builder to complete by setting a barrier on the resulting
-        // buffer. This can be important in case the rendering is triggered
-        // immediately afterwards, without executing the command list
-        //D3D12_RESOURCE_BARRIER uavBarrier{};
-        //uavBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-        //uavBarrier.UAV.pResource = m_beamTlasBuffers.pResult.Get();
-        //uavBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-        //mCommandList->ResourceBarrier(1, &uavBarrier);
     }
     
-    ThrowIfFailed(mCommandList->Close());
-    ID3D12CommandList* cmdsLists2[] = { mCommandList.Get() };
-    mCommandQueue->ExecuteCommandLists(_countof(cmdsLists2), cmdsLists2);
-
-    // wait until Tlas creation is finished
-    ++m_currentBeamTlasFence;
-    mCommandQueue->Signal(m_beamTlasFence.Get(), m_currentBeamTlasFence);
-
-    if (m_beamTlasFence->GetCompletedValue() < m_currentBeamTlasFence)
-    {
-        HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
-        ThrowIfFailed(m_beamTlasFence->SetEventOnCompletion(m_currentBeamTlasFence, eventHandle));
-
-        if (eventHandle != 0)
-        {
-            WaitForSingleObject(eventHandle, INFINITE);
-            CloseHandle(eventHandle);
-        }
-    }
+    auto tlasBarrier = CD3DX12_RESOURCE_BARRIER::UAV(m_beamTlasBuffers.pResult.Get());
+    mCommandList->ResourceBarrier(1, &tlasBarrier);
 }
 
 void PhotonBeamApp::RayTrace()
@@ -683,6 +561,11 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
 {
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc = mCurrFrameResource->CmdListAlloc;
 
+    // Reuse the memory associated with command recording.
+    // We can only reset when the associated command lists have finished execution on the GPU.
+    ThrowIfFailed(cmdListAlloc->Reset());
+    ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));
+
     if (m_createBeamPhotonAS)
     {
         BeamTrace();
@@ -695,11 +578,6 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
     ImGui::NewFrame();
     RenderUI();
     ImGui::Render();
-
-    // Reuse the memory associated with command recording.
-    // We can only reset when the associated command lists have finished execution on the GPU.
-    ThrowIfFailed(cmdListAlloc->Reset());
-    ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));
 
     if (m_useRayTracer)
     {
@@ -2562,37 +2440,6 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
 
         auto defaultHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
 
-        ThrowIfFailed(
-            md3dDevice->CreateCommittedResource(
-                &defaultHeapProperties,
-                D3D12_HEAP_FLAG_NONE,
-                &bufferDesc,
-                D3D12_RESOURCE_STATE_COPY_DEST,
-                nullptr,
-                IID_PPV_ARGS(&m_beamCounterRead)
-            )
-        );
-        NAME_D3D12_OBJECT(m_beamCounterRead);
-
-
-        auto bufferDesc2 = CD3DX12_RESOURCE_DESC::Buffer(
-            sizeof(PhotonBeam),
-            D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE
-        );
-
-        auto defaultHeapProperties2 = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
-
-        ThrowIfFailed(
-            md3dDevice->CreateCommittedResource(
-                &defaultHeapProperties2,
-                D3D12_HEAP_FLAG_NONE,
-                &bufferDesc2,
-                D3D12_RESOURCE_STATE_COPY_DEST,
-                nullptr,
-                IID_PPV_ARGS(&m_beamReadDebug)
-            )
-        );
-        NAME_D3D12_OBJECT(m_beamReadDebug);
     }
 
     //upload buffer  for resetting beam counter
