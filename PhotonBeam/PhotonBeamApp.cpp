@@ -391,7 +391,7 @@ void PhotonBeamApp::Rasterize()
     D3D12_RENDER_PASS_BEGINNING_ACCESS renderPassBeginningAccessClear{ D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR, { clearValue } };
     static const D3D12_RENDER_PASS_ENDING_ACCESS renderPassEndingAccessPreserve{ D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE, {} };
     D3D12_RENDER_PASS_RENDER_TARGET_DESC renderPassRenderTargetDesc{
-        CurrentBackBufferView(),
+        rtvHeapHandle,
         renderPassBeginningAccessClear,
         renderPassEndingAccessPreserve
     };
@@ -690,6 +690,24 @@ void PhotonBeamApp::CopyRaytracingOutputToBackbuffer()
     mCommandList->ResourceBarrier(ARRAYSIZE(postCopyBarriers), postCopyBarriers);
 }
 
+void PhotonBeamApp::CopyRasterizationOutputToBackbuffer()
+{
+    auto renderTarget = mSwapChainBuffer[mCurrBackBuffer].Get();
+
+    D3D12_RESOURCE_BARRIER preCopyBarriers[2] = {};
+    preCopyBarriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
+    preCopyBarriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(m_offScreenOutput.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE);
+    mCommandList->ResourceBarrier(ARRAYSIZE(preCopyBarriers), preCopyBarriers);
+
+    mCommandList->CopyResource(renderTarget, m_offScreenOutput.Get());
+
+    D3D12_RESOURCE_BARRIER postCopyBarriers[2] = {};
+    postCopyBarriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    postCopyBarriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(m_offScreenOutput.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+    mCommandList->ResourceBarrier(ARRAYSIZE(postCopyBarriers), postCopyBarriers);
+}
+
 void PhotonBeamApp::Draw(const GameTimer& gt)
 {
     
@@ -744,6 +762,7 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList.Get());
 
         mCommandList->EndRenderPass();
+        CopyRasterizationOutputToBackbuffer();
     }
 
     // Indicate a state transition on the resource usage.

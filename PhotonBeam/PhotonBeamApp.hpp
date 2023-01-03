@@ -241,6 +241,7 @@ private:
     void BeamTrace();
     void RayTrace();
     void CopyRaytracingOutputToBackbuffer();
+    void CopyRasterizationOutputToBackbuffer();
     void drawPost();
 
     void CreateSurfaceBlas();
