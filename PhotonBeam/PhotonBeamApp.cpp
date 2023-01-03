@@ -505,7 +505,7 @@ void PhotonBeamApp::BeamTrace()
     auto resourceBarrierRender = CD3DX12_RESOURCE_BARRIER::Transition(
         m_beamAsInstanceDescData.Get(),
         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-        D3D12_RESOURCE_STATE_GENERIC_READ
+        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE 
     );
     mCommandList->ResourceBarrier(1, &resourceBarrierRender);   
     
