@@ -427,10 +427,6 @@ void PhotonBeamApp::Rasterize()
 
 void PhotonBeamApp::BeamTrace()
 {
-    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc = mCurrFrameResource->CmdListAlloc;
-    ThrowIfFailed(cmdListAlloc->Reset());
-    ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));
-
     // Reset Sub beam info buffer
     {
         mCommandList->SetPipelineState(mPSOs["bufferReset"].Get());
@@ -448,6 +444,9 @@ void PhotonBeamApp::BeamTrace()
 
         //mCommandList->ResourceBarrier(1, &resourceBarrierRead);
     }
+
+    auto subBeamBarrier = CD3DX12_RESOURCE_BARRIER::UAV(m_beamAsInstanceDescData.Get());
+    mCommandList->ResourceBarrier(1, &subBeamBarrier);
 
 
     // do beam tracing
@@ -528,35 +527,11 @@ void PhotonBeamApp::BeamTrace()
         // Build the top-level AS
         mCommandList->BuildRaytracingAccelerationStructure(&buildDesc, 0, nullptr);
 
-        // Wait for the builder to complete by setting a barrier on the resulting
-        // buffer. This can be important in case the rendering is triggered
-        // immediately afterwards, without executing the command list
-        //D3D12_RESOURCE_BARRIER uavBarrier{};
-        //uavBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-        //uavBarrier.UAV.pResource = m_beamTlasBuffers.pResult.Get();
-        //uavBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-        //mCommandList->ResourceBarrier(1, &uavBarrier);
     }
     
-    ThrowIfFailed(mCommandList->Close());
-    ID3D12CommandList* cmdsLists2[] = { mCommandList.Get() };
-    mCommandQueue->ExecuteCommandLists(_countof(cmdsLists2), cmdsLists2);
-
-    // wait until Tlas creation is finished
-    ++m_currentBeamTlasFence;
-    mCommandQueue->Signal(m_beamTlasFence.Get(), m_currentBeamTlasFence);
-
-    if (m_beamTlasFence->GetCompletedValue() < m_currentBeamTlasFence)
-    {
-        HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
-        ThrowIfFailed(m_beamTlasFence->SetEventOnCompletion(m_currentBeamTlasFence, eventHandle));
-
-        if (eventHandle != 0)
-        {
-            WaitForSingleObject(eventHandle, INFINITE);
-            CloseHandle(eventHandle);
-        }
-    }
+    auto tlasBarrier = CD3DX12_RESOURCE_BARRIER::UAV(m_beamTlasBuffers.pResult.Get());
+    mCommandList->ResourceBarrier(1, &tlasBarrier);
+   
 }
 
 void PhotonBeamApp::RayTrace()
@@ -597,6 +572,11 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
 {
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc = mCurrFrameResource->CmdListAlloc;
 
+    // Reuse the memory associated with command recording.
+    // We can only reset when the associated command lists have finished execution on the GPU.
+    ThrowIfFailed(cmdListAlloc->Reset());
+    ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));
+
     if (m_createBeamPhotonAS)
     {
         BeamTrace();
@@ -609,11 +589,6 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
     ImGui::NewFrame();
     RenderUI();
     ImGui::Render();
-
-    // Reuse the memory associated with command recording.
-    // We can only reset when the associated command lists have finished execution on the GPU.
-    ThrowIfFailed(cmdListAlloc->Reset());
-    ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));
 
     if (m_useRayTracer)
     {
