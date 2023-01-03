@@ -198,7 +198,7 @@ private:
     void OnKeyboardInput(const GameTimer& gt);
     void UpdateObjectCBs(const GameTimer& gt);
     void UpdateMainPassCB(const GameTimer& gt);
-    void UpdateRayTracingPushConstants();
+    void UpdateRayTracingPushConstants(const GameTimer& gt);
 
     void SerializeAndCreateRootSignature(
         D3D12_ROOT_SIGNATURE_DESC& desc,
@@ -368,7 +368,7 @@ private:
     bool          m_usePhotonBeam;
     float         m_hgAssymFactor;
     bool          m_showDirectColor;
-    bool m_createBeamPhotonAS;
+    bool m_isBeamMotionOn;
     float m_camearaFOV;
     float m_prevCameraFOV;
 
