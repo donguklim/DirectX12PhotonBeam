@@ -695,7 +695,7 @@ void PhotonBeamApp::OnKeyboardInput(const GameTimer& gt)
 
     const float dt = gt.DeltaTime();
 
-    if (GetAsyncKeyState(VK_LSHIFT) & 0x8000 || GetAsyncKeyState(VK_LSHIFT) & 0x8000)
+    if (GetAsyncKeyState(VK_LSHIFT) & 0x8000 || GetAsyncKeyState(VK_RSHIFT) & 0x8000)
     {
         if (GetAsyncKeyState('W') & 0x8000)
             m_lightPosition.z -= 10.0f * dt;
