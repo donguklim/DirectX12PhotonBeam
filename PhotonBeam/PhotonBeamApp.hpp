@@ -271,8 +271,8 @@ private:
     
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rayTracingDescriptorHeap = nullptr;
     uint32_t m_rayTracingDescriptorsAllocated;
-    uint32_t m_raytracingOutputResourceUAVDescriptorHeapIndex;
-    D3D12_GPU_DESCRIPTOR_HANDLE m_rayTracingOutputDescriptorHandle{};
+    uint32_t m_offScreenOutputResourceUAVDescriptorHeapIndex;
+    D3D12_GPU_DESCRIPTOR_HANDLE m_offScreenOutputDescriptorHandle{};
     D3D12_GPU_DESCRIPTOR_HANDLE m_rayTracingNormalDescriptorHandle{};
     D3D12_GPU_DESCRIPTOR_HANDLE m_rayTracingTextureDescriptorHandle{};
     D3D12_GPU_DESCRIPTOR_HANDLE m_rayTracingBeamDataDescriptorHandle{};
@@ -307,7 +307,7 @@ private:
     uint32_t m_rayMissShaderTableStrideInBytes = 0;
 
 
-    Microsoft::WRL::ComPtr<ID3D12Resource> m_raytracingOutput = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Resource> m_offScreenOutput = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounter = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounterReset = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounterRead = nullptr;

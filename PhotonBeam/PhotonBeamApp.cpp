@@ -64,7 +64,7 @@ const CD3DX12_STATIC_SAMPLER_DESC& PhotonBeamApp::GetLinearSampler()
 
 PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance): 
     D3DApp(hInstance),
-    m_raytracingOutputResourceUAVDescriptorHeapIndex(UINT_MAX),
+    m_offScreenOutputResourceUAVDescriptorHeapIndex(UINT_MAX),
     m_beamTracingDescriptorsAllocated(0),
     m_rayTracingDescriptorsAllocated(0)
 {
@@ -272,8 +272,8 @@ void PhotonBeamApp::OnResize()
 {
     D3DApp::OnResize();
 
-    m_raytracingOutput.Reset();
-    if(m_raytracingOutputResourceUAVDescriptorHeapIndex < UINT32_MAX)
+    m_offScreenOutput.Reset();
+    if(m_offScreenOutputResourceUAVDescriptorHeapIndex < UINT32_MAX)
         CreateRayTracingOutputResource();
 
     mCamera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
@@ -676,14 +676,14 @@ void PhotonBeamApp::CopyRaytracingOutputToBackbuffer()
 
     D3D12_RESOURCE_BARRIER preCopyBarriers[2] = {};
     preCopyBarriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
-    preCopyBarriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(m_raytracingOutput.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+    preCopyBarriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(m_offScreenOutput.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
     mCommandList->ResourceBarrier(ARRAYSIZE(preCopyBarriers), preCopyBarriers);
 
-    mCommandList->CopyResource(renderTarget, m_raytracingOutput.Get());
+    mCommandList->CopyResource(renderTarget, m_offScreenOutput.Get());
 
     D3D12_RESOURCE_BARRIER postCopyBarriers[2] = {};
     postCopyBarriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    postCopyBarriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(m_raytracingOutput.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+    postCopyBarriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(m_offScreenOutput.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 
     mCommandList->ResourceBarrier(ARRAYSIZE(postCopyBarriers), postCopyBarriers);
 }
@@ -2484,27 +2484,27 @@ void PhotonBeamApp::CreateRayTracingOutputResource()
             &uavDesc, 
             D3D12_RESOURCE_STATE_UNORDERED_ACCESS, 
             nullptr, 
-            IID_PPV_ARGS(&m_raytracingOutput)
+            IID_PPV_ARGS(&m_offScreenOutput)
         )
     );
-    NAME_D3D12_OBJECT(m_raytracingOutput);
+    NAME_D3D12_OBJECT(m_offScreenOutput);
 
     D3D12_CPU_DESCRIPTOR_HANDLE uavDescriptorHandle;
-    m_raytracingOutputResourceUAVDescriptorHeapIndex = AllocateRayTracingDescriptor(
+    m_offScreenOutputResourceUAVDescriptorHeapIndex = AllocateRayTracingDescriptor(
         &uavDescriptorHandle, 
-        m_raytracingOutputResourceUAVDescriptorHeapIndex
+        m_offScreenOutputResourceUAVDescriptorHeapIndex
     );
     D3D12_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
     UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
     md3dDevice->CreateUnorderedAccessView(
-        m_raytracingOutput.Get(), 
+        m_offScreenOutput.Get(), 
         nullptr, 
         &UAVDesc, 
         uavDescriptorHandle
     );
-    m_rayTracingOutputDescriptorHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(
+    m_offScreenOutputDescriptorHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(
         m_rayTracingDescriptorHeap->GetGPUDescriptorHandleForHeapStart(), 
-        m_raytracingOutputResourceUAVDescriptorHeapIndex, 
+        m_offScreenOutputResourceUAVDescriptorHeapIndex, 
         mCbvSrvUavDescriptorSize
     );
 }
@@ -2885,7 +2885,7 @@ void PhotonBeamApp::BuildRayTracingShaderTables()
             D3D12_GPU_DESCRIPTOR_HANDLE textureDescriptorTable;
         } rootArgs{};
 
-        rootArgs.outputImageDescriptorTable = m_rayTracingOutputDescriptorHandle;
+        rootArgs.outputImageDescriptorTable = m_offScreenOutputDescriptorHandle;
         rootArgs.beamAsAddress = m_beamTlasBuffers.pResult->GetGPUVirtualAddress();
         rootArgs.surfaceAsAddress = m_surfaceTlasBuffers.pResult->GetGPUVirtualAddress();
         rootArgs.geometryDescriptorTable = m_rayTracingNormalDescriptorHandle;
