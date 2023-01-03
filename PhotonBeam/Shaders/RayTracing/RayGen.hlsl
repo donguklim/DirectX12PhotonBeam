@@ -35,6 +35,7 @@ void RayGen() {
 
     // Initialize the random number
     uint seed = tea(launchIndex, pc_ray.seed);
+    uint nextSeed = tea(launchIndex, pc_ray.seed + 1);
 
     const float2 pixelCenter = float2(dispatchIndex.xy) + (float2)(0.5);
     float2 inUV = pixelCenter / float2(dispatchDimensionSize.xy) * 2.0 - 1.0;
@@ -163,7 +164,14 @@ void RayGen() {
         if (material.roughness > 0.01)
             break;
 
-        rayDesc.Direction = microfacetReflectedLightSampling(seed, rayDesc.Direction, world_normal, material.roughness);
+        rayDesc.Direction = microfacetReflectedLightSampling(seed, rayDesc.Direction, world_normal, material.roughness) * (1.0f - pc_ray.nextSeedRatio) +
+            microfacetReflectedLightSampling(nextSeed, rayDesc.Direction, world_normal, material.roughness) * pc_ray.nextSeedRatio;
+
+        if (rayDesc.Direction.x == 0 && rayDesc.Direction.y == 0 && rayDesc.Direction.z == 0)
+            break;
+
+        rayDesc.Direction = normalize(rayDesc.Direction);
+
         if (dot(world_normal, rayDesc.Direction) < 0)
             break;
 
