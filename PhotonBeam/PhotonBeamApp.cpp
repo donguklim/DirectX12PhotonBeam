@@ -65,7 +65,6 @@ const CD3DX12_STATIC_SAMPLER_DESC& PhotonBeamApp::GetLinearSampler()
 PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance): 
     D3DApp(hInstance),
     m_offScreenOutputResourceUAVDescriptorHeapIndex(UINT_MAX),
-    m_offScreenOutputResourceSRVDescriptorHeapIndex(UINT_MAX),
     m_beamTracingDescriptorsAllocated(0),
     m_rayTracingDescriptorsAllocated(0)
 {
@@ -312,13 +311,24 @@ void PhotonBeamApp::drawPost()
 {
     mCommandList->SetPipelineState(mPSOs["post"].Get());
 
-    // Indicate a state transition on the resource usage.
-    auto resourceBarrierRender = CD3DX12_RESOURCE_BARRIER::Transition(
-        CurrentBackBuffer(),
-        D3D12_RESOURCE_STATE_PRESENT,
+
+
+
+
+    auto renderTarget = CurrentBackBuffer();
+
+    D3D12_RESOURCE_BARRIER barriers[2] = {};
+    barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(
+        renderTarget, 
+        D3D12_RESOURCE_STATE_PRESENT, 
         D3D12_RESOURCE_STATE_RENDER_TARGET
     );
-    mCommandList->ResourceBarrier(1, &resourceBarrierRender);
+    barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(
+        m_offScreenOutput.Get(), 
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS, 
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+    );
+    mCommandList->ResourceBarrier(2, barriers);
 
 
     CD3DX12_CLEAR_VALUE clearValue{ DXGI_FORMAT_R32G32B32_FLOAT, m_clearColor };
@@ -347,29 +357,23 @@ void PhotonBeamApp::drawPost()
     mCommandList->BeginRenderPass(
         1,
         &renderPassRenderTargetDesc,
-        &renderPassDepthStencilDesc,
+        nullptr,
         D3D12_RENDER_PASS_FLAG_NONE
     );
     mCommandList->RSSetViewports(1, &mScreenViewport);
     mCommandList->RSSetScissorRects(1, &mScissorRect);
 
-        ID3D12DescriptorHeap* descriptorHeaps[] = { mSrvDescriptorHeap.Get() };
+    ID3D12DescriptorHeap* descriptorHeaps[] = { m_postSrvDescriptorHeap.Get() };
     mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
     mCommandList->SetGraphicsRootSignature(mPostRootSignature.Get());
-    
-    mCommandList->SetGraphicsRootDescriptorTable(0, m_offScreenOutputTextureDescriptorHandle);
+    mCommandList->SetGraphicsRootDescriptorTable(0, m_postSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
     mCommandList->IASetVertexBuffers(0, 0, nullptr);
     //mCommandList->IASetIndexBuffer(&indexBufferView);
     mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     mCommandList->DrawInstanced(3, 1, 0, 0);
     //mCommandList->DrawIndexedInstanced(3, 0, 0);
-
-    ID3D12DescriptorHeap* guiDescriptorHeaps[] = { mGuiDescriptorHeap.Get() };
-    mCommandList->SetDescriptorHeaps(_countof(guiDescriptorHeaps), guiDescriptorHeaps);
-    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList.Get());
-    mCommandList->EndRenderPass();
 
 }
 
@@ -440,6 +444,7 @@ void PhotonBeamApp::Rasterize()
     mCommandList->SetGraphicsRootShaderResourceView(2, matBuffer->GetGPUVirtualAddress());
     mCommandList->SetGraphicsRootDescriptorTable(3, mSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
     DrawRenderItems(mCommandList.Get(), mOpaqueRitems);
+    mCommandList->EndRenderPass();
 
 }
 
@@ -738,38 +743,23 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
     ThrowIfFailed(cmdListAlloc->Reset());
     ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));
 
-    // Indicate a state transition on the resource usage.
-    auto resourceBarrierRender = CD3DX12_RESOURCE_BARRIER::Transition(
-        CurrentBackBuffer(),
-        D3D12_RESOURCE_STATE_PRESENT,
-        D3D12_RESOURCE_STATE_RENDER_TARGET
-    );
-    mCommandList->ResourceBarrier(1, &resourceBarrierRender);
 
     if (m_useRayTracer)
     {
         RayTrace();
 
-        CopyRaytracingOutputToBackbuffer();
-
-        ID3D12DescriptorHeap* guiDescriptorHeaps[] = { mGuiDescriptorHeap.Get() };
-
-        auto currentOutputView = CurrentBackBufferView();
-        mCommandList->OMSetRenderTargets(1, &currentOutputView, false, nullptr);
-        mCommandList->SetDescriptorHeaps(_countof(guiDescriptorHeaps), guiDescriptorHeaps);
-        ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList.Get());
     }
     else
     {
         Rasterize();
-
-        ID3D12DescriptorHeap* guiDescriptorHeaps[] = { mGuiDescriptorHeap.Get() };
-        mCommandList->SetDescriptorHeaps(_countof(guiDescriptorHeaps), guiDescriptorHeaps);
-        ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList.Get());
-
-        mCommandList->EndRenderPass();
-        CopyRasterizationOutputToBackbuffer();
     }
+
+    drawPost();
+
+    ID3D12DescriptorHeap* guiDescriptorHeaps[] = { mGuiDescriptorHeap.Get() };
+    mCommandList->SetDescriptorHeaps(_countof(guiDescriptorHeaps), guiDescriptorHeaps);
+    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList.Get());
+    mCommandList->EndRenderPass();
 
     // Indicate a state transition on the resource usage.
     auto presentBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
@@ -1085,9 +1075,15 @@ void PhotonBeamApp::BuildDescriptorHeaps()
     srvHeapDesc.NumDescriptors = static_cast<UINT>(m_textures.size()) + 1;
     srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+    srvHeapDesc.NumDescriptors = 1;
+    ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_postSrvDescriptorHeap)));
+
+    srvHeapDesc.NumDescriptors = static_cast<UINT>(m_textures.size());
     ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSrvDescriptorHeap)));
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -1102,8 +1098,6 @@ void PhotonBeamApp::BuildDescriptorHeaps()
         md3dDevice->CreateShaderResourceView(textureResource->Resource.Get(), &srvDesc, hDescriptor);
         hDescriptor.Offset(1, mCbvSrvDescriptorSize);
     }
-
-    m_offScreenOutputResourceUAVDescriptorHeapIndex = m_textures.size();
 }
 
 void PhotonBeamApp::BuildRayTracingDescriptorHeaps()
@@ -2561,17 +2555,8 @@ void PhotonBeamApp::CreateOffScreenOutputResource()
     srvDesc.Format = m_offScreenOutput->GetDesc().Format;
     srvDesc.Texture2D.MipLevels = 1;
 
-    CD3DX12_CPU_DESCRIPTOR_HANDLE srvDescriptorHandle(mSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-    srvDescriptorHandle.Offset(m_offScreenOutputResourceSRVDescriptorHeapIndex);
-
+    CD3DX12_CPU_DESCRIPTOR_HANDLE srvDescriptorHandle(m_postSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
     md3dDevice->CreateShaderResourceView(m_offScreenOutput.Get(), &srvDesc, srvDescriptorHandle);
-
-    m_offScreenOutputTextureDescriptorHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE(
-        mSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart(),
-        m_offScreenOutputResourceSRVDescriptorHeapIndex,
-        mCbvSrvUavDescriptorSize
-    );
-    
 }
 
 void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& resetValuploadBuffer)

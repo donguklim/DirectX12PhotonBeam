@@ -261,6 +261,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> mPostRootSignature = nullptr;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_postSrvDescriptorHeap = nullptr;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mGuiDescriptorHeap = nullptr;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_offScreenRtvHeap = nullptr;
 
@@ -274,9 +275,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rayTracingDescriptorHeap = nullptr;
     uint32_t m_rayTracingDescriptorsAllocated;
     uint32_t m_offScreenOutputResourceUAVDescriptorHeapIndex;
-    uint32_t m_offScreenOutputResourceSRVDescriptorHeapIndex;
     D3D12_GPU_DESCRIPTOR_HANDLE m_offScreenOutputDescriptorHandle{};
-    D3D12_GPU_DESCRIPTOR_HANDLE m_offScreenOutputTextureDescriptorHandle{};
     D3D12_GPU_DESCRIPTOR_HANDLE m_rayTracingNormalDescriptorHandle{};
     D3D12_GPU_DESCRIPTOR_HANDLE m_rayTracingTextureDescriptorHandle{};
     D3D12_GPU_DESCRIPTOR_HANDLE m_rayTracingBeamDataDescriptorHandle{};
