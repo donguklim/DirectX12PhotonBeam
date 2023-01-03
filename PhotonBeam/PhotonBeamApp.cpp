@@ -658,42 +658,6 @@ void PhotonBeamApp::RayTrace()
     mCommandList->DispatchRays(&dispatchDesc);
 }
 
-void PhotonBeamApp::CopyRaytracingOutputToBackbuffer()
-{
-    auto renderTarget = mSwapChainBuffer[mCurrBackBuffer].Get();
-
-    D3D12_RESOURCE_BARRIER preCopyBarriers[2] = {};
-    preCopyBarriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
-    preCopyBarriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(m_offScreenOutput.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
-    mCommandList->ResourceBarrier(ARRAYSIZE(preCopyBarriers), preCopyBarriers);
-
-    mCommandList->CopyResource(renderTarget, m_offScreenOutput.Get());
-
-    D3D12_RESOURCE_BARRIER postCopyBarriers[2] = {};
-    postCopyBarriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    postCopyBarriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(m_offScreenOutput.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-
-    mCommandList->ResourceBarrier(ARRAYSIZE(postCopyBarriers), postCopyBarriers);
-}
-
-void PhotonBeamApp::CopyRasterizationOutputToBackbuffer()
-{
-    auto renderTarget = mSwapChainBuffer[mCurrBackBuffer].Get();
-
-    D3D12_RESOURCE_BARRIER preCopyBarriers[2] = {};
-    preCopyBarriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_DEST);
-    preCopyBarriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(m_offScreenOutput.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COPY_SOURCE);
-    mCommandList->ResourceBarrier(ARRAYSIZE(preCopyBarriers), preCopyBarriers);
-
-    mCommandList->CopyResource(renderTarget, m_offScreenOutput.Get());
-
-    D3D12_RESOURCE_BARRIER postCopyBarriers[2] = {};
-    postCopyBarriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(renderTarget, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    postCopyBarriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(m_offScreenOutput.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-    mCommandList->ResourceBarrier(ARRAYSIZE(postCopyBarriers), postCopyBarriers);
-}
-
 void PhotonBeamApp::Draw(const GameTimer& gt)
 {
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc = mCurrFrameResource->CmdListAlloc;
