@@ -228,7 +228,7 @@ private:
     void BuildBeamTracingShaderTables();
     void BuildRayTracingShaderTables();
 
-    void CreateRayTracingOutputResource();
+    void CreateOffScreenOutputResource();
     void CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& resetValuploadBuffer);
 
     void BuildFrameResources();

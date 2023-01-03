@@ -160,7 +160,7 @@ bool PhotonBeamApp::Initialize()
     CreateSurfaceTlas();
     CreateBeamBlases();
 
-    CreateRayTracingOutputResource();
+    CreateOffScreenOutputResource();
 
     ComPtr<ID3D12Resource> resetValuploadBuffer = nullptr;
     CreateBeamBuffers(resetValuploadBuffer);
@@ -275,7 +275,7 @@ void PhotonBeamApp::OnResize()
 
     m_offScreenOutput.Reset();
     if(m_offScreenOutputResourceUAVDescriptorHeapIndex < UINT32_MAX)
-        CreateRayTracingOutputResource();
+        CreateOffScreenOutputResource();
 
     mCamera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
 
@@ -2501,7 +2501,7 @@ uint32_t PhotonBeamApp::AllocateBeamTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDL
     return descriptorIndexToUse;
 }
 
-void PhotonBeamApp::CreateRayTracingOutputResource()
+void PhotonBeamApp::CreateOffScreenOutputResource()
 {
     auto backbufferFormat = mBackBufferFormat;
 
