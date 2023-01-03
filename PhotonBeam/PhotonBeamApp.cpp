@@ -66,7 +66,11 @@ PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance):
     D3DApp(hInstance),
     m_offScreenOutputResourceUAVDescriptorHeapIndex(UINT_MAX),
     m_beamTracingDescriptorsAllocated(0),
-    m_rayTracingDescriptorsAllocated(0)
+    m_rayTracingDescriptorsAllocated(0),
+    m_maxNumSubBeamInfo(
+        ((m_maxNumBeamSamples * 48 + m_maxNumPhotonSamples) / SUB_BEAM_INFO_BUFFER_RESET_COMPUTE_SHADER_GROUP_SIZE)
+        * SUB_BEAM_INFO_BUFFER_RESET_COMPUTE_SHADER_GROUP_SIZE
+    )
 {
     mLastMousePos = POINT{};
     m_useRayTracer = true;
@@ -74,8 +78,6 @@ PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance):
     m_airScatterCoff = XMVECTORF32{};
     m_airExtinctCoff = XMVECTORF32{};
     m_sourceLight = XMVECTORF32{};
-
-    
 
     for (size_t i = 0; i < to_underlying(RootSignatueEnums::BeamTrace::ERootSignatures::Count); i++)
     {
@@ -435,9 +437,6 @@ void PhotonBeamApp::BeamTrace()
         mCommandList->SetComputeRootSignature(m_bufferResetRootSignature.Get());
         mCommandList->SetComputeRootUnorderedAccessView(0, m_beamAsInstanceDescData->GetGPUVirtualAddress());
 
-        // num_groups = m_maxNumSubBeamInfo * ShaderRayTracingTopASInstanceDesc / SUB_BEAM_INFO_BUFFER_RESET_COMPUTE_SHADER_GROUP_SIZE
-        // = m_maxNumSubBeamInfo  * 256 / 256
-        // = m_maxNumSubBeamInfo
         const auto num_groups = m_maxNumSubBeamInfo / 256;
         mCommandList->Dispatch(num_groups, 1, 1);
 
