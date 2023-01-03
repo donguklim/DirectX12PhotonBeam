@@ -96,10 +96,7 @@ float4 PS(VertexOut pin) : SV_Target
 
     float3 specular = computeSpecular(material, pin.ViewDir, L, normal);
 
-    const static float gamma = 1. / 2.2;
-    const static float4 gammaVec = float4(gamma, gamma, gamma, gamma);
-
-    return pow(float4(lightIntensity * (diffuse + specular), 1), gammaVec);
+    return float4(lightIntensity * (diffuse + specular), 1);
 }
 
 #endif
