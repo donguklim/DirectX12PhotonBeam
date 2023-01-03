@@ -26,6 +26,7 @@ VertexOut VS(VertexIn vin)
 
     vout.outUV = float2((vin.vertexId << 1) & 2, vin.vertexId & 2);
     vout.posH = float4(vout.outUV * 2.0f - 1.0f, 1.0f, 1.0f);
+    vout.posH.y *= -1.0f;
 
     return vout;
 }
