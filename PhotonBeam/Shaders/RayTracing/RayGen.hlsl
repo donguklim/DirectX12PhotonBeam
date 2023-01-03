@@ -10,9 +10,9 @@ RWTexture2D<float4> RenderTarget : register(u0);
 RaytracingAccelerationStructure g_beamAS : register(t0);
 RaytracingAccelerationStructure g_surfaceAS : register(t1);
 
-StructuredBuffer<float3> g_normals : register(t2);
-StructuredBuffer<float2> g_texCoords : register(t3);
-StructuredBuffer<uint3> g_indices : register(t4);
+Buffer<float3> g_normals : register(t2);
+Buffer<float2> g_texCoords : register(t3);
+Buffer<uint> g_indices : register(t4);
 
 StructuredBuffer<GltfShadeMaterial> g_materials : register(t5, space0);
 StructuredBuffer<PrimMeshInfo> g_meshInfos : register(t6, space0);
@@ -113,12 +113,12 @@ void RayGen() {
         PrimMeshInfo meshInfo = g_meshInfos[instanceID];
         prd.instanceID = instanceID;
 
-        uint indexOffset = (meshInfo.indexOffset / 3) + query.CommittedPrimitiveIndex();
+        uint indexOffset = meshInfo.indexOffset + 3 * query.CommittedPrimitiveIndex();
         uint vertexOffset = meshInfo.vertexOffset;           // Vertex offset as defined in glTF
         uint materialIndex = max(0, meshInfo.materialIndex);  // material of primitive mesh
 
         // Getting the 3 indices of the triangle (local)
-        uint3 triangleIndex = g_indices[indexOffset];
+        uint3 triangleIndex = uint3(g_indices[indexOffset], g_indices[indexOffset + 1], g_indices[indexOffset + 2]);
         triangleIndex += (uint3)(vertexOffset);  // (global)
 
         float3 barycentrics = float3(0.0, query.CandidateTriangleBarycentrics());
