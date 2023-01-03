@@ -1995,6 +1995,7 @@ void PhotonBeamApp::SetDefaults()
 
     m_camearaFOV = 60.0f;
     m_prevCameraFOV = m_camearaFOV;
+    m_isBeamMotionOn = true;
 
 }
 
@@ -2034,7 +2035,7 @@ void PhotonBeamApp::RenderUI()
         ImGuiH::Control::Info(
             "",
             "",
-            "use W,A,S,D key and Q,E key to adjust Camera position. Pressing Shift key adjusts light position",
+            "Use W,A,S,D key and Q,E key to adjust Camera/Light position. Pressing Shift key adjusts light position.",
             ImGuiH::Control::Flags::Disabled
         );
 
