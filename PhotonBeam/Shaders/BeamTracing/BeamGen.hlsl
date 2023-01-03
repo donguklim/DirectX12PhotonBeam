@@ -12,7 +12,7 @@ RWStructuredBuffer<PhotonBeam> g_photonBeams: register(u0, space0);
 RWStructuredBuffer<ShaderRayTracingTopASInstanceDesc> g_photonBeamsTopAsInstanceDescs : register(u1, space0);
 RWStructuredBuffer<PhotonBeamCounter> g_photonBeamCounters  : register(u2, space0);
 
-[shader("raygeneration")] 
+[shader("raygeneration")]
 void BeamGen()
 {
     const uint HitTypeAir = 0;
@@ -28,13 +28,18 @@ void BeamGen()
 
     // Initialize the random number
     uint seed = tea(launchIndex, pc_beam.seed);
+    uint nextSeed = tea(launchIndex, pc_beam.seed + 1);
     float3 rayOrigin = pc_beam.lightPosition;
-    float3 rayDirection = uniformSamplingSphere(seed);
+    float3 rayDirection = normalize(uniformSamplingSphere(seed) * (1.0 - pc_beam.nextSeedRatio) + pc_beam.nextSeedRatio * uniformSamplingSphere(nextSeed));
+    if (rayDirection.x == 0 && rayDirection.y == 0 && rayDirection.z == 0)
+        return;
 
     BeamHitPayload prd;
     prd.rayOrigin = rayOrigin;
     prd.rayDirection = rayDirection;
     prd.seed = seed;
+    prd.nextSeed = seed;
+    prd.nextSeedRatio = pc_beam.nextSeedRatio;
     prd.weight = float3(0, 0, 0);
 
     uint  rayFlags = RAY_FLAG_FORCE_OPAQUE;
@@ -47,9 +52,9 @@ void BeamGen()
     uint64_t beamIndex;
     uint64_t subBeamIndex;
     float3 beamColor = pc_beam.sourceLight;
-    
+
     bool keepTracing = true;
-    while(keepTracing)
+    while (keepTracing)
     {
         rayDesc.Direction = prd.rayDirection;
         rayDesc.Origin = prd.rayOrigin;
@@ -132,7 +137,7 @@ void BeamGen()
                     tangent * pc_beam.beamRadius,
                     rayDirection * pc_beam.beamRadius,
                     splitStart
-                )
+                    )
             );
             asInfo.transform[0] = transformMat[0];
             asInfo.transform[1] = transformMat[1];
@@ -156,7 +161,7 @@ void BeamGen()
                     prd.hitNormal * pc_beam.photonRadius,
                     tangent,
                     boxStart
-                )
+                    )
             );
 
             asInfo.transform[0] = transformMat[0];
