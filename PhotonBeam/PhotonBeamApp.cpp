@@ -135,13 +135,6 @@ bool PhotonBeamApp::Initialize()
     mCamera.LookAt(XMFLOAT3{ 0.0f, 0.0f, 15.0f }, XMFLOAT3{ 0.0f, 0.0f, 0.0f }, XMFLOAT3{ 0.0f, 1.0f, 0.0f });
     mCamera.UpdateViewMatrix();
 
-    ThrowIfFailed(
-        md3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_beamCounterFence))
-    );
-    ThrowIfFailed(
-        md3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_beamTlasFence))
-    );
-
     LoadScene();
     CreateTextures();
     BuildRasterizeRootSignature();
@@ -479,7 +472,6 @@ void PhotonBeamApp::BeamTrace()
 
             mCommandList->ResourceBarrier(1, &resourceBarrierRead);
 
-            OutputDebugString(L"beam counter reset\n");
         }
 
         D3D12_DISPATCH_RAYS_DESC dispatchDesc = {};
@@ -509,7 +501,6 @@ void PhotonBeamApp::BeamTrace()
     mCommandList->ResourceBarrier(1, &resourceBarrierRender);   
     
     {
-        
         // Create a descriptor of the requested builder work, to generate a top-level
         // AS from the input parameters
         D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildDesc = {};
@@ -526,12 +517,10 @@ void PhotonBeamApp::BeamTrace()
 
         // Build the top-level AS
         mCommandList->BuildRaytracingAccelerationStructure(&buildDesc, 0, nullptr);
-
     }
     
     auto tlasBarrier = CD3DX12_RESOURCE_BARRIER::UAV(m_beamTlasBuffers.pResult.Get());
     mCommandList->ResourceBarrier(1, &tlasBarrier);
-   
 }
 
 void PhotonBeamApp::RayTrace()
@@ -2451,37 +2440,6 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
 
         auto defaultHeapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
 
-        ThrowIfFailed(
-            md3dDevice->CreateCommittedResource(
-                &defaultHeapProperties,
-                D3D12_HEAP_FLAG_NONE,
-                &bufferDesc,
-                D3D12_RESOURCE_STATE_COPY_DEST,
-                nullptr,
-                IID_PPV_ARGS(&m_beamCounterRead)
-            )
-        );
-        NAME_D3D12_OBJECT(m_beamCounterRead);
-
-
-        auto bufferDesc2 = CD3DX12_RESOURCE_DESC::Buffer(
-            sizeof(PhotonBeam),
-            D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE
-        );
-
-        auto defaultHeapProperties2 = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_READBACK);
-
-        ThrowIfFailed(
-            md3dDevice->CreateCommittedResource(
-                &defaultHeapProperties2,
-                D3D12_HEAP_FLAG_NONE,
-                &bufferDesc2,
-                D3D12_RESOURCE_STATE_COPY_DEST,
-                nullptr,
-                IID_PPV_ARGS(&m_beamReadDebug)
-            )
-        );
-        NAME_D3D12_OBJECT(m_beamReadDebug);
     }
 
     //upload buffer  for resetting beam counter

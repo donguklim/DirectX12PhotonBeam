@@ -314,18 +314,9 @@ private:
     Microsoft::WRL::ComPtr<ID3D12Resource> m_offScreenOutput = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounter = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounterReset = nullptr;
-    Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounterRead = nullptr;
-
-    Microsoft::WRL::ComPtr<ID3D12Resource> m_beamReadDebug = nullptr;
 
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamData = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamAsInstanceDescData = nullptr;
-    Microsoft::WRL::ComPtr<ID3D12Fence> m_beamCounterFence = nullptr;
-    uint64_t m_currentBeamCounterFence = 0;
-
-    Microsoft::WRL::ComPtr<ID3D12Fence> m_beamTlasFence = nullptr;
-    uint64_t m_currentBeamTlasFence = 0;
-    
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
 
