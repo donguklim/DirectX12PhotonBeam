@@ -375,6 +375,7 @@ private:
 
     float m_prevUpdateTime;
     float m_seedTime;
+    float m_seedUPdateInterval;
 
     std::vector<AccelerationStructureBuffers> m_surfaceBlasBuffers{};
     AccelerationStructureBuffers m_surfaceTlasBuffers{};
