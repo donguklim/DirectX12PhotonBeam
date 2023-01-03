@@ -1,8 +1,4 @@
-//***************************************************************************************
-// PhotonBeamApp.cpp by Frank Luna (C) 2015 All Rights Reserved.
-//
-// Hold down '1' key to view scene in wireframe mode.
-//***************************************************************************************
+
 #pragma once
 
 #define NOMINMAX
@@ -353,16 +349,7 @@ void PhotonBeamApp::drawPost()
 
 void PhotonBeamApp::Rasterize()
 {
-    if (mIsWireframe)
-    {
-
-        mCommandList->SetPipelineState(mPSOs["opaque_wireframe"].Get());
-    }
-    else
-    {
-
-        mCommandList->SetPipelineState(mPSOs["opaque"].Get());
-    }
+    mCommandList->SetPipelineState(mPSOs["raster"].Get());
 
     CD3DX12_CLEAR_VALUE clearValue{ DXGI_FORMAT_R32G32B32_FLOAT, m_clearColor };
 
@@ -696,11 +683,6 @@ void PhotonBeamApp::OnKeyboardInput(const GameTimer& gt)
     // Bellow will cause error 
     //if (ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureKeyboard)
         //return;
-
-    if (GetAsyncKeyState('1') & 0x8000)
-        mIsWireframe = true;
-    else
-        mIsWireframe = false;
 
     const float dt = gt.DeltaTime();
 
@@ -1852,13 +1834,11 @@ void PhotonBeamApp::BuildPSOs()
     ZeroMemory(&opaquePsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
     opaquePsoDesc.InputLayout = { mInputLayout.data(), (UINT)mInputLayout.size() };
     opaquePsoDesc.pRootSignature = mRootSignature.Get();
-    opaquePsoDesc.VS =
-    {
+    opaquePsoDesc.VS = {
         reinterpret_cast<BYTE*>(m_rasterizeShaders["standardVS"]->GetBufferPointer()),
         m_rasterizeShaders["standardVS"]->GetBufferSize()
     };
-    opaquePsoDesc.PS =
-    {
+    opaquePsoDesc.PS = {
         reinterpret_cast<BYTE*>(m_rasterizeShaders["opaquePS"]->GetBufferPointer()),
         m_rasterizeShaders["opaquePS"]->GetBufferSize()
     };
@@ -1872,12 +1852,7 @@ void PhotonBeamApp::BuildPSOs()
     opaquePsoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
     opaquePsoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
     opaquePsoDesc.DSVFormat = mDepthStencilFormat;
-    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(mPSOs["opaque"].GetAddressOf())));
-
-    // PSO for opaque wireframe objects.
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC opaqueWireframePsoDesc = opaquePsoDesc;
-    opaqueWireframePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
-    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaqueWireframePsoDesc, IID_PPV_ARGS(mPSOs["opaque_wireframe"].GetAddressOf())));
+    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(mPSOs["raster"].GetAddressOf())));
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC postPsoDesc;
     ZeroMemory(&postPsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));

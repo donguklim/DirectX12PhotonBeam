@@ -1,9 +1,3 @@
-//***************************************************************************************
-// PhotonBeamApp.cpp by Frank Luna (C) 2015 All Rights Reserved.
-//
-// Hold down '1' key to view scene in wireframe mode.
-//***************************************************************************************
-
 #pragma once
 #define NOMINMAX
 #include "d3d12.h"
