@@ -25,17 +25,20 @@ Texture2D g_texturesMap[] : register(t0, space1);
 
 SamplerState gsamLinearWrap  : register(s0);
 
-bool randomScatterOccured(inout BeamHitPayload prd, const in float rayLength) 
+bool randomScatterOccured(inout BeamHitPayload prd, const in float rayLength)
 {
     float min_extinct = min(min(pc_beam.airExtinctCoff.x, pc_beam.airExtinctCoff.y), pc_beam.airExtinctCoff.z);
-    
+
     if (min_extinct <= 0.001)
         return false;
 
     float max_extinct = max(max(pc_beam.airExtinctCoff.x, pc_beam.airExtinctCoff.y), pc_beam.airExtinctCoff.z);
 
+    float curSeedRatio = 1.0f - prd.nextSeedRatio;
+
     // random walk within participating media(air) scattering
-    float airScatterAt = -log(1.0 - rnd(prd.seed)) / max_extinct;
+    float airScatterAt = curSeedRatio * (-log(1.0 - rnd(prd.seed))) - prd.nextSeedRatio * log(1.0f - rnd(prd.nextSeed));
+    airScatterAt /= max_extinct;
 
     if (rayLength < airScatterAt) {
         return false;
@@ -48,13 +51,24 @@ bool randomScatterOccured(inout BeamHitPayload prd, const in float rayLength)
     float absorptionProb = 1.0 - max(max(albedo.x, albedo.y), albedo.z);
 
     // use russian roulett to decide whether scatter or absortion occurs
-    if (rnd(prd.seed) <= absorptionProb) {
+    if (rnd(prd.seed) * curSeedRatio + rnd(prd.nextSeed) * prd.nextSeedRatio <= absorptionProb)
+    {
         prd.weight = float3(0.0, 0.0, 0.0);
         return true;
     }
 
     prd.weight = exp(-pc_beam.airExtinctCoff * airScatterAt);
-    prd.rayDirection = heneyGreenPhaseFuncSampling(prd.seed, prd.rayDirection, pc_beam.airHGAssymFactor);
+    float3 rayDirection = heneyGreenPhaseFuncSampling(prd.seed, prd.rayDirection, pc_beam.airHGAssymFactor) * curSeedRatio +
+        heneyGreenPhaseFuncSampling(prd.nextSeed, prd.rayDirection, pc_beam.airHGAssymFactor) * prd.nextSeedRatio;
+
+    // if smoothed direction is zero by any chance, then just make the beam absorbed
+    if (rayDirection.x == 0 && rayDirection.y == 0 && rayDirection.z == 0)
+    {
+        prd.weight = float3(0.0, 0.0, 0.0);
+        return true;
+    }
+
+    prd.rayDirection = normalize(rayDirection);
 
     return true;
 }
