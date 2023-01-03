@@ -752,8 +752,8 @@ void PhotonBeamApp::UpdateMainPassCB(const GameTimer& gt)
     auto totalTime = gt.TotalTime();
     if(m_isBeamMotionOn)
         mMainPassCB.LightPos = XMFLOAT3(
-            XMScalarSin(totalTime) + m_lightPosition[0],
-            XMScalarCos(totalTime) + m_lightPosition[2],
+            XMScalarSin(totalTime * 1.5) * 1.2 + m_lightPosition[0],
+            XMScalarCos(totalTime * 1.5) * 1.2 + m_lightPosition[2],
             m_lightPosition[2]
         );
     else
@@ -805,8 +805,8 @@ void PhotonBeamApp::UpdateRayTracingPushConstants(const GameTimer& gt)
     m_pcBeam.seed = 1017;
     if(m_isBeamMotionOn)
         m_pcBeam.lightPosition = XMFLOAT3(
-            XMScalarSin(totalTime) + m_lightPosition[0], 
-            XMScalarCos(totalTime) + m_lightPosition[2], 
+            XMScalarSin(totalTime * 1.5) * 1.2 + m_lightPosition[0], 
+            XMScalarCos(totalTime * 1.5) * 1.2 + m_lightPosition[2], 
             m_lightPosition[2]
         );
     else
