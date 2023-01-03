@@ -836,7 +836,7 @@ void PhotonBeamApp::UpdateRayTracingPushConstants(const GameTimer& gt)
     m_pcRay.showDirectColor = m_showDirectColor ? 1 : 0;
     
 
-    const static float seedUPdateInterval = 1.0;
+    const static float seedUPdateInterval = 5.0;
     
     auto totalTime = gt.TotalTime();
 
