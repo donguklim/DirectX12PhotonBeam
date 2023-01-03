@@ -25,10 +25,10 @@ Texture2D g_texturesMap[] : register(t0, space1);
 
 SamplerState gsamLinearWrap  : register(s0);
 
-bool randomScatterOccured(inout BeamHitPayload prd, const in float rayLength) 
+bool randomScatterOccured(inout BeamHitPayload prd, const in float rayLength)
 {
     float min_extinct = min(min(pc_beam.airExtinctCoff.x, pc_beam.airExtinctCoff.y), pc_beam.airExtinctCoff.z);
-    
+
     if (min_extinct <= 0.001)
         return false;
 
@@ -57,7 +57,8 @@ bool randomScatterOccured(inout BeamHitPayload prd, const in float rayLength)
     }
 
     prd.weight = exp(-pc_beam.airExtinctCoff * airScatterAt);
-    prd.rayDirection = heneyGreenPhaseFuncSampling(prd.seed, prd.rayDirection, pc_beam.airHGAssymFactor);
+    prd.rayDirection = normalize(heneyGreenPhaseFuncSampling(prd.seed, prd.rayDirection, pc_beam.airHGAssymFactor) * curSeedRatio +
+        heneyGreenPhaseFuncSampling(prd.nextSeed, prd.rayDirection, pc_beam.airHGAssymFactor) * prd.nextSeedRatio);
 
     return true;
 }
