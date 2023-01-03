@@ -39,18 +39,17 @@ void SurfaceAnyHit(inout RayHitPayload prd, RayHitAttributes attrs) {
         return;
     }
 
-    if (pc_ray.showDirectColor == 1)
-    {
-        prd.hitValue = prd.hitAlbedo;
-        return;
-    }
-
     if (!getIntersection(prd.tMax, beam))
     {
         IgnoreHit();
         return;
     }
 
+    if (pc_ray.showDirectColor == 1)
+    {
+        prd.hitValue = prd.hitAlbedo;
+        return;
+    }
 
     const float rayDist = prd.tMax;
     const float3 worldPos = WorldRayOrigin() + WorldRayDirection() * rayDist;
