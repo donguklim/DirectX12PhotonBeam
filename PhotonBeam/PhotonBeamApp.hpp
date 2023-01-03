@@ -361,7 +361,7 @@ private:
     DirectX::XMVECTORF32 m_airScatterCoff;
     DirectX::XMVECTORF32 m_airExtinctCoff;
     DirectX::XMVECTORF32 m_sourceLight;
-    DirectX::XMVECTORF32 m_lightPosition{ 0.0f, 0.0f, 0.0f };
+    DirectX::XMFLOAT3 m_lightPosition{ 0.0f, 0.0f, 0.0f };
     float m_lightIntensity;
     float         m_beamIntensity;
     bool          m_usePhotonMapping;
