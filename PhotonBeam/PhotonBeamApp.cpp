@@ -58,6 +58,16 @@ const CD3DX12_STATIC_SAMPLER_DESC& PhotonBeamApp::GetLinearSampler()
 }
 
 
+XMFLOAT3 getLightMotion(const float totalTime, const DirectX::XMVECTORF32& lightPosition)
+{
+    return XMFLOAT3(
+        XMScalarSin(totalTime * 1.5f) * 1.2f + lightPosition[0],
+        XMScalarCos(totalTime * 1.5f) * 1.2f + lightPosition[1],
+        XMScalarSin(totalTime) * 0.8f + lightPosition[2]
+    );
+}
+
+
 PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance): 
     D3DApp(hInstance),
     m_offScreenOutputResourceUAVDescriptorHeapIndex(UINT_MAX),
@@ -68,6 +78,9 @@ PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance):
         * SUB_BEAM_INFO_BUFFER_RESET_COMPUTE_SHADER_GROUP_SIZE
     )
 {
+    m_pcRay.seed = 231;
+    m_pcBeam.seed = 1017;
+
     mLastMousePos = POINT{};
     m_useRayTracer = true;
     m_isBeamMotionOn = true;
@@ -750,14 +763,10 @@ void PhotonBeamApp::UpdateMainPassCB(const GameTimer& gt)
     mMainPassCB.EyePosW = mCamera.GetPosition3f();
 
     auto totalTime = gt.TotalTime();
-    if(m_isBeamMotionOn)
-        mMainPassCB.LightPos = XMFLOAT3(
-            XMScalarSin(totalTime * 1.5) * 1.2 + m_lightPosition[0],
-            XMScalarCos(totalTime * 1.5) * 1.2 + m_lightPosition[2],
-            m_lightPosition[2]
-        );
+    if (m_isBeamMotionOn)
+        mMainPassCB.LightPos = getLightMotion(totalTime, m_lightPosition);
     else
-        mMainPassCB.LightPos = XMFLOAT3(m_lightPosition[0] * 2, m_lightPosition[1] * 2, m_lightPosition[2]);
+        mMainPassCB.LightPos = XMFLOAT3(m_lightPosition[0], m_lightPosition[1], m_lightPosition[2]);
 
     mMainPassCB.lightIntensity = m_lightIntensity;
     mMainPassCB.RenderTargetSize = XMFLOAT2((float)mClientWidth, (float)mClientHeight);
@@ -798,17 +807,14 @@ void PhotonBeamApp::UpdateRayTracingPushConstants(const GameTimer& gt)
     m_pcRay.numBeamSources = m_usePhotonBeam ? m_numBeamSamples : 0;
     m_pcRay.numPhotonSources = m_usePhotonMapping ? m_numPhotonSamples : 0;
     m_pcRay.showDirectColor = m_showDirectColor ? 1 : 0;
-    m_pcRay.seed = 231;
+    
+    
 
     auto totalTime = gt.TotalTime();
 
     m_pcBeam.seed = 1017;
     if(m_isBeamMotionOn)
-        m_pcBeam.lightPosition = XMFLOAT3(
-            XMScalarSin(totalTime * 1.5) * 1.2 + m_lightPosition[0], 
-            XMScalarCos(totalTime * 1.5) * 1.2 + m_lightPosition[2], 
-            m_lightPosition[2]
-        );
+        m_pcBeam.lightPosition = getLightMotion(totalTime, m_lightPosition);
     else
         m_pcBeam.lightPosition = XMFLOAT3(m_lightPosition[0], m_lightPosition[2], m_lightPosition[2]);
     m_pcBeam.airExtinctCoff = m_pcRay.airScatterCoff;
@@ -2107,7 +2113,7 @@ void PhotonBeamApp::RenderUI()
             ImGuiSliderFlags_None
         );
 
-        ImGui::Checkbox("Beam Motion", &m_isBeamMotionOn);  // Switch between raster and ray tracing
+        ImGui::Checkbox("Light Motion", &m_isBeamMotionOn);  // Switch between raster and ray tracing
 
         ImGuiH::Control::Info(
             "",
