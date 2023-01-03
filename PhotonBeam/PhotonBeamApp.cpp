@@ -2021,7 +2021,7 @@ void PhotonBeamApp::SetDefaults()
     m_pcRay.seed = 231;
     m_pcBeam.seed = 1017;
     m_isRandomSeedFixed = false;
-    m_seedUPdateInterval = 20.0f;
+    m_seedUPdateInterval = 50.0f;
 
 }
 
@@ -2096,6 +2096,13 @@ void PhotonBeamApp::RenderUI()
 
         ImGui::SliderFloat("Light Intensity", &m_beamIntensity, 0.0f, 300.f);
 
+        ImGuiH::Control::Slider(
+            std::string("Light Variation Interval"), "How long does it takes light to changes",
+            &m_seedUPdateInterval,
+            nullptr,
+            ImGuiH::Control::Flags::Normal,
+            1.0f, 100.0f
+        );
 
         ImGuiH::Control::Custom(
             "Air Scatter",
@@ -2116,14 +2123,6 @@ void PhotonBeamApp::RenderUI()
             "Source Light Power",
             [&] { return ImGui::InputFloat3("##Eye", (float*)&m_sourceLight, "%.5f"); },
             ImGuiH::Control::Flags::Disabled
-        );
-
-        ImGuiH::Control::Slider(
-            std::string("Light Change Time"), "How long it takes light to changes",
-            &m_seedUPdateInterval,
-            nullptr,
-            ImGuiH::Control::Flags::Normal,
-            1.0f, 100.0f
         );
 
         ImGuiH::Control::Slider(
