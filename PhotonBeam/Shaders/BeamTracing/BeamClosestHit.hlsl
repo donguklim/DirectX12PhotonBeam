@@ -51,7 +51,7 @@ bool randomScatterOccured(inout BeamHitPayload prd, const in float rayLength)
     float absorptionProb = 1.0 - max(max(albedo.x, albedo.y), albedo.z);
 
     // use russian roulett to decide whether scatter or absortion occurs
-    if (rnd(prd.seed) <= absorptionProb) {
+    if (rnd(prd.seed) * curSeedRatio + rnd(prd.nextSeed) * prd.nextSeedRatio <= absorptionProb) {
         prd.weight = float3(0.0, 0.0, 0.0);
         return true;
     }
