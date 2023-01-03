@@ -311,10 +311,6 @@ void PhotonBeamApp::drawPost()
 {
     mCommandList->SetPipelineState(mPSOs["post"].Get());
 
-
-
-
-
     auto renderTarget = CurrentBackBuffer();
 
     D3D12_RESOURCE_BARRIER barrier = {};
@@ -326,7 +322,6 @@ void PhotonBeamApp::drawPost()
 
     mCommandList->ResourceBarrier(1, &barrier);
 
-
     CD3DX12_CLEAR_VALUE clearValue{ DXGI_FORMAT_R32G32B32_FLOAT, m_clearColor };
 
     D3D12_RENDER_PASS_BEGINNING_ACCESS renderPassBeginningAccessClear{ D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR, { clearValue } };
@@ -335,19 +330,6 @@ void PhotonBeamApp::drawPost()
         CurrentBackBufferView(),
         renderPassBeginningAccessClear,
         renderPassEndingAccessPreserve
-    };
-
-    static const CD3DX12_CLEAR_VALUE depthStencilClearValue{ DXGI_FORMAT_D32_FLOAT_S8X24_UINT, 1.0f, 0 };
-    static const D3D12_RENDER_PASS_ENDING_ACCESS endingNoAccess{ D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_NO_ACCESS, {} };
-
-    static const D3D12_RENDER_PASS_BEGINNING_ACCESS beginningNoAccess{ D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_NO_ACCESS, {} };
-
-    static const D3D12_RENDER_PASS_DEPTH_STENCIL_DESC renderPassDepthStencilDesc{
-        D3D12_CPU_DESCRIPTOR_HANDLE{0},
-        beginningNoAccess,
-        beginningNoAccess,
-        endingNoAccess,
-        endingNoAccess
     };
 
     mCommandList->BeginRenderPass(
@@ -375,10 +357,6 @@ void PhotonBeamApp::drawPost()
 
 void PhotonBeamApp::Rasterize()
 {
-
-    // A command list can be reset after it has been added to the command queue via ExecuteCommandList.
-    // Reusing the command list reuses memory.
-
     if (mIsWireframe)
     {
 
@@ -717,8 +695,6 @@ void PhotonBeamApp::CopyRasterizationOutputToBackbuffer()
 
 void PhotonBeamApp::Draw(const GameTimer& gt)
 {
-    
-
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc = mCurrFrameResource->CmdListAlloc;
 
     if (m_createBeamPhotonAS)
