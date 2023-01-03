@@ -502,98 +502,12 @@ void PhotonBeamApp::BeamTrace()
         mCommandList->DispatchRays(&dispatchDesc);
     }
 
-    // copy beam counter to read buffer
-    {
-        auto resourceBarrierRead = CD3DX12_RESOURCE_BARRIER::Transition(
-            m_beamCounter.Get(),
-            D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
-            D3D12_RESOURCE_STATE_COPY_SOURCE
-        );
-
-        mCommandList->ResourceBarrier(1, &resourceBarrierRead);
-
-        mCommandList->CopyBufferRegion(
-            m_beamCounterRead.Get(),
-            0,
-            m_beamCounter.Get(),
-            0,
-            sizeof(PhotonBeamCounter)
-        );
-    }
-
-    // debug read data copy
-    {
-        auto resourceBarrierRead2 = CD3DX12_RESOURCE_BARRIER::Transition(
-            m_beamData.Get(),
-            D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
-            D3D12_RESOURCE_STATE_COPY_SOURCE
-        );
-
-        mCommandList->ResourceBarrier(1, &resourceBarrierRead2);
-
-        mCommandList->CopyBufferRegion(
-            m_beamReadDebug.Get(),
-            0,
-            m_beamData.Get(),
-            0,
-            sizeof(PhotonBeam)
-        );
-    }
-
-
-    ThrowIfFailed(mCommandList->Close());
-    ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
-    mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
-
-    // wait until counting is finished
-    ++m_currentBeamCounterFence;
-    mCommandQueue->Signal(m_beamCounterFence.Get(), m_currentBeamCounterFence);
-
-    if (m_beamCounterFence->GetCompletedValue() < m_currentBeamCounterFence)
-    {
-        HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
-        ThrowIfFailed(m_beamCounterFence->SetEventOnCompletion(m_currentBeamCounterFence, eventHandle));
-
-        if (eventHandle != 0)
-        {
-            WaitForSingleObject(eventHandle, INFINITE);
-            CloseHandle(eventHandle);
-        }
-    }
-
-    // read the counter
-    uint32_t numSubbeams = 0;
-    {
-        D3D12_RANGE readbackBufferRange{ 0, sizeof(PhotonBeamCounter) };
-        PhotonBeamCounter* pReadBack = nullptr;
-
-        m_beamCounterRead->Map(
-            0,
-            &readbackBufferRange,
-            reinterpret_cast<void**>(&pReadBack)
-        );
-
-        numSubbeams = static_cast<uint32_t>(pReadBack->subBeamCount);
-        auto numBeams = pReadBack->beamCount;
-
-        m_beamCounterRead->Unmap(0, nullptr);
-
-
-        D3D12_RANGE readbackBufferRange2{ 0, sizeof(PhotonBeamCounter) };
-
-        PhotonBeam* pReadBack2 = nullptr;
-
-        m_beamReadDebug->Map(
-            0,
-            &readbackBufferRange2,
-            reinterpret_cast<void**>(&pReadBack2)
-        );
-
-        m_beamReadDebug->Unmap(0, nullptr);
-    }
-
-    ThrowIfFailed(cmdListAlloc->Reset());
-    ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));
+    auto resourceBarrierRender = CD3DX12_RESOURCE_BARRIER::Transition(
+        m_beamAsInstanceDescData.Get(),
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+        D3D12_RESOURCE_STATE_GENERIC_READ
+    );
+    mCommandList->ResourceBarrier(1, &resourceBarrierRender);   
     
     {
         
