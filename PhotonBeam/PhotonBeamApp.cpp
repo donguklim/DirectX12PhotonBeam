@@ -1041,6 +1041,14 @@ void PhotonBeamApp::BuildDescriptorHeaps()
     ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&guiHeapDesc,
         IID_PPV_ARGS(&mGuiDescriptorHeap)));
 
+    D3D12_DESCRIPTOR_HEAP_DESC offScreenRtvHeapDesc{};
+    offScreenRtvHeapDesc.NumDescriptors = 1;
+    offScreenRtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+    offScreenRtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+    offScreenRtvHeapDesc.NodeMask = 0;
+    ThrowIfFailed(md3dDevice->CreateDescriptorHeap(
+        &offScreenRtvHeapDesc, IID_PPV_ARGS(m_offScreenRtvHeap.GetAddressOf())));
+
     D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
     srvHeapDesc.NumDescriptors = static_cast<UINT>(m_textures.size());
     srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;

@@ -261,6 +261,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D12RootSignature> mPostRootSignature = nullptr;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mGuiDescriptorHeap = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_offScreenRtvHeap = nullptr;
 
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_beamTracingDescriptorHeap = nullptr;
     uint32_t m_beamTracingDescriptorsAllocated;
