@@ -70,6 +70,7 @@ PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance):
 {
     mLastMousePos = POINT{};
     m_useRayTracer = true;
+    m_createBeamPhotonAS = true;
     m_airScatterCoff = XMVECTORF32{};
     m_airExtinctCoff = XMVECTORF32{};
     m_sourceLight = XMVECTORF32{};
@@ -2081,7 +2082,7 @@ void PhotonBeamApp::SetDefaults()
 
     m_lightPosition = XMVECTORF32{ 0.0f, 0.0f, 0.0f };
     m_lightIntensity = 10.0f;
-    m_createBeamPhotonAS = true;
+
     m_camearaFOV = 60.0f;
     m_prevCameraFOV = m_camearaFOV;
 
