@@ -34,8 +34,11 @@ bool randomScatterOccured(inout BeamHitPayload prd, const in float rayLength)
 
     float max_extinct = max(max(pc_beam.airExtinctCoff.x, pc_beam.airExtinctCoff.y), pc_beam.airExtinctCoff.z);
 
+    float curSeedRatio = 1.0f - prd.nextSeedRatio;
+
     // random walk within participating media(air) scattering
-    float airScatterAt = -log(1.0 - rnd(prd.seed)) / max_extinct;
+    float airScatterAt = curSeedRatio * (-log(1.0 - rnd(prd.seed))) - prd.nextSeedRatio * log(1.0f - rnd(prd.nextSeed));
+    airScatterAt /= max_extinct;
 
     if (rayLength < airScatterAt) {
         return false;
