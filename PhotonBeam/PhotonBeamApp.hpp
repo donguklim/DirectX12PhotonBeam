@@ -258,6 +258,7 @@ private:
 
     Microsoft::WRL::ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> mPostRootSignature = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_bufferResetRootSignature = nullptr;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_postSrvDescriptorHeap = nullptr;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mGuiDescriptorHeap = nullptr;

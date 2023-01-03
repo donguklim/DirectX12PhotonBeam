@@ -1428,6 +1428,21 @@ void PhotonBeamApp::BuildRayTracingRootSignatures()
 
     }
 
+    // build AS instance description buffer reset root signature
+    {
+        CD3DX12_ROOT_PARAMETER rootParameters[2] = {};
+
+        rootParameters[0].InitAsConstants(sizeof(uint32_t), 0);
+        rootParameters[1].InitAsUnorderedAccessView(0);
+
+        CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters, 1, &GetLinearSampler());
+        desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
+        SerializeAndCreateRootSignature(
+            desc,
+            m_bufferResetRootSignature.GetAddressOf()
+        );
+    }
+
 }
 
 void PhotonBeamApp::BuildPostRootSignature()
@@ -1826,6 +1841,21 @@ void PhotonBeamApp::BuildBeamTracingPSOs()
 
 void PhotonBeamApp::BuildRayTracingPSOs()
 {
+    // create buffer reset PSO
+    {
+        D3D12_COMPUTE_PIPELINE_STATE_DESC bufferResetPsoDesc = {};
+        bufferResetPsoDesc.pRootSignature = m_bufferResetRootSignature.Get();
+        bufferResetPsoDesc.CS = {
+            reinterpret_cast<BYTE*>(m_AsInstanceBufferResetShader->GetBufferPointer()),
+            m_AsInstanceBufferResetShader->GetBufferSize()
+        };
+        bufferResetPsoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+
+        ThrowIfFailed(md3dDevice->CreateComputePipelineState(&bufferResetPsoDesc, IID_PPV_ARGS(mPSOs["bufferReset"].GetAddressOf())));
+    }
+
+
+
     CD3DX12_STATE_OBJECT_DESC rayTracingPipeline{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
 
     for (size_t i = 0; i < to_underlying(ERayTracingShaders::Count); i++)
@@ -1947,24 +1977,22 @@ void PhotonBeamApp::BuildPSOs()
     opaquePsoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
     opaquePsoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
     opaquePsoDesc.DSVFormat = mDepthStencilFormat;
-    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(&mPSOs["opaque"])));
+    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(mPSOs["opaque"].GetAddressOf())));
 
     // PSO for opaque wireframe objects.
     D3D12_GRAPHICS_PIPELINE_STATE_DESC opaqueWireframePsoDesc = opaquePsoDesc;
     opaqueWireframePsoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
-    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaqueWireframePsoDesc, IID_PPV_ARGS(&mPSOs["opaque_wireframe"])));
+    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaqueWireframePsoDesc, IID_PPV_ARGS(mPSOs["opaque_wireframe"].GetAddressOf())));
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC postPsoDesc;
     ZeroMemory(&postPsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
     postPsoDesc.InputLayout = { nullptr, 0 };
     postPsoDesc.pRootSignature = mPostRootSignature.Get();
-    postPsoDesc.VS =
-    {
+    postPsoDesc.VS = {
         reinterpret_cast<BYTE*>(m_rasterizeShaders["postVS"]->GetBufferPointer()),
         m_rasterizeShaders["postVS"]->GetBufferSize()
     };
-    postPsoDesc.PS =
-    {
+    postPsoDesc.PS = {
         reinterpret_cast<BYTE*>(m_rasterizeShaders["postPS"]->GetBufferPointer()),
         m_rasterizeShaders["postPS"]->GetBufferSize()
     };
@@ -1979,9 +2007,7 @@ void PhotonBeamApp::BuildPSOs()
     postPsoDesc.RTVFormats[0] = mBackBufferFormat;
     postPsoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
     postPsoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
-    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&postPsoDesc, IID_PPV_ARGS(&mPSOs["post"])));
-
-
+    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&postPsoDesc, IID_PPV_ARGS(mPSOs["post"].GetAddressOf())));
 }
 
 void PhotonBeamApp::BuildFrameResources()
