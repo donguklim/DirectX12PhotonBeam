@@ -428,7 +428,29 @@ void PhotonBeamApp::BeamTrace()
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc = mCurrFrameResource->CmdListAlloc;
     ThrowIfFailed(cmdListAlloc->Reset());
     ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));
-    
+
+    // Reset Sub beam info buffer
+    {
+        mCommandList->SetPipelineState(mPSOs["bufferReset"].Get());
+        mCommandList->SetComputeRootSignature(m_bufferResetRootSignature.Get());
+        mCommandList->SetComputeRootUnorderedAccessView(0, m_beamAsInstanceDescData->GetGPUVirtualAddress());
+
+        // num_groups = m_maxNumSubBeamInfo * ShaderRayTracingTopASInstanceDesc / SUB_BEAM_INFO_BUFFER_RESET_COMPUTE_SHADER_GROUP_SIZE
+        // = m_maxNumSubBeamInfo  * 256 / 256
+        // = m_maxNumSubBeamInfo
+        const auto num_groups = m_maxNumSubBeamInfo / 256;
+        mCommandList->Dispatch(num_groups, 1, 1);
+
+        auto resourceBarrierRead = CD3DX12_RESOURCE_BARRIER::Transition(
+            m_beamAsInstanceDescData.Get(),
+            D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+            D3D12_RESOURCE_STATE_GENERIC_READ
+        );
+
+        //mCommandList->ResourceBarrier(1, &resourceBarrierRead);
+    }
+
+
     // do beam tracing
     {
         using namespace RootSignatueEnums::BeamTrace;
@@ -1297,6 +1319,18 @@ void PhotonBeamApp::BuildRasterizeRootSignature()
 
 void PhotonBeamApp::BuildRayTracingRootSignatures()
 {
+    // sub beam info buffer root signature
+    {
+        CD3DX12_ROOT_PARAMETER rootParameters[1] = {};
+        rootParameters[0].InitAsUnorderedAccessView(0);
+
+        CD3DX12_ROOT_SIGNATURE_DESC desc(1, rootParameters, 1, &GetLinearSampler());
+        SerializeAndCreateRootSignature(
+            desc,
+            m_bufferResetRootSignature.GetAddressOf()
+        );
+    }
+
     // Global Root Signature
     // This is a root signature that is shared across all raytracing shaders invoked during a DispatchRays() call.
     {
@@ -1427,22 +1461,6 @@ void PhotonBeamApp::BuildRayTracingRootSignatures()
         }
 
     }
-
-    // build AS instance description buffer reset root signature
-    {
-        CD3DX12_ROOT_PARAMETER rootParameters[2] = {};
-
-        rootParameters[0].InitAsConstants(sizeof(uint32_t), 0);
-        rootParameters[1].InitAsUnorderedAccessView(0);
-
-        CD3DX12_ROOT_SIGNATURE_DESC desc(ARRAYSIZE(rootParameters), rootParameters, 1, &GetLinearSampler());
-        desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
-        SerializeAndCreateRootSignature(
-            desc,
-            m_bufferResetRootSignature.GetAddressOf()
-        );
-    }
-
 }
 
 void PhotonBeamApp::BuildPostRootSignature()
@@ -1506,7 +1524,7 @@ void PhotonBeamApp::BuildShadersAndInputLayout()
     m_rasterizeShaders["postVS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"vs_6_6", L"VS");
     m_rasterizeShaders["postPS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"ps_6_6", L"PS");
 
-    m_AsInstanceBufferResetShader = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\ResetBeamAsInstanceBuffer.hlsl", L"cs_6_6", L"main");
+    m_AsInstanceBufferResetShader = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\ResetSubBeamInfoBuffer.hlsl", L"cs_6_6", L"main");
 
     m_beamShaders[to_underlying(EBeamTracingShaders::Miss)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamMiss.hlsl", L"lib_6_6");
     m_beamShaders[to_underlying(EBeamTracingShaders::CloseHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamClosestHit.hlsl", L"lib_6_6");
