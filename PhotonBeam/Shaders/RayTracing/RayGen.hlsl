@@ -10,9 +10,9 @@ RWTexture2D<float4> RenderTarget : register(u0);
 RaytracingAccelerationStructure g_beamAS : register(t0);
 RaytracingAccelerationStructure g_surfaceAS : register(t1);
 
-StructuredBuffer<float3> g_normals : register(t2);
-StructuredBuffer<float2> g_texCoords : register(t3);
-StructuredBuffer<uint3> g_indices : register(t4);
+Buffer<float3> g_normals : register(t2);
+Buffer<float2> g_texCoords : register(t3);
+Buffer<uint> g_indices : register(t4);
 
 StructuredBuffer<GltfShadeMaterial> g_materials : register(t5, space0);
 StructuredBuffer<PrimMeshInfo> g_meshInfos : register(t6, space0);
@@ -42,29 +42,22 @@ void RayGen() {
     // Invert Y for DirectX-style coordinates
     inUV.y = -inUV.y;
 
-    float4 origin = mul(float4(0, 0, 0, 1), pc_ray.viewInverse);
-    float4 target = mul(float4(inUV, 1, 1), pc_ray.projInverse);
-    float4 direction = mul(float4(normalize(target.xyz), 0), pc_ray.viewInverse);
-
     RayHitPayload prd;
 
     prd.hitValue = (float3)(0);
     prd.weight = (float3)(1.0);
 
-    float3 secondRayDir;
     float       vDotN = 0;
     float halfVecPdfVal;
     float rayPdfVal;
     float tMaxDefault = 10000.0;
-
-    float3 rayOrigin = origin.xyz;
-    float3 rayDirection = direction.xyz;
+    float4 target = mul(float4(inUV, 1, 1), pc_ray.projInverse);
 
     RayDesc rayDesc;
     rayDesc.TMin = 0.001;
     rayDesc.TMax = tMaxDefault;
-    rayDesc.Direction = rayDirection;
-    rayDesc.Origin = rayOrigin;
+    rayDesc.Direction = mul(float4(normalize(target.xyz), 0), pc_ray.viewInverse).xyz;
+    rayDesc.Origin = mul(float4(0, 0, 0, 1), pc_ray.viewInverse).xyz;
     prd.tMax = tMaxDefault;
 
     uint num_iteration = 2;
@@ -113,12 +106,12 @@ void RayGen() {
         PrimMeshInfo meshInfo = g_meshInfos[instanceID];
         prd.instanceID = instanceID;
 
-        uint indexOffset = (meshInfo.indexOffset / 3) + query.CommittedPrimitiveIndex();
+        uint indexOffset = meshInfo.indexOffset + 3 * query.CommittedPrimitiveIndex();
         uint vertexOffset = meshInfo.vertexOffset;           // Vertex offset as defined in glTF
         uint materialIndex = max(0, meshInfo.materialIndex);  // material of primitive mesh
 
         // Getting the 3 indices of the triangle (local)
-        uint3 triangleIndex = g_indices[indexOffset];
+        uint3 triangleIndex = uint3(g_indices[indexOffset], g_indices[indexOffset + 1], g_indices[indexOffset + 2]);
         triangleIndex += (uint3)(vertexOffset);  // (global)
 
         float3 barycentrics = float3(0.0, query.CandidateTriangleBarycentrics());
@@ -166,18 +159,17 @@ void RayGen() {
         if (i + 1 >= num_iteration)
             break;
 
-        float3 viewingDirection = -rayDirection;
+        float3 viewingDirection = -rayDesc.Direction;
         if (material.roughness > 0.01)
             break;
 
-        rayDirection = microfacetReflectedLightSampling(seed, rayDirection, world_normal, material.roughness);
-        if (dot(world_normal, rayDirection) < 0)
+        rayDesc.Direction = microfacetReflectedLightSampling(seed, rayDesc.Direction, world_normal, material.roughness);
+        if (dot(world_normal, rayDesc.Direction) < 0)
             break;
 
-        rayOrigin = rayOrigin - viewingDirection * rayDesc.TMax;
-        rayOrigin += rayDirection;
+        rayDesc.Origin = rayDesc.Origin - viewingDirection * rayDesc.TMax + rayDesc.Direction;
         prd.weight *= exp(-pc_ray.airExtinctCoff * rayDesc.TMax) * pdfWeightedGltfBrdf(
-            rayDirection, 
+            rayDesc.Direction,
             viewingDirection,
             world_normal, 
             albedo, 
