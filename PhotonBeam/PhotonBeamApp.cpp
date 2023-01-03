@@ -1491,7 +1491,7 @@ void PhotonBeamApp::BuildShadersAndInputLayout()
     m_rasterizeShaders["postVS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"vs_6_6", L"VS");
     m_rasterizeShaders["postPS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"ps_6_6", L"PS");
 
-    m_AsInstanceBufferResetShader = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\ResetBeamAsInstanceBuffer.hlsl", L"lib_6_6");
+    m_AsInstanceBufferResetShader = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\ResetBeamAsInstanceBuffer.hlsl", L"cs_6_6", L"main");
 
     m_beamShaders[to_underlying(EBeamTracingShaders::Miss)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamMiss.hlsl", L"lib_6_6");
     m_beamShaders[to_underlying(EBeamTracingShaders::CloseHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamClosestHit.hlsl", L"lib_6_6");
@@ -1980,6 +1980,8 @@ void PhotonBeamApp::BuildPSOs()
     postPsoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
     postPsoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
     ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&postPsoDesc, IID_PPV_ARGS(&mPSOs["post"])));
+
+
 }
 
 void PhotonBeamApp::BuildFrameResources()
