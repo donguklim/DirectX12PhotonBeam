@@ -838,8 +838,6 @@ void PhotonBeamApp::UpdateRayTracingPushConstants(const GameTimer& gt)
     m_pcRay.numPhotonSources = m_usePhotonMapping ? m_numPhotonSamples : 0;
     m_pcRay.showDirectColor = m_showDirectColor ? 1 : 0;
     
-
-    const static float seedUPdateInterval = 5.0;
     
     auto totalTime = gt.TotalTime();
 
@@ -851,15 +849,15 @@ void PhotonBeamApp::UpdateRayTracingPushConstants(const GameTimer& gt)
     if (m_seedTime < 0)
         m_seedTime = 0;
 
-    if (m_seedTime > seedUPdateInterval)
+    if (m_seedTime > m_seedUPdateInterval)
     {
-        m_seedTime = std::fmodf(m_seedTime, seedUPdateInterval);
+        m_seedTime = std::fmodf(m_seedTime, m_seedUPdateInterval);
         m_pcRay.seed++;
         m_pcBeam.seed++;
     }
 
-    m_pcBeam.nextSeedRatio = m_seedTime / seedUPdateInterval;
-    m_pcRay.nextSeedRatio = m_seedTime / seedUPdateInterval;
+    m_pcBeam.nextSeedRatio = m_seedTime / m_seedUPdateInterval;
+    m_pcRay.nextSeedRatio = m_seedTime / m_seedUPdateInterval;
 
     if(m_isBeamMotionOn)
         m_pcBeam.lightPosition = getLightMotion(totalTime, m_lightPosition);
@@ -2010,7 +2008,7 @@ void PhotonBeamApp::SetDefaults()
     m_airAlbedo = 0.06f;
 
     m_numBeamSamples = 1600;
-    m_numPhotonSamples = 4 * 4 * 2048;
+    m_numPhotonSamples = 2 * 4 * 2048;
 
 
     m_lightPosition = XMFLOAT3{ 0.0f, 0.0f, 0.0f };
@@ -2023,6 +2021,7 @@ void PhotonBeamApp::SetDefaults()
     m_pcRay.seed = 231;
     m_pcBeam.seed = 1017;
     m_isRandomSeedFixed = false;
+    m_seedUPdateInterval = 50.0f;
 
 }
 
@@ -2097,6 +2096,13 @@ void PhotonBeamApp::RenderUI()
 
         ImGui::SliderFloat("Light Intensity", &m_beamIntensity, 0.0f, 300.f);
 
+        ImGuiH::Control::Slider(
+            std::string("Light Variation Interval"), "How long does it takes light to changes",
+            &m_seedUPdateInterval,
+            nullptr,
+            ImGuiH::Control::Flags::Normal,
+            1.0f, 100.0f
+        );
 
         ImGuiH::Control::Custom(
             "Air Scatter",
@@ -2118,8 +2124,6 @@ void PhotonBeamApp::RenderUI()
             [&] { return ImGui::InputFloat3("##Eye", (float*)&m_sourceLight, "%.5f"); },
             ImGuiH::Control::Flags::Disabled
         );
-
-
 
         ImGuiH::Control::Slider(
             std::string("Beam Radius"), "Sampling radius for beams",
