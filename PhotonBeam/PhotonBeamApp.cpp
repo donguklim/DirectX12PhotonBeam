@@ -2096,6 +2096,8 @@ void PhotonBeamApp::RenderUI()
 
         ImGui::SliderFloat("Light Intensity", &m_beamIntensity, 0.0f, 300.f);
 
+        ImGui::Checkbox("Light Variation On", &m_isRandomSeedFixed);
+
         ImGuiH::Control::Slider(
             std::string("Light Variation Interval"), "How long does it takes light to changes",
             &m_seedUPdateInterval,
@@ -2176,8 +2178,6 @@ void PhotonBeamApp::RenderUI()
         );
 
         ImGui::Checkbox("Light Motion", &m_isBeamMotionOn);  // Switch between raster and ray tracing
-
-        ImGui::Checkbox("Fix Light Random Seed", &m_isRandomSeedFixed);
 
     } while (false);
 
