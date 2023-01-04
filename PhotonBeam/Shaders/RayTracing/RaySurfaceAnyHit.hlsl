@@ -63,7 +63,9 @@ void SurfaceAnyHit(inout RayHitPayload prd, RayHitAttributes attrs) {
         return;
     }
 
-    float3 radiance = beam.lightColor / float(pc_ray.numPhotonSources) * dot(towardLightDirection, prd.hitNormal) / (pc_ray.photonRadius * pc_ray.photonRadius * M_PI);
+    float3 radiance = exp(-pc_ray.airExtinctCoff * (rayDist + beamDist))
+        * gltfBrdf(towardLightDirection, vewingDirection, prd.hitNormal, prd.hitAlbedo, prd.hitRoughness, prd.hitMetallic)
+        * beam.lightColor / float(pc_ray.numPhotonSources) * dot(towardLightDirection, prd.hitNormal) / (pc_ray.photonRadius * pc_ray.photonRadius * M_PI);
 
     float pointDist = length(worldPos - beam.endPos);
 
@@ -71,9 +73,9 @@ void SurfaceAnyHit(inout RayHitPayload prd, RayHitAttributes attrs) {
     //prd.hitValue += prd.weight * radiance * (1 - pointDist / pc_ray.photonRadius);
     //prd.hitValue += prd.weight * radiance;
 
-    //prd.hitValue +=  radiance * pow((1 - pointDist / pc_ray.photonRadius), 0.5);
+    //prd.hitValue += prd.weight * radiance * pow((1 - pointDist / pc_ray.photonRadius), 0.5);
 
-    prd.hitValue += radiance;
+    prd.hitValue += prd.weight * radiance;
 
     IgnoreHit();
 

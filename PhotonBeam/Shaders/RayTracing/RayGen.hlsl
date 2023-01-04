@@ -156,8 +156,6 @@ void RayGen() {
         );
         prd.weight = prd.weight * 1.0;
 
-        break;
-
         // stop the loop at this point if this is the last iteration
         if (i + 1 >= num_iteration)
             break;
