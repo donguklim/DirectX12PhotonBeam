@@ -1999,14 +1999,14 @@ void PhotonBeamApp::SetDefaults()
     m_clearColor = Colors::LightSteelBlue;
     m_beamNearColor = defaultBeamNearColor;
     m_beamUnitDistantColor = defaultBeamUnitDistantColor;
-    m_beamRadius = 0.8f;
+    m_beamRadius = 0.6f;
     m_photonRadius = 1.2f;
-    m_beamIntensity = 3.0f;
+    m_beamIntensity = 6.0f;
     m_usePhotonMapping = true;
     m_usePhotonBeam = true;
     m_hgAssymFactor = 0.0f;
     m_showDirectColor = false;
-    m_airAlbedo = 0.07f;
+    m_airAlbedo = 0.5f;
 
     m_numBeamSamples = 1600;
     m_numPhotonSamples = 2 * 4 * 2048;

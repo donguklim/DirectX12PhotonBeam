@@ -9,18 +9,6 @@
 ConstantBuffer<PushConstantRay> pc_ray : register(b0);
 StructuredBuffer<PhotonBeam> g_photonBeams: register(t0);
 
-bool getIntersection(float tMax, in PhotonBeam beam)
-{
-    const float3 rayEnd = WorldRayOrigin() + WorldRayDirection() * tMax;
-
-    if (length(beam.endPos - rayEnd) > pc_ray.photonRadius)
-    {
-        return false;
-    }
-
-    return true;
-}
-
 
 [shader("anyhit")]
 void SurfaceAnyHit(inout RayHitPayload prd, RayHitAttributes attrs) {
@@ -38,8 +26,12 @@ void SurfaceAnyHit(inout RayHitPayload prd, RayHitAttributes attrs) {
         IgnoreHit();
         return;
     }
+    
+    const float rayDist = prd.tMax;
+    const float3 worldPos = WorldRayOrigin() + WorldRayDirection() * rayDist;
+    const float pointDist = length(worldPos - beam.endPos);
 
-    if (!getIntersection(prd.tMax, beam))
+    if (pointDist > pc_ray.photonRadius)
     {
         IgnoreHit();
         return;
@@ -51,8 +43,7 @@ void SurfaceAnyHit(inout RayHitPayload prd, RayHitAttributes attrs) {
         return;
     }
 
-    const float rayDist = prd.tMax;
-    const float3 worldPos = WorldRayOrigin() + WorldRayDirection() * rayDist;
+    
     const float3 towardLightDirection = normalize(beam.startPos - beam.endPos);
     const float beamDist = length(beam.startPos - beam.endPos);
     const float3 vewingDirection = normalize(-WorldRayDirection());
@@ -67,13 +58,17 @@ void SurfaceAnyHit(inout RayHitPayload prd, RayHitAttributes attrs) {
         * gltfBrdf(towardLightDirection, vewingDirection, prd.hitNormal, prd.hitAlbedo, prd.hitRoughness, prd.hitMetallic)
         * beam.lightColor / float(pc_ray.numPhotonSources) * dot(towardLightDirection, prd.hitNormal) / (pc_ray.photonRadius * pc_ray.photonRadius * M_PI);
 
-    float pointDist = length(worldPos - beam.endPos);
+    // 
 
     //prd.hitValue += radiance * exp(-pc_ray.photonRadius * pointDist * pointDist);
-    //prd.hitValue += prd.weight * radiance * (1 - pointDist / pc_ray.photonRadius);
+    //prd.hitValue += prd.weight * radiance * nearFarRatio;
     //prd.hitValue += prd.weight * radiance;
 
-    prd.hitValue += prd.weight * radiance * pow((1 - pointDist / pc_ray.photonRadius), 0.5);
+    // pow(0, x) causes invalid value, resulting tiny flashing black dots on the screen
+    // so becareful and try not to insert zero value or near zero value as first parameter to the power function
+    // This is the reason 0.1 is subtracted from pointDist
+    prd.hitValue += prd.weight * radiance * pow((1.0f - (pointDist - 0.1) / pc_ray.photonRadius), 0.5);
+
 
     IgnoreHit();
 

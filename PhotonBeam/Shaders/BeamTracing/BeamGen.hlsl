@@ -78,6 +78,9 @@ void BeamGen()
         // newBeam.radius = pc_beam.beamRadius;
         newBeam.radius = 0;
         newBeam.lightColor = beamColor;
+        // Only saving instance id to check if ray and photon mathces the instace for now.
+        // But for a better accuracy and handle some instance with complicated shaped mesh, 
+        // better to save primitive ID and check if the ray nad photon maches the primitive
         newBeam.hitInstanceID = prd.instanceID;
 
         float3 beamVec = newBeam.endPos - newBeam.startPos;
