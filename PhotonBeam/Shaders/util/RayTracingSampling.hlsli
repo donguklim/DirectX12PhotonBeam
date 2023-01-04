@@ -82,6 +82,9 @@ void createCoordinateSystem(in float3 N, out float3 Nt, out float3 Nb)
 
 
 // Henyey-Greenstein phase function
+// this function returns pdf value of theta distribution
+// this function does not return pdf value of cos theta distribution
+// If you want probability distribution value of cos theta, mutliply this function result by 2 Pie.
 float heneyGreenPhaseFunc(float cosTheta, float g)
 {
     // assymetriy factor
@@ -102,9 +105,16 @@ float3 heneyGreenPhaseFuncSampling(inout uint seed, in float3 normal, float g)
     float r2 = rnd(seed);
 
     float g2 = g * g;
-    float r12 = r1 * r1;
-    float numerator = g * (2.0f * r12 + 2.0f - 1.0f * r1) + 2.0f * r1 - 1.0f + g2 * g * (2.0f * r12 - 1.0f * r1) + 2.0f * g2 - 1.0f;
-    float denom = 1.0 + g2 * (4.0 * r1 * r1 + 1.0 - 2.0 * r1) + g * (4.0 * r1 - 1.0);
+    float g3 = g2 * g;
+ 
+    float s1 = 2 * r1 - 1;
+    float s2 = s1 * s1;
+
+    float denom = 1 + g * s1;
+    denom = denom * denom * 2;
+
+    float numerator = 2 * s1 + g * (s2 + 3) + g2 * (2 * s1) + g3 * (s2 - 1);
+    
 
     if (denom == 0.0)
     {
@@ -131,25 +141,13 @@ float3 heneyGreenPhaseFuncSampling(inout uint seed, in float3 normal, float g)
 // nDotH is the dot product between half vector and surfcace normal
 // half vector = normalize (incident light direction +  refliected light direction)
 // both incident light and reflected light directions start from the point of the reflection
-float microfacetPDF(float nDotH, float a2)
+float microfacetPDF(float nDotH, float roughness)
 {
-    if (nDotH < 0)
-        return 0.0;
-
-    if (a2 <= 0.0)
-        return 0.0;
+    float a2 = roughness * roughness;
 
     float denom = (nDotH * nDotH * (a2 - 1.0) + 1);
     denom = denom * denom * M_PI;
     return a2 / denom;
-
-}
-
-// PDF for the reflected light
-// hDotL is the dot product between half vector and reflected light direction
-float microfacetLightPDF(float hDotL, float nDotH, float a2)
-{
-    return microfacetPDF(nDotH, a2) / (4 * hDotL);
 }
 
 // https://schuttejoe.github.io/post/ggximportancesamplingpart1/
@@ -204,7 +202,7 @@ float3 gltfBrdf(
     float3 f_diffuse = (1.0 - frsnel) / M_PI * c_diff;
 
     float dVal = 0.0;
-    // roughness = 0.0, nDotH = 1.0 -> microfacetPDF = inf
+    // roughness = 0.0 and nDotH = 1.0 -> microfacetPDF = inf
     if (roughness > 0.0 || nDotH < 0.9999)
     {
         dVal = microfacetPDF(nDotH, roughness);
@@ -255,11 +253,11 @@ float3 pdfWeightedGltfBrdf(
     float3 frsnel = f0 + (1 - f0) * pow(1 - abs(vDotH), 5);
     float3 f_diffuse = float3(0.0, 0.0, 0.0);
 
-    // hDotL = 0 ->  microfacetLightPDF = inf -> f_diffuse = 0
-    // roughness = 0.0, nDotH = 1.0 -> microfacetPDF = inf -> microfacetLightPDF = inf -> f_diffuse = 0
+    // hDotL = 0 ->  microfacetPDF = inf -> f_diffuse = 0
+    // roughness = 0.0, nDotH = 1.0 -> microfacetPDF = inf -> microfacetPDF = inf -> f_diffuse = 0
     if ((roughness > 0.0 || nDotH < 0.999) && hDotL > 0.0)
     {
-        f_diffuse = (1.0 - frsnel) / M_PI * c_diff / microfacetLightPDF(hDotL, nDotH, a2);
+        f_diffuse = (1.0 - frsnel) / M_PI * c_diff / microfacetPDF(nDotH, roughness);
     }
 
     float gVal = 0.0;

@@ -369,7 +369,7 @@ private:
     float         m_hgAssymFactor;
     bool          m_showDirectColor;
     bool m_isBeamMotionOn;
-    bool m_isRandomSeedFixed;
+    bool m_isRandomSeedChanging;
     float m_camearaFOV;
     float m_prevCameraFOV;
 
