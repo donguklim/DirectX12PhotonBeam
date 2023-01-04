@@ -1993,7 +1993,8 @@ void PhotonBeamApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const st
 void PhotonBeamApp::SetDefaults()
 {
     const XMVECTORF32 defaultBeamNearColor{ 1.0f, 1.0f, 1.0f, 1.0f };
-    const XMVECTORF32 defaultBeamUnitDistantColor{ 0.895f, 0.966f, 0.966f, 1.0f };
+    //const XMVECTORF32 defaultBeamUnitDistantColor{ 0.895f, 0.966f, 0.966f, 1.0f };
+    const XMVECTORF32 defaultBeamUnitDistantColor{ 0.99f, 0.99f, 0.99f, 1.0f };
 
     m_clearColor = Colors::LightSteelBlue;
     m_beamNearColor = defaultBeamNearColor;
