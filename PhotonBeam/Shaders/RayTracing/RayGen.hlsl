@@ -170,6 +170,11 @@ void RayGen() {
         if (rayDesc.Direction.x == 0 && rayDesc.Direction.y == 0 && rayDesc.Direction.z == 0)
             break;
 
+        // subsurface scattering occured. (light refracted inside the surface)
+        // Igore subsurface scattering and the light is just considered to be absorbd
+        if (dot(world_normal, rayDesc.Direction) <= 0)
+            break;
+
         rayDesc.Direction = normalize(rayDesc.Direction);
 
         if (dot(world_normal, rayDesc.Direction) < 0)

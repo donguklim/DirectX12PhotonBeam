@@ -143,13 +143,11 @@ float3 heneyGreenPhaseFuncSampling(inout uint seed, in float3 normal, float g)
 // both incident light and reflected light directions start from the point of the reflection
 float microfacetPDF(float nDotH, float roughness)
 {
-
     float a2 = roughness * roughness;
 
     float denom = (nDotH * nDotH * (a2 - 1.0) + 1);
     denom = denom * denom * M_PI;
     return a2 / denom;
-
 }
 
 // https://schuttejoe.github.io/post/ggximportancesamplingpart1/
