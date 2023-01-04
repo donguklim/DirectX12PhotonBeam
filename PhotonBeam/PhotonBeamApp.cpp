@@ -2000,7 +2000,7 @@ void PhotonBeamApp::SetDefaults()
     m_beamUnitDistantColor = defaultBeamUnitDistantColor;
     m_beamRadius = 0.8f;
     m_photonRadius = 1.2f;
-    m_beamIntensity = 15.0f;
+    m_beamIntensity = 3.0f;
     m_usePhotonMapping = true;
     m_usePhotonBeam = true;
     m_hgAssymFactor = 0.0f;
@@ -2012,7 +2012,7 @@ void PhotonBeamApp::SetDefaults()
 
 
     m_lightPosition = XMFLOAT3{ 0.0f, 0.0f, 0.0f };
-    m_lightIntensity = 3.0f;
+    m_lightIntensity = 10.0f;
 
     m_camearaFOV = 60.0f;
     m_prevCameraFOV = m_camearaFOV;
