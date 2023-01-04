@@ -851,13 +851,13 @@ void PhotonBeamApp::UpdateRayTracingPushConstants(const GameTimer& gt)
 
     if (m_seedTime > m_seedUPdateInterval)
     {
-        //m_seedTime = std::fmodf(m_seedTime, m_seedUPdateInterval);
-        //m_pcRay.seed++;
-        //m_pcBeam.seed++;
+        m_seedTime = std::fmodf(m_seedTime, m_seedUPdateInterval);
+        m_pcRay.seed++;
+        m_pcBeam.seed++;
     }
 
-    m_pcBeam.nextSeedRatio = 0;
-    m_pcRay.nextSeedRatio = 0;
+    m_pcBeam.nextSeedRatio = m_seedTime / m_seedUPdateInterval;
+    m_pcRay.nextSeedRatio = m_seedTime / m_seedUPdateInterval;
 
     if(m_isBeamMotionOn)
         m_pcBeam.lightPosition = getLightMotion(totalTime, m_lightPosition);
@@ -2094,7 +2094,7 @@ void PhotonBeamApp::RenderUI()
         //ImGui::SliderFloat("Surface Photon Radius", &helloVk.m_photonRadius, 0.05f, 5.0f);
         //ImGui::SliderFloat("HG Assymetric Factor", &helloVk.m_hgAssymFactor, -0.99f, 0.99f);
 
-        ImGui::SliderFloat("Light Intensity", &m_beamIntensity, 0.0f, 15.f);
+        ImGui::SliderFloat("Light Intensity", &m_beamIntensity, 0.0f, 150.f);
 
         ImGui::Checkbox("Light Variation On", &m_isRandomSeedChanging);
 
