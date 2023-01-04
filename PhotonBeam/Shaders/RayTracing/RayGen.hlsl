@@ -172,13 +172,10 @@ void RayGen() {
 
         // subsurface scattering occured. (light refracted inside the surface)
         // Igore subsurface scattering and the light is just considered to be absorbd
-        if (dot(world_normal, rayDesc.Direction) <= 0)
+        if (dot(world_normal, rayDesc.Direction) < 0)
             break;
 
         rayDesc.Direction = normalize(rayDesc.Direction);
-
-        if (dot(world_normal, rayDesc.Direction) < 0)
-            break;
 
         rayDesc.Origin = rayDesc.Origin - viewingDirection * rayDesc.TMax + rayDesc.Direction;
         prd.weight *= exp(-pc_ray.airExtinctCoff * rayDesc.TMax) * pdfWeightedGltfBrdf(
