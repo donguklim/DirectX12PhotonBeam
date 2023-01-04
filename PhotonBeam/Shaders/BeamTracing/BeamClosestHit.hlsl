@@ -57,7 +57,7 @@ bool randomScatterOccured(inout BeamHitPayload prd, const in float rayLength)
         return true;
     }
 
-    prd.weight = exp(-pc_beam.airExtinctCoff * airScatterAt);
+    prd.weight = albedo;
     float3 rayDirection = heneyGreenPhaseFuncSampling(prd.seed, prd.rayDirection, pc_beam.airHGAssymFactor) * curSeedRatio +
         heneyGreenPhaseFuncSampling(prd.nextSeed, prd.rayDirection, pc_beam.airHGAssymFactor) * prd.nextSeedRatio;
 
