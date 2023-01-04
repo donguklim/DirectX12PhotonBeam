@@ -90,7 +90,7 @@ PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance):
     mLastMousePos = POINT{};
     m_useRayTracer = true;
     m_isBeamMotionOn = true;
-    m_isRandomSeedFixed = false;
+    m_isRandomSeedChanging = true;
     m_airScatterCoff = XMVECTORF32{};
     m_airExtinctCoff = XMVECTORF32{};
     m_sourceLight = XMVECTORF32{};
@@ -841,7 +841,7 @@ void PhotonBeamApp::UpdateRayTracingPushConstants(const GameTimer& gt)
     
     auto totalTime = gt.TotalTime();
 
-    if (!m_isRandomSeedFixed)
+    if (m_isRandomSeedChanging)
         m_seedTime += totalTime - m_prevUpdateTime;
 
     m_prevUpdateTime = totalTime;
@@ -851,13 +851,13 @@ void PhotonBeamApp::UpdateRayTracingPushConstants(const GameTimer& gt)
 
     if (m_seedTime > m_seedUPdateInterval)
     {
-        m_seedTime = std::fmodf(m_seedTime, m_seedUPdateInterval);
-        m_pcRay.seed++;
-        m_pcBeam.seed++;
+        //m_seedTime = std::fmodf(m_seedTime, m_seedUPdateInterval);
+        //m_pcRay.seed++;
+        //m_pcBeam.seed++;
     }
 
-    m_pcBeam.nextSeedRatio = m_seedTime / m_seedUPdateInterval;
-    m_pcRay.nextSeedRatio = m_seedTime / m_seedUPdateInterval;
+    m_pcBeam.nextSeedRatio = 0;
+    m_pcRay.nextSeedRatio = 0;
 
     if(m_isBeamMotionOn)
         m_pcBeam.lightPosition = getLightMotion(totalTime, m_lightPosition);
@@ -1993,7 +1993,7 @@ void PhotonBeamApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const st
 void PhotonBeamApp::SetDefaults()
 {
     const XMVECTORF32 defaultBeamNearColor{ 1.0f, 1.0f, 1.0f, 1.0f };
-    const XMVECTORF32 defaultBeamUnitDistantColor{ 0.816f, 0.906f, 0.906f, 1.0f };
+    const XMVECTORF32 defaultBeamUnitDistantColor{ 0.895f, 0.966f, 0.966f, 1.0f };
 
     m_clearColor = Colors::LightSteelBlue;
     m_beamNearColor = defaultBeamNearColor;
@@ -2005,14 +2005,14 @@ void PhotonBeamApp::SetDefaults()
     m_usePhotonBeam = true;
     m_hgAssymFactor = 0.0f;
     m_showDirectColor = false;
-    m_airAlbedo = 0.06f;
+    m_airAlbedo = 0.07f;
 
     m_numBeamSamples = 1600;
     m_numPhotonSamples = 2 * 4 * 2048;
 
 
     m_lightPosition = XMFLOAT3{ 0.0f, 0.0f, 0.0f };
-    m_lightIntensity = 10.0f;
+    m_lightIntensity = 3.0f;
 
     m_camearaFOV = 60.0f;
     m_prevCameraFOV = m_camearaFOV;
@@ -2020,7 +2020,7 @@ void PhotonBeamApp::SetDefaults()
 
     m_pcRay.seed = 231;
     m_pcBeam.seed = 1017;
-    m_isRandomSeedFixed = false;
+    m_isRandomSeedChanging = true;
     m_seedUPdateInterval = 50.0f;
 
 }
@@ -2094,9 +2094,9 @@ void PhotonBeamApp::RenderUI()
         //ImGui::SliderFloat("Surface Photon Radius", &helloVk.m_photonRadius, 0.05f, 5.0f);
         //ImGui::SliderFloat("HG Assymetric Factor", &helloVk.m_hgAssymFactor, -0.99f, 0.99f);
 
-        ImGui::SliderFloat("Light Intensity", &m_beamIntensity, 0.0f, 300.f);
+        ImGui::SliderFloat("Light Intensity", &m_beamIntensity, 0.0f, 15.f);
 
-        ImGui::Checkbox("Light Variation On", &m_isRandomSeedFixed);
+        ImGui::Checkbox("Light Variation On", &m_isRandomSeedChanging);
 
         ImGuiH::Control::Slider(
             std::string("Light Variation Interval"), "How long does it takes light to changes",
