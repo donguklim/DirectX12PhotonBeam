@@ -2094,10 +2094,10 @@ void PhotonBeamApp::RenderUI()
         //ImGui::SliderFloat("Surface Photon Radius", &helloVk.m_photonRadius, 0.05f, 5.0f);
         //ImGui::SliderFloat("HG Assymetric Factor", &helloVk.m_hgAssymFactor, -0.99f, 0.99f);
 
-        ImGui::SliderFloat("Light Intensity", &m_beamIntensity, 0.0f, 150.f);
+        ImGui::SliderFloat("Light Intensity", &m_beamIntensity, 0.0f, 50.f);
+        ImGui::Checkbox("Light Motion", &m_isBeamMotionOn);
 
         ImGui::Checkbox("Light Variation On", &m_isRandomSeedChanging);
-
         ImGuiH::Control::Slider(
             std::string("Light Variation Interval"), "How long does it takes light to changes",
             &m_seedUPdateInterval,
@@ -2176,8 +2176,6 @@ void PhotonBeamApp::RenderUI()
             nullptr,
             ImGuiSliderFlags_None
         );
-
-        ImGui::Checkbox("Light Motion", &m_isBeamMotionOn);  // Switch between raster and ray tracing
 
     } while (false);
 
