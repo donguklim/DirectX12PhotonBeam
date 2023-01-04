@@ -82,9 +82,9 @@ void createCoordinateSystem(in float3 N, out float3 Nt, out float3 Nb)
 
 
 // Henyey-Greenstein phase function
-// this probability distribution on cos theta
-// this is not probiability distribution on theta
-// If you want probability distribution on theta, then divide this function result by 2 PI.
+// this function returns pdf value of theta distribution
+// this function does not return pdf value of cos theta distribution
+// If you want probability distribution value of cos theta, mutliply this function result by 2 Pie.
 float heneyGreenPhaseFunc(float cosTheta, float g)
 {
     // assymetriy factor
@@ -95,7 +95,7 @@ float heneyGreenPhaseFunc(float cosTheta, float g)
     float g2 = g * g;
     float denom = 1 + g2 - 2 * g * cosTheta;
 
-    return (1 - g2) / (denom * sqrt(denom)) / 2;
+    return (1 - g2) / (denom * sqrt(denom)) / (4 * M_PI);
 }
 
 // normal is incoming ray direction start from the light source 
