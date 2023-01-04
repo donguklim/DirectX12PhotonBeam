@@ -174,7 +174,7 @@ void ClosestHit(inout BeamHitPayload prd, BuiltInTriangleIntersectionAttributes 
 
     prd.rayOrigin = rayOrigin;
     prd.rayDirection = rayDirection;
-    prd.weight = material_f * cos_theta * exp(-pc_beam.airExtinctCoff * rayLength);
+    prd.weight = material_f * cos_theta;
 
     return;
 }
