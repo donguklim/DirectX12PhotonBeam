@@ -82,7 +82,7 @@ void createCoordinateSystem(in float3 N, out float3 Nt, out float3 Nb)
 
 
 // Henyey-Greenstein phase function
-// this function returns pdf value of theta distribution
+// this function returns pdf value of solid angle distribution
 // this function does not return pdf value of cos theta distribution
 // If you want probability distribution value of cos theta, mutliply this function result by 2 Pie.
 float heneyGreenPhaseFunc(float cosTheta, float g)
@@ -144,9 +144,9 @@ float3 heneyGreenPhaseFuncSampling(inout uint seed, in float3 normal, float g)
 float microfacetPDF(float nDotH, float roughness)
 {
     float a2 = roughness * roughness;
-
     float denom = (nDotH * nDotH * (a2 - 1.0) + 1);
     denom = denom * denom * M_PI;
+
     return a2 / denom;
 }
 
@@ -254,7 +254,7 @@ float3 pdfWeightedGltfBrdf(
     float3 f_diffuse = float3(0.0, 0.0, 0.0);
 
     // hDotL = 0 ->  microfacetPDF = inf -> f_diffuse = 0
-    // roughness = 0.0, nDotH = 1.0 -> microfacetPDF = inf -> microfacetPDF = inf -> f_diffuse = 0
+    // roughness = 0.0, nDotH = 1.0 -> microfacetPDF = inf -> f_diffuse = 0
     if ((roughness > 0.0 || nDotH < 0.999) && hDotL > 0.0)
     {
         f_diffuse = (1.0 - frsnel) / M_PI * c_diff / microfacetPDF(nDotH, roughness);
