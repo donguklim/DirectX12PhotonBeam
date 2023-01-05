@@ -74,7 +74,7 @@ PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance):
     m_beamTracingDescriptorsAllocated(0),
     m_rayTracingDescriptorsAllocated(0),
     m_maxNumSubBeamInfo(
-        ((m_maxNumBeamSamples * 48 + m_maxNumPhotonSamples) / SUB_BEAM_INFO_BUFFER_RESET_COMPUTE_SHADER_GROUP_SIZE)
+        ((m_maxNumBeamSamples * 16 + m_maxNumPhotonSamples) / SUB_BEAM_INFO_BUFFER_RESET_COMPUTE_SHADER_GROUP_SIZE)
         * SUB_BEAM_INFO_BUFFER_RESET_COMPUTE_SHADER_GROUP_SIZE
     )
 {
@@ -573,8 +573,6 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
     ThrowIfFailed(cmdListAlloc->Reset());
     ThrowIfFailed(mCommandList->Reset(cmdListAlloc.Get(), nullptr));
 
-    BeamTrace();
-
     // Start the Dear ImGui frame
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplWin32_NewFrame();
@@ -584,6 +582,7 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
 
     if (m_useRayTracer)
     {
+        BeamTrace();
         RayTrace();
 
     }
@@ -1995,6 +1994,10 @@ void PhotonBeamApp::SetDefaults()
     const XMVECTORF32 defaultBeamNearColor{ 1.0f, 1.0f, 1.0f, 1.0f };
     //const XMVECTORF32 defaultBeamUnitDistantColor{ 0.895f, 0.966f, 0.966f, 1.0f };
     const XMVECTORF32 defaultBeamUnitDistantColor{ 0.99f, 0.99f, 0.99f, 1.0f };
+
+    mCamera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
+    mCamera.LookAt(XMFLOAT3{ 0.0f, 0.0f, 15.0f }, XMFLOAT3{ 0.0f, 0.0f, 0.0f }, XMFLOAT3{ 0.0f, 1.0f, 0.0f });
+    mCamera.UpdateViewMatrix();
 
     m_clearColor = Colors::LightSteelBlue;
     m_beamNearColor = defaultBeamNearColor;
