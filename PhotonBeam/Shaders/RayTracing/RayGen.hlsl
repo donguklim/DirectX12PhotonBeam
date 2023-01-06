@@ -164,11 +164,16 @@ void RayGen() {
         if (material.roughness > 0.01)
             break;
 
-        rayDesc.Direction = microfacetReflectedLightSampling(seed, rayDesc.Direction, world_normal, material.roughness) * (1.0f - pc_ray.nextSeedRatio) +
-            microfacetReflectedLightSampling(nextSeed, rayDesc.Direction, world_normal, material.roughness) * pc_ray.nextSeedRatio;
+        float3 firstDirection = microfacetReflectedLightSampling(seed, rayDesc.Direction, world_normal, material.roughness);
+        float3 secondDirection = microfacetReflectedLightSampling(nextSeed, rayDesc.Direction, world_normal, material.roughness);
+        float3 sumDirection = firstDirection + secondDirection;
 
-        if (rayDesc.Direction.x == 0 && rayDesc.Direction.y == 0 && rayDesc.Direction.z == 0)
+        if (sumDirection.x == 0 && sumDirection.y == 0 && sumDirection.z == 0)
             break;
+
+        rayDesc.Direction = normalize((1.0f - pc_ray.nextSeedRatio) * firstDirection + pc_ray.nextSeedRatio * secondDirection);
+
+
 
         // subsurface scattering occured. (light refracted inside the surface)
         // Igore subsurface scattering and the light is just considered to be absorbd
