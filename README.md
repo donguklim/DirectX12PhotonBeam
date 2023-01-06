@@ -1,6 +1,39 @@
 ﻿# DirectX12PhotonBeam
 Photon beam rendering algorithm implemented with DirectX12 and RTX
 
+### Link to video
+[![Link to video](https://img.youtube.com/vi/Tia85zQ_XLM/0.jpg)](https://youtu.be/Tia85zQ_XLM)
+
+## Background
+This is a portfolio project made with intention to implement Photon Beam rendering algorithm using DXR and DirectX 12. 
+
+Photon Beam is a rendering algorithm developed by Disney for descriging radiance 
+due to [volumetric participating media](## "Volumetric objects where light scatters or gets absorbed. EX: water, fog, fire, smoke, cloud, dusty wind, murky air").
+
+
+This application loads a GLTF 3D model file. 
+BRDF equation used for surface refelections on the 3D model follows [BRDF in GLTF specification](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#appendix-b-brdf-implementation) for surface reflection.
+
+
+For rendering, this application uses 
+
+- Photon beam method for volumetric participating media radiance estimation
+- Photon mapping method for surface radiance
+- Simple raytracing for specular reflection on 3D model objects with zero roughness.
+
+Watch above video for checking how the implementation works.
+
+For more detailed background of the techinques used, you may check the references.
+
+
+## Vulkan Implementation
+
+https://github.com/donguklim/vk_raytracing_tutorial_KHR/tree/master/photon_beam
+
+There is Vulkan version of the implementation, which is made earlier than this DirectX 12 version. 
+
+Vulkan version lacks light motion, and light variation features. Only a fixed light simulation is used for every frame generated.
+
 
 ## References
 
