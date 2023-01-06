@@ -57,17 +57,21 @@ bool randomScatterOccured(inout BeamHitPayload prd, const in float rayLength)
         return true;
     }
 
-    prd.weight = albedo;
-    float3 rayDirection = heneyGreenPhaseFuncSampling(prd.seed, prd.rayDirection, pc_beam.airHGAssymFactor) * curSeedRatio +
-        heneyGreenPhaseFuncSampling(prd.nextSeed, prd.rayDirection, pc_beam.airHGAssymFactor) * prd.nextSeedRatio;
+    
+    float3 rayDirectionFirst = heneyGreenPhaseFuncSampling(prd.seed, prd.rayDirection, pc_beam.airHGAssymFactor);
+    float3 rayDirectionSecond = heneyGreenPhaseFuncSampling(prd.nextSeed, prd.rayDirection, pc_beam.airHGAssymFactor);
+    float3 sumDirection = rayDirectionFirst + rayDirectionSecond;
 
-    // if smoothed direction is zero by any chance, then just make the beam absorbed
-    if (rayDirection.x == 0 && rayDirection.y == 0 && rayDirection.z == 0)
+    if (sumDirection.x == 0 && sumDirection.y == 0 && sumDirection.z == 0)
     {
         prd.weight = float3(0.0, 0.0, 0.0);
         return true;
     }
 
+    float3 rayDirection = normalize(curSeedRatio * rayDirectionFirst + prd.nextSeedRatio * rayDirectionSecond);
+
+
+    prd.weight = albedo;
     prd.rayDirection = normalize(rayDirection);
 
     return true;
@@ -138,12 +142,30 @@ void ClosestHit(inout BeamHitPayload prd, BuiltInTriangleIntersectionAttributes 
         return;
     }
 
-    float3 rayDirection = microfacetReflectedLightSampling(
-        prd.seed, 
-        prd.rayDirection, 
-        world_normal, 
+    float3 rayDirectionFirst = microfacetReflectedLightSampling(
+        prd.seed,
+        prd.rayDirection,
+        world_normal,
         material.roughness
     );
+    float3 rayDirectionSecond = microfacetReflectedLightSampling(
+        prd.nextSeed,
+        prd.rayDirection,
+        world_normal,
+        material.roughness
+    );
+
+    float3 sumDirection = rayDirectionFirst + rayDirectionSecond;
+    if (sumDirection.x == 0 && sumDirection.y == 0 && sumDirection.z == 0)
+    {
+        prd.rayOrigin = rayOrigin;
+        prd.weight = float3(0.0, 0.0, 0.0);
+        prd.isHit = 0;
+        return;
+    }
+
+    float curSeedRatio = 1.0f - prd.nextSeedRatio;
+    float3 rayDirection = normalize(curSeedRatio * rayDirectionFirst + prd.nextSeedRatio * rayDirectionSecond);
 
     // subsurface scattering occured. (light refracted inside the surface)
     // Igore subsurface scattering and the light is just considered to be absorbd
