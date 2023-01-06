@@ -515,11 +515,9 @@ void PhotonBeamApp::BeamTrace()
         buildDesc.Inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
         buildDesc.Inputs.InstanceDescs = m_beamAsInstanceDescData->GetGPUVirtualAddress();
         buildDesc.Inputs.NumDescs = m_maxNumSubBeamInfo;
-        buildDesc.DestAccelerationStructureData = { m_beamTlasBuffers.pResult->GetGPUVirtualAddress()
-        };
-        buildDesc.ScratchAccelerationStructureData = { m_beamTlasBuffers.pScratch->GetGPUVirtualAddress()
-        };
-        buildDesc.SourceAccelerationStructureData = 0;
+        buildDesc.DestAccelerationStructureData = m_beamTlasBuffers.pResult->GetGPUVirtualAddress();
+        buildDesc.ScratchAccelerationStructureData = m_beamTlasBuffers.pScratch->GetGPUVirtualAddress();
+        buildDesc.SourceAccelerationStructureData = m_beamTlasBuffers.pResult->GetGPUVirtualAddress();
         buildDesc.Inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE;
 
         // Build the top-level AS
@@ -1999,24 +1997,24 @@ void PhotonBeamApp::SetDefaults()
     mCamera.LookAt(XMFLOAT3{ 0.0f, 0.0f, 15.0f }, XMFLOAT3{ 0.0f, 0.0f, 0.0f }, XMFLOAT3{ 0.0f, 1.0f, 0.0f });
     mCamera.UpdateViewMatrix();
 
-    m_clearColor = Colors::LightSteelBlue;
+    m_clearColor = {0.52f, 0.81f, 0.92f};
     m_beamNearColor = defaultBeamNearColor;
     m_beamUnitDistantColor = defaultBeamUnitDistantColor;
     m_beamRadius = 0.6f;
-    m_photonRadius = 1.2f;
-    m_beamIntensity = 6.0f;
+    m_photonRadius = 1.0f;
+    m_beamIntensity = 3.0f;
     m_usePhotonMapping = true;
     m_usePhotonBeam = true;
     m_hgAssymFactor = 0.0f;
     m_showDirectColor = false;
     m_airAlbedo = 0.5f;
 
-    m_numBeamSamples = 1600;
-    m_numPhotonSamples = 2 * 4 * 2048;
+    m_numBeamSamples = 1024;
+    m_numPhotonSamples = 4 * 4 * 2048;
 
 
     m_lightPosition = XMFLOAT3{ 0.0f, 0.0f, 0.0f };
-    m_lightIntensity = 10.0f;
+    m_lightIntensity = 15.0f;
 
     m_camearaFOV = 60.0f;
     m_prevCameraFOV = m_camearaFOV;
@@ -2025,7 +2023,7 @@ void PhotonBeamApp::SetDefaults()
     m_pcRay.seed = 231;
     m_pcBeam.seed = 1017;
     m_isRandomSeedChanging = true;
-    m_seedUPdateInterval = 50.0f;
+    m_seedUPdateInterval = 20.0f;
 
 }
 
