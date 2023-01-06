@@ -30,11 +30,14 @@ void BeamGen()
     uint seed = tea(launchIndex, pc_beam.seed);
     uint nextSeed = tea(launchIndex, pc_beam.seed + 1);
     float3 rayOrigin = pc_beam.lightPosition;
-    float3 rayDirection = uniformSamplingSphere(seed) * (1.0 - pc_beam.nextSeedRatio) + pc_beam.nextSeedRatio * uniformSamplingSphere(nextSeed);
-    if (rayDirection.x == 0 && rayDirection.y == 0 && rayDirection.z == 0)
+    float3 rayDirectionFirst = uniformSamplingSphere(seed);
+    float3 rayDirectionSecond = uniformSamplingSphere(nextSeed);
+    float3 sumDirection = rayDirectionFirst + rayDirectionSecond;
+
+    if (sumDirection.x == 0 && sumDirection.y == 0 && sumDirection.z == 0)
         return;
 
-    rayDirection = normalize(rayDirection);
+    float3 rayDirection = normalize(rayDirectionFirst * (1.0 - pc_beam.nextSeedRatio) + rayDirectionSecond * pc_beam.nextSeedRatio);
 
     BeamHitPayload prd;
     prd.rayOrigin = rayOrigin;
