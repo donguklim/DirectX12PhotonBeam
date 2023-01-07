@@ -30,9 +30,7 @@ For more detailed background of the techinques used, you may check the reference
 
 https://github.com/donguklim/vk_raytracing_tutorial_KHR/tree/master/photon_beam
 
-There is Vulkan version of the implementation, which is made earlier than this DirectX 12 version. 
-
-Vulkan version lacks light motion, and light variation features. Only a fixed light simulation is used for every frame generated.
+The vulkna implementation is made with Nvidia raytracing sample code as base. 
 
 
 ## References
