@@ -94,6 +94,7 @@ PhotonBeamApp::PhotonBeamApp(HINSTANCE hInstance):
     m_airScatterCoff = XMVECTORF32{};
     m_airExtinctCoff = XMVECTORF32{};
     m_sourceLight = XMVECTORF32{};
+    m_camearaFOV = 60.0f;
 
     for (size_t i = 0; i < to_underlying(RootSignatueEnums::BeamTrace::ERootSignatures::Count); i++)
     {
