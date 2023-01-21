@@ -8,11 +8,12 @@
 #include <imgui/imgui_impl_win32.h>
 #include <imgui/imgui_impl_dx12.h>
 #include <imgui_helper.h>
-#include "raytraceHelper.hpp"
+#include <microsoft-directx-graphics-samples/raytraceHelper.hpp>
+#include <microsoft-directx-graphics-samples/DirectXRaytracingHelper.h>
+
 
 #include "Shaders/RaytracingHlslCompat.h"
 #include "AS-Builders/BlasGenerator.h"
-#include <microsoft-directx-graphics-samples/DirectXRaytracingHelper.h>
 #include "Raytracing-Utils/DXCompileShader.hpp"
 
 using Microsoft::WRL::ComPtr;
