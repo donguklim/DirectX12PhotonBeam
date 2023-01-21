@@ -424,7 +424,7 @@ void PhotonBeamApp::Rasterize()
 
     mCommandList->SetGraphicsRootShaderResourceView(2, matBuffer->GetGPUVirtualAddress());
     mCommandList->SetGraphicsRootDescriptorTable(3, mSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-    DrawRenderItems(mCommandList.Get(), mOpaqueRitems);
+    DrawRenderItems(mCommandList.Get(), m_renderItems);
     mCommandList->EndRenderPass();
 
 }
@@ -749,22 +749,22 @@ void PhotonBeamApp::OnKeyboardInput(const GameTimer& gt)
 void PhotonBeamApp::UpdateObjectCBs(const GameTimer& gt)
 {
     auto currObjectCB = mCurrFrameResource->ObjectCB.get();
-    for (auto& e : mAllRitems)
+    for (auto& item : m_renderItems)
     {
         // Only update the cbuffer data if the constants have changed.  
         // This needs to be tracked per frame resource.
-        if (e->NumFramesDirty > 0)
+        if (item.NumFramesDirty > 0)
         {
-            XMMATRIX world = XMLoadFloat4x4(&e->World);
+            XMMATRIX world = XMLoadFloat4x4(&item.World);
 
             ObjectConstants objConstants;
             XMStoreFloat4x4(&objConstants.World, XMMatrixTranspose(world));
-            objConstants.materialIndex = e->MaterialIndex;
+            objConstants.materialIndex = item.MaterialIndex;
 
-            currObjectCB->CopyData(e->ObjCBIndex, objConstants);
+            currObjectCB->CopyData(item.ObjCBIndex, objConstants);
 
             // Next FrameResource need to be updated too.
-            e->NumFramesDirty--;
+            item.NumFramesDirty--;
         }
     }
 }
@@ -1679,29 +1679,23 @@ void PhotonBeamApp::BuildRenderItems()
 
     for (auto& node : m_gltfScene.GetNodes())
     {
-        auto rItem = std::make_unique<RenderItem>();
+        auto& rItem = m_renderItems.emplace_back();
         auto& primitive = primMeshes[node.primMesh];
 
-        rItem->ObjCBIndex = objCBIndex++;
-        rItem->World = node.worldMatrix;
-        rItem->MaterialIndex = primitive.materialIndex;
-        rItem->Geo = mGeometries["cornellBox"].get();
-        rItem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-        rItem->IndexCount = primitive.indexCount;
-        rItem->StartIndexLocation = primitive.firstIndex;
-        rItem->BaseVertexLocation = primitive.vertexOffset;
-        mAllRitems.push_back(std::move(rItem));
+        rItem.ObjCBIndex = objCBIndex++;
+        rItem.World = node.worldMatrix;
+        rItem.MaterialIndex = primitive.materialIndex;
+        rItem.Geo = mGeometries["cornellBox"].get();
+        rItem.PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+        rItem.IndexCount = primitive.indexCount;
+        rItem.StartIndexLocation = primitive.firstIndex;
+        rItem.BaseVertexLocation = primitive.vertexOffset;
     }
-
-    // All the render items are opaque.
-    for (auto& e : mAllRitems)
-        mOpaqueRitems.push_back(e.get());
 }
 
 void PhotonBeamApp::BuildBeamTracingPSOs()
 {
     CD3DX12_STATE_OBJECT_DESC beamTracingPipeline{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
-
 
     for (size_t i = 0; i < to_underlying(EBeamTracingShaders::Count); i++)
     {
@@ -1791,8 +1785,6 @@ void PhotonBeamApp::BuildRayTracingPSOs()
 
         ThrowIfFailed(md3dDevice->CreateComputePipelineState(&bufferResetPsoDesc, IID_PPV_ARGS(mPSOs["bufferReset"].GetAddressOf())));
     }
-
-
 
     CD3DX12_STATE_OBJECT_DESC rayTracingPipeline{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
 
@@ -1946,11 +1938,11 @@ void PhotonBeamApp::BuildFrameResources()
     for (int i = 0; i < gNumFrameResources; ++i)
     {
         mFrameResources.push_back(std::make_unique<FrameResource>(md3dDevice.Get(),
-            1, (UINT)mAllRitems.size()));
+            1, (UINT)m_renderItems.size()));
     }
 }
 
-void PhotonBeamApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems)
+void PhotonBeamApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem>& ritems)
 {
     UINT objCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
 
@@ -1959,26 +1951,26 @@ void PhotonBeamApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const st
     // For each render item...
     for (size_t i = 0; i < ritems.size(); ++i)
     {
-        auto ri = ritems[i];
+        auto& ri = ritems[i];
 
-        auto vertexBufferView = ri->Geo->VertexBufferView();
-        auto indexBufferView = ri->Geo->IndexBufferView();
+        auto vertexBufferView = ri.Geo->VertexBufferView();
+        auto indexBufferView = ri.Geo->IndexBufferView();
 
         D3D12_VERTEX_BUFFER_VIEW vertexBufferViews[3] = {
-            ri->Geo->VertexBufferView(),
-            ri->Geo->NormalBufferView(),
-            ri->Geo->UvBufferView()
+            ri.Geo->VertexBufferView(),
+            ri.Geo->NormalBufferView(),
+            ri.Geo->UvBufferView()
         };
 
         cmdList->IASetVertexBuffers(0, 3, vertexBufferViews);
         cmdList->IASetIndexBuffer(&indexBufferView);
-        cmdList->IASetPrimitiveTopology(ri->PrimitiveType);
+        cmdList->IASetPrimitiveTopology(ri.PrimitiveType);
 
-        D3D12_GPU_VIRTUAL_ADDRESS objCBAddress = objectCB->GetGPUVirtualAddress() + static_cast<UINT64>(ri->ObjCBIndex) * objCBByteSize;
+        D3D12_GPU_VIRTUAL_ADDRESS objCBAddress = objectCB->GetGPUVirtualAddress() + static_cast<UINT64>(ri.ObjCBIndex) * objCBByteSize;
 
         cmdList->SetGraphicsRootConstantBufferView(0, objCBAddress);
 
-        cmdList->DrawIndexedInstanced(ri->IndexCount, 1, ri->StartIndexLocation, ri->BaseVertexLocation, 0);
+        cmdList->DrawIndexedInstanced(ri.IndexCount, 1, ri.StartIndexLocation, ri.BaseVertexLocation, 0);
 
     }
 }

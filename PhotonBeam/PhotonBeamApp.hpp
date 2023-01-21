@@ -227,7 +227,7 @@ private:
 
     void BuildFrameResources();
     void BuildRenderItems();
-    void DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems);
+    void DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem>& ritems);
     void RenderUI();
     void SetDefaults();
 
@@ -308,30 +308,24 @@ private:
     Microsoft::WRL::ComPtr<ID3D12Resource> m_offScreenOutput = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounter = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounterReset = nullptr;
-
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamData = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamAsInstanceDescData = nullptr;
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> m_inputLayout;
 
     // List of all the render items.
-    std::vector<std::unique_ptr<RenderItem>> mAllRitems;
+    std::vector<RenderItem> m_renderItems;
 
-    // Render items divided by PSO.
-    std::vector<RenderItem*> mOpaqueRitems;
 
     PassConstants m_mainPassCB;
-
     PushConstantRay m_pcRay;
     PushConstantBeam m_pcBeam;
 
     GltfScene m_gltfScene;
 
     DirectX::XMVECTORF32 m_clearColor;
-
     POINT mLastMousePos;
     Camera m_camera;
-
     float    m_airAlbedo{ 0.1f };
     float m_beamRadius{ 0.5f };
     float    m_photonRadius{ 0.5f };
