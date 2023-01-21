@@ -9,7 +9,6 @@
 #include <imgui/imgui_impl_dx12.h>
 #include <imgui_helper.h>
 #include <microsoft-directx-graphics-samples/raytraceHelper.h>
-#include <microsoft-directx-graphics-samples/DirectXRaytracingHelper.h>
 
 #include "Shaders/RaytracingHlslCompat.h"
 #include "AS-Builders/BlasGenerator.hpp"
@@ -1762,7 +1761,7 @@ void PhotonBeamApp::BuildBeamTracingPSOs()
 
     pipelineConfig->Config(1);
 
-    PrintStateObjectDesc(beamTracingPipeline);
+    raytrace_helper::PrintStateObjectDesc(beamTracingPipeline);
 
     ThrowIfFailed(
         md3dDevice->CreateStateObject(
@@ -1870,7 +1869,7 @@ void PhotonBeamApp::BuildRayTracingPSOs()
 
     pipelineConfig->Config(1);
 
-    PrintStateObjectDesc(rayTracingPipeline);
+    raytrace_helper::PrintStateObjectDesc(rayTracingPipeline);
 
     ThrowIfFailed(
         md3dDevice->CreateStateObject(
