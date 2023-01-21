@@ -784,23 +784,23 @@ void PhotonBeamApp::UpdateMainPassCB(const GameTimer& gt)
     XMMATRIX invProj = XMMatrixInverse(&projDeterminant, proj);
     XMMATRIX invViewProj = XMMatrixInverse(&viewProjDeterminant, viewProj);
 
-    XMStoreFloat4x4(&mMainPassCB.View, XMMatrixTranspose(view));
-    XMStoreFloat4x4(&mMainPassCB.InvView, XMMatrixTranspose(invView));
-    XMStoreFloat4x4(&mMainPassCB.Proj, XMMatrixTranspose(proj));
-    XMStoreFloat4x4(&mMainPassCB.InvProj, XMMatrixTranspose(invProj));
-    XMStoreFloat4x4(&mMainPassCB.ViewProj, XMMatrixTranspose(viewProj));
-    XMStoreFloat4x4(&mMainPassCB.InvViewProj, XMMatrixTranspose(invViewProj));
+    XMStoreFloat4x4(&m_mainPassCB.View, XMMatrixTranspose(view));
+    XMStoreFloat4x4(&m_mainPassCB.InvView, XMMatrixTranspose(invView));
+    XMStoreFloat4x4(&m_mainPassCB.Proj, XMMatrixTranspose(proj));
+    XMStoreFloat4x4(&m_mainPassCB.InvProj, XMMatrixTranspose(invProj));
+    XMStoreFloat4x4(&m_mainPassCB.ViewProj, XMMatrixTranspose(viewProj));
+    XMStoreFloat4x4(&m_mainPassCB.InvViewProj, XMMatrixTranspose(invViewProj));
 
     auto totalTime = gt.TotalTime();
     if (m_isBeamMotionOn)
-        mMainPassCB.LightPos = getLightMotion(totalTime, m_lightPosition);
+        m_mainPassCB.LightPos = getLightMotion(totalTime, m_lightPosition);
     else
-        mMainPassCB.LightPos = m_lightPosition;
+        m_mainPassCB.LightPos = m_lightPosition;
 
-    mMainPassCB.LightIntensity = m_lightIntensity;
+    m_mainPassCB.LightIntensity = m_lightIntensity;
 
     auto currPassCB = mCurrFrameResource->PassCB.get();
-    currPassCB->CopyData(0, mMainPassCB);
+    currPassCB->CopyData(0, m_mainPassCB);
 }
 
 void PhotonBeamApp::UpdateRayTracingPushConstants(const GameTimer& gt)
@@ -1434,7 +1434,7 @@ void PhotonBeamApp::BuildShadersAndInputLayout()
     m_rasterizeShaders["standardVS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\Rasterization.hlsl", L"vs_6_6", L"VS");
     m_rasterizeShaders["opaquePS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\Rasterization.hlsl", L"ps_6_6", L"PS");
 
-    mInputLayout =
+    m_inputLayout =
     {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -1893,7 +1893,7 @@ void PhotonBeamApp::BuildPSOs()
 
     // PSO for opaque objects.
     ZeroMemory(&opaquePsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
-    opaquePsoDesc.InputLayout = { mInputLayout.data(), (UINT)mInputLayout.size() };
+    opaquePsoDesc.InputLayout = { m_inputLayout.data(), (UINT)m_inputLayout.size() };
     opaquePsoDesc.pRootSignature = mRootSignature.Get();
     opaquePsoDesc.VS = {
         reinterpret_cast<BYTE*>(m_rasterizeShaders["standardVS"]->GetBufferPointer()),

@@ -312,7 +312,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamData = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamAsInstanceDescData = nullptr;
 
-    std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
+    std::vector<D3D12_INPUT_ELEMENT_DESC> m_inputLayout;
 
     // List of all the render items.
     std::vector<std::unique_ptr<RenderItem>> mAllRitems;
@@ -320,7 +320,7 @@ private:
     // Render items divided by PSO.
     std::vector<RenderItem*> mOpaqueRitems;
 
-    PassConstants mMainPassCB;
+    PassConstants m_mainPassCB;
 
     PushConstantRay m_pcRay;
     PushConstantBeam m_pcBeam;
