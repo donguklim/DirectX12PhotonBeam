@@ -325,7 +325,7 @@ void PhotonBeamApp::Update(const GameTimer& gt)
 
 void PhotonBeamApp::drawPost()
 {
-    mCommandList->SetPipelineState(mPSOs["post"].Get());
+    mCommandList->SetPipelineState(m_postPso.Get());
 
     auto renderTarget = CurrentBackBuffer();
 
@@ -373,7 +373,7 @@ void PhotonBeamApp::drawPost()
 
 void PhotonBeamApp::Rasterize()
 {
-    mCommandList->SetPipelineState(mPSOs["raster"].Get());
+    mCommandList->SetPipelineState(m_rasterPso.Get());
 
     CD3DX12_CLEAR_VALUE clearValue{ DXGI_FORMAT_R32G32B32_FLOAT, m_clearColor };
 
@@ -433,7 +433,7 @@ void PhotonBeamApp::BeamTrace()
 {
     // Reset Sub beam info buffer
     {
-        mCommandList->SetPipelineState(mPSOs["bufferReset"].Get());
+        mCommandList->SetPipelineState(m_beamBufferResetPso.Get());
         mCommandList->SetComputeRootSignature(m_bufferResetRootSignature.Get());
         mCommandList->SetComputeRootUnorderedAccessView(0, m_beamAsInstanceDescData->GetGPUVirtualAddress());
 
@@ -1783,7 +1783,7 @@ void PhotonBeamApp::BuildRayTracingPSOs()
         };
         bufferResetPsoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
-        ThrowIfFailed(md3dDevice->CreateComputePipelineState(&bufferResetPsoDesc, IID_PPV_ARGS(mPSOs["bufferReset"].GetAddressOf())));
+        ThrowIfFailed(md3dDevice->CreateComputePipelineState(&bufferResetPsoDesc, IID_PPV_ARGS(m_beamBufferResetPso.GetAddressOf())));
     }
 
     CD3DX12_STATE_OBJECT_DESC rayTracingPipeline{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
@@ -1905,7 +1905,7 @@ void PhotonBeamApp::BuildPSOs()
     opaquePsoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
     opaquePsoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
     opaquePsoDesc.DSVFormat = mDepthStencilFormat;
-    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(mPSOs["raster"].GetAddressOf())));
+    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(m_rasterPso.GetAddressOf())));
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC postPsoDesc;
     ZeroMemory(&postPsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
@@ -1930,7 +1930,7 @@ void PhotonBeamApp::BuildPSOs()
     postPsoDesc.RTVFormats[0] = mBackBufferFormat;
     postPsoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
     postPsoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
-    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&postPsoDesc, IID_PPV_ARGS(mPSOs["post"].GetAddressOf())));
+    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&postPsoDesc, IID_PPV_ARGS(m_postPso.GetAddressOf())));
 }
 
 void PhotonBeamApp::BuildFrameResources()
