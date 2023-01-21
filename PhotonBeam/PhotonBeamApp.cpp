@@ -13,6 +13,7 @@
 #include "Shaders/RaytracingHlslCompat.h"
 #include "AS-Builders/BlasGenerator.h"
 #include <microsoft-directx-graphics-samples/DirectXRaytracingHelper.h>
+#include "Raytracing-Utils/DXCompileShader.hpp"
 
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
@@ -1431,8 +1432,8 @@ void PhotonBeamApp::BuildPostRootSignature()
 void PhotonBeamApp::BuildShadersAndInputLayout()
 {
 
-    m_rasterizeShaders["standardVS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\Rasterization.hlsl", L"vs_6_6", L"VS");
-    m_rasterizeShaders["opaquePS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\Rasterization.hlsl", L"ps_6_6", L"PS");
+    m_rasterizeShaders["standardVS"] = DxCompileShaderLibrary(L"Shaders\\Rasterization.hlsl", L"vs_6_6", L"VS");
+    m_rasterizeShaders["opaquePS"] = DxCompileShaderLibrary(L"Shaders\\Rasterization.hlsl", L"ps_6_6", L"PS");
 
     m_inputLayout =
     {
@@ -1441,21 +1442,21 @@ void PhotonBeamApp::BuildShadersAndInputLayout()
         { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 2, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
     };
 
-    m_rasterizeShaders["postVS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"vs_6_6", L"VS");
-    m_rasterizeShaders["postPS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"ps_6_6", L"PS");
+    m_rasterizeShaders["postVS"] = DxCompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"vs_6_6", L"VS");
+    m_rasterizeShaders["postPS"] = DxCompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"ps_6_6", L"PS");
 
-    m_AsInstanceBufferResetShader = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\ResetSubBeamInfoBuffer.hlsl", L"cs_6_6", L"main");
+    m_AsInstanceBufferResetShader = DxCompileShaderLibrary(L"Shaders\\BeamTracing\\ResetSubBeamInfoBuffer.hlsl", L"cs_6_6", L"main");
 
-    m_beamShaders[to_underlying(EBeamTracingShaders::Miss)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamMiss.hlsl", L"lib_6_6");
-    m_beamShaders[to_underlying(EBeamTracingShaders::CloseHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamClosestHit.hlsl", L"lib_6_6");
-    m_beamShaders[to_underlying(EBeamTracingShaders::Gen)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamGen.hlsl", L"lib_6_6");
+    m_beamShaders[to_underlying(EBeamTracingShaders::Miss)] = DxCompileShaderLibrary(L"Shaders\\BeamTracing\\BeamMiss.hlsl", L"lib_6_6");
+    m_beamShaders[to_underlying(EBeamTracingShaders::CloseHit)] = DxCompileShaderLibrary(L"Shaders\\BeamTracing\\BeamClosestHit.hlsl", L"lib_6_6");
+    m_beamShaders[to_underlying(EBeamTracingShaders::Gen)] = DxCompileShaderLibrary(L"Shaders\\BeamTracing\\BeamGen.hlsl", L"lib_6_6");
 
-    m_rayShaders[to_underlying(ERayTracingShaders::Miss)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RayMiss.hlsl", L"lib_6_6");
-    m_rayShaders[to_underlying(ERayTracingShaders::BeamAnyHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RayBeamAnyHit.hlsl", L"lib_6_6");
-    m_rayShaders[to_underlying(ERayTracingShaders::BeamInt)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RayBeamInt.hlsl", L"lib_6_6");
-    m_rayShaders[to_underlying(ERayTracingShaders::SurfaceAnyHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RaySurfaceAnyHit.hlsl", L"lib_6_6");
-    m_rayShaders[to_underlying(ERayTracingShaders::SurfaceInt)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RaySurfaceInt.hlsl", L"lib_6_6");
-    m_rayShaders[to_underlying(ERayTracingShaders::Gen)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RayGen.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ERayTracingShaders::Miss)] = DxCompileShaderLibrary(L"Shaders\\RayTracing\\RayMiss.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ERayTracingShaders::BeamAnyHit)] = DxCompileShaderLibrary(L"Shaders\\RayTracing\\RayBeamAnyHit.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ERayTracingShaders::BeamInt)] = DxCompileShaderLibrary(L"Shaders\\RayTracing\\RayBeamInt.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ERayTracingShaders::SurfaceAnyHit)] = DxCompileShaderLibrary(L"Shaders\\RayTracing\\RaySurfaceAnyHit.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ERayTracingShaders::SurfaceInt)] = DxCompileShaderLibrary(L"Shaders\\RayTracing\\RaySurfaceInt.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ERayTracingShaders::Gen)] = DxCompileShaderLibrary(L"Shaders\\RayTracing\\RayGen.hlsl", L"lib_6_6");
 }
 
 void PhotonBeamApp::LoadScene()

@@ -178,6 +178,7 @@
     <ClInclude Include="FrameResource.h" />
     <ClInclude Include="PhotonBeamApp.hpp" />
     <ClInclude Include="raytraceHelper.hpp" />
+    <ClInclude Include="Raytracing-Utils\DXCompileShader.hpp" />
     <ClInclude Include="Shaders\RaytracingHlslCompat.h" />
     <ClInclude Include="Shaders\util\HlslCompat.h" />
     <ClInclude Include="third-party-helper\imgui-helper\imgui_helper.h" />
@@ -203,6 +204,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PhotonBeamApp.cpp" />
     <ClCompile Include="raytraceHelper.cpp" />
+    <ClCompile Include="Raytracing-Utils\DXCompileShader.cpp" />
     <ClCompile Include="third-party-helper\imgui-helper\imgui_helper.cpp" />
     <ClCompile Include="third-party-helper\tiny-gltf-helper\GltfScene.cpp" />
   </ItemGroup>
