@@ -168,7 +168,6 @@
     <ClInclude Include="..\third-party\imgui\imstb_rectpack.h" />
     <ClInclude Include="..\third-party\imgui\imstb_textedit.h" />
     <ClInclude Include="..\third-party\imgui\imstb_truetype.h" />
-    <ClInclude Include="..\third-party\microsoft-directx-graphics-samples\DirectXRaytracingHelper.h" />
     <ClInclude Include="..\third-party\microsoft-directx-graphics-samples\raytraceHelper.h" />
     <ClInclude Include="..\third-party\tiny-gltf\json.hpp" />
     <ClInclude Include="..\third-party\tiny-gltf\stb_image.h" />
