@@ -167,9 +167,12 @@ bool PhotonBeamApp::Initialize()
     BuildDescriptorHeaps();
 
     BuildPSOs();
-
+    
     CreateSurfaceBlas();
-    CreateSurfaceTlas();
+
+    auto tlasGenerator = ASBuilder::TlasGenerator(md3dDevice.Get());
+    CreateSurfaceTlas(tlasGenerator);
+
     CreateBeamBlases();
 
     CreateOffScreenOutputResource();
@@ -2247,16 +2250,17 @@ void PhotonBeamApp::CreateSurfaceBlas()
     }
 }
 
-void PhotonBeamApp::CreateSurfaceTlas()
+void PhotonBeamApp::CreateSurfaceTlas(ASBuilder::TlasGenerator& tlasGenerator)
 {
     auto identity = MathHelper::Identity4x4();
+
     for (auto& node : m_gltfScene.GetNodes())
     {
         XMFLOAT4X4 worldMat{};
         XMStoreFloat4x4(&worldMat, XMMatrixTranspose(XMLoadFloat4x4(&node.worldMatrix)));
 
         auto blasAddress = m_surfaceBlasBuffers[node.primMesh].pResult.Get();
-        m_topLevelASGenerator.AddInstance(
+        tlasGenerator.AddInstance(
             blasAddress,
             worldMat,
             node.primMesh,
@@ -2265,8 +2269,7 @@ void PhotonBeamApp::CreateSurfaceTlas()
     }
 
     UINT64 scratchSize, resultSize, instanceDescsSize;
-    m_topLevelASGenerator.ComputeASBufferSizes(
-        md3dDevice.Get(),
+    tlasGenerator.ComputeASBufferSizes(
         true,
         &scratchSize,
         &resultSize,
@@ -2298,7 +2301,7 @@ void PhotonBeamApp::CreateSurfaceTlas()
     );
 
 
-    m_topLevelASGenerator.Generate(
+    tlasGenerator.Generate(
         mCommandList.Get(),
         m_surfaceTlasBuffers.pScratch.Get(),
         m_surfaceTlasBuffers.pResult.Get(),
@@ -2669,11 +2672,10 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
 
     // Create scratch buffer for beam TLAS
     {
-        nv_helpers_dx12::TopLevelASGenerator generator;
+        ASBuilder::TlasGenerator generator{md3dDevice.Get()};
 
         UINT64 scratchSize, resultSize, instanceDescsSize;
         generator.ComputeASBufferSizes(
-            md3dDevice.Get(),
             true,
             &scratchSize,
             &resultSize,

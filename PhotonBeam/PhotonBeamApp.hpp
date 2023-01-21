@@ -7,7 +7,7 @@
 #include "../Common/Camera.h"
 #include "../Common/MathHelper.h"
 #include "../Common/UploadBuffer.h"
-#include "Nvidia-DXRHelpers/nv_helpers_dx12/TopLevelASGenerator.h"
+#include "AS-Builders/TlasGenerator.h"
 #include "FrameResource.h"
 #include "third-party-helper/tiny-gltf-helper/GltfScene.hpp"
 
@@ -237,7 +237,7 @@ private:
     void drawPost();
 
     void CreateSurfaceBlas();
-    void CreateSurfaceTlas();
+    void CreateSurfaceTlas(ASBuilder::TlasGenerator& tlasGenerator);
 
     void CreateBeamBlases();
 
@@ -385,7 +385,6 @@ private:
     AccelerationStructureBuffers m_beamTlasBuffers{};
 
     Microsoft::WRL::ComPtr<ID3D12Resource> m_bottomLevelAS; // Storage for the bottom Level AS
-    nv_helpers_dx12::TopLevelASGenerator m_topLevelASGenerator;
 
 };
 
