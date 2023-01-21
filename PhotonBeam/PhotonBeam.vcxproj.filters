@@ -46,7 +46,7 @@
     <Filter Include="Third Party Libraries Helper">
       <UniqueIdentifier>{ff010d16-33fd-4995-8f48-61130aa1439a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Third Party Libraries Helper\imgui-helper">
+    <Filter Include="Third Party Libraries Helper\imgui helper">
       <UniqueIdentifier>{7f16d946-3719-40e8-a188-9bba60fbce6f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -136,7 +136,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\third-party-helper\imgui-helper\imgui_helper.h">
-      <Filter>Third Party Libraries Helper\imgui-helper</Filter>
+      <Filter>Third Party Libraries Helper\imgui helper</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -201,7 +201,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\third-party-helper\imgui-helper\imgui_helper.cpp">
-      <Filter>Third Party Libraries Helper\imgui-helper</Filter>
+      <Filter>Third Party Libraries Helper\imgui helper</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
