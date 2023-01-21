@@ -13,6 +13,9 @@ namespace ASBuilder
     class BottomLevelASGenerator
     {
     public:
+        BottomLevelASGenerator(
+            ID3D12Device5* pDevice
+        );
         void AddAabbBuffer(
             ID3D12Resource* aabbBuffer,
             UINT64 aabbOffsetInBytes,
@@ -54,8 +57,7 @@ namespace ASBuilder
 
         void Generate(
             ID3D12GraphicsCommandList4* commandList,
-            ID3D12Resource* scratchBuffer,
-                                    
+            ID3D12Resource* scratchBuffer,                 
             ID3D12Resource* resultBuffer,
             bool updateOnly = false,
             ID3D12Resource* previousResult = nullptr /// Optional previous acceleration structure, used
@@ -66,6 +68,7 @@ namespace ASBuilder
 
         UINT64 m_scratchSizeInBytes = 0;
         UINT64 m_resultSizeInBytes = 0;
+        ID3D12Device5* m_pDevice;
 
         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS m_flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE;
     };

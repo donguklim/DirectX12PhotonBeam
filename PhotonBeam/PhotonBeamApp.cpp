@@ -2204,7 +2204,7 @@ void PhotonBeamApp::CreateSurfaceBlas()
     {
         m_surfaceBlasBuffers.emplace_back(nullptr, nullptr, nullptr );
         const auto& mesh = primMeshes[i];
-        ASBuilder::BottomLevelASGenerator generator{};
+        ASBuilder::BottomLevelASGenerator generator{md3dDevice.Get()};
 
         generator.AddVertexBuffer(
             geo->VertexBufferGPU.Get(),
@@ -2321,7 +2321,7 @@ void PhotonBeamApp::CreateBeamBlases()
     );
 
     {
-        ASBuilder::BottomLevelASGenerator beamBoxGenerator{};
+        ASBuilder::BottomLevelASGenerator beamBoxGenerator{md3dDevice.Get()};
 
         beamBoxGenerator.AddAabbBuffer(boxBuffer.Get(), 0, 1);
 
@@ -2354,7 +2354,7 @@ void PhotonBeamApp::CreateBeamBlases()
     }
 
     {
-        ASBuilder::BottomLevelASGenerator photonBoxGenerator{};
+        ASBuilder::BottomLevelASGenerator photonBoxGenerator{md3dDevice.Get()};
 
         photonBoxGenerator.AddAabbBuffer(boxBuffer.Get(), sizeof(D3D12_RAYTRACING_AABB), 1);
 

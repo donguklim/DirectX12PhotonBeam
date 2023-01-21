@@ -9,6 +9,13 @@
 
 namespace ASBuilder {
 
+    BottomLevelASGenerator::BottomLevelASGenerator(
+        ID3D12Device5* pDevice
+    ) :m_pDevice(pDevice)
+    {
+        m_scratchSizeInBytes = 0;
+    }
+
     void BottomLevelASGenerator::AddAabbBuffer(
         ID3D12Resource* aabbBuffer,
         UINT64 aabbOffsetInBytes,
