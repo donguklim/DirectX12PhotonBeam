@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="imgui helper">
-      <UniqueIdentifier>{48d4b0a2-3dfb-4395-96f0-97866b29598d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Shaders">
       <UniqueIdentifier>{c07e8fca-13de-4b73-ba33-19ee2a73b677}</UniqueIdentifier>
     </Filter>
@@ -46,6 +43,12 @@
     <Filter Include="Third Party Libraries\Microsoft DirecX Samples">
       <UniqueIdentifier>{8f0c46f0-7885-4ec7-af11-b72c2a085c59}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Third Party Libraries Helper">
+      <UniqueIdentifier>{ff010d16-33fd-4995-8f48-61130aa1439a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third Party Libraries Helper\imgui-helper">
+      <UniqueIdentifier>{7f16d946-3719-40e8-a188-9bba60fbce6f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PhotonBeamApp.hpp">
@@ -53,9 +56,6 @@
     </ClInclude>
     <ClInclude Include="GltfScene.hpp">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\imgui-helper\imgui_helper.h">
-      <Filter>imgui helper</Filter>
     </ClInclude>
     <ClInclude Include="raytraceHelper.hpp">
       <Filter>Header Files</Filter>
@@ -135,6 +135,9 @@
     <ClInclude Include="AS-Builders\BlasGenerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\third-party-helper\imgui-helper\imgui_helper.h">
+      <Filter>Third Party Libraries Helper\imgui-helper</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PhotonBeamApp.cpp">
@@ -145,9 +148,6 @@
     </ClCompile>
     <ClCompile Include="GltfScene.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\imgui-helper\imgui_helper.cpp">
-      <Filter>imgui helper</Filter>
     </ClCompile>
     <ClCompile Include="raytraceHelper.cpp">
       <Filter>Source Files</Filter>
@@ -199,6 +199,9 @@
     </ClCompile>
     <ClCompile Include="AS-Builders\BlasGenerator.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\third-party-helper\imgui-helper\imgui_helper.cpp">
+      <Filter>Third Party Libraries Helper\imgui-helper</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

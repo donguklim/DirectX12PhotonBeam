@@ -123,7 +123,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\imgui-helper;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\third-party-helper\imgui-helper;</AdditionalIncludeDirectories>
       <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
@@ -142,7 +142,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\imgui-helper;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\third-party-helper\imgui-helper;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -160,7 +160,7 @@
     <ClInclude Include="..\Common\GameTimer.h" />
     <ClInclude Include="..\Common\MathHelper.h" />
     <ClInclude Include="..\Common\UploadBuffer.h" />
-    <ClInclude Include="..\imgui-helper\imgui_helper.h" />
+    <ClInclude Include="..\third-party-helper\imgui-helper\imgui_helper.h" />
     <ClInclude Include="..\third-party\imgui\imconfig.h" />
     <ClInclude Include="..\third-party\imgui\imgui.h" />
     <ClInclude Include="..\third-party\imgui\imgui_impl_dx12.h" />
@@ -190,7 +190,7 @@
     <ClCompile Include="..\Common\DDSTextureLoader.cpp" />
     <ClCompile Include="..\Common\GameTimer.cpp" />
     <ClCompile Include="..\Common\MathHelper.cpp" />
-    <ClCompile Include="..\imgui-helper\imgui_helper.cpp" />
+    <ClCompile Include="..\third-party-helper\imgui-helper\imgui_helper.cpp" />
     <ClCompile Include="..\third-party\imgui\imgui.cpp" />
     <ClCompile Include="..\third-party\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\third-party\imgui\imgui_draw.cpp" />
