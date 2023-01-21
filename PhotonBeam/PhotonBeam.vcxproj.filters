@@ -52,6 +52,9 @@
     <Filter Include="AS Builder">
       <UniqueIdentifier>{ae14d9e1-c2ee-4b82-9f16-c2843af5cc73}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Raytracing Utils">
+      <UniqueIdentifier>{42b10e3f-e95f-49fb-b5aa-1ca82f9faf5a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PhotonBeamApp.hpp">
@@ -129,9 +132,6 @@
     <ClInclude Include="third-party-helper\tiny-gltf-helper\GltfScene.hpp">
       <Filter>Third Party Libraries Helper\tiny-gltf helper</Filter>
     </ClInclude>
-    <ClInclude Include="Raytracing-Utils\DXCompileShader.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="AS-Builders\BlasGenerator.hpp">
       <Filter>AS Builder</Filter>
     </ClInclude>
@@ -140,6 +140,9 @@
     </ClInclude>
     <ClInclude Include="..\third-party\microsoft-directx-graphics-samples\raytraceHelper.h">
       <Filter>Third Party Libraries\Microsoft DirecX Samples</Filter>
+    </ClInclude>
+    <ClInclude Include="Raytracing-Utils\DXCompileShader.hpp">
+      <Filter>Raytracing Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -204,7 +207,7 @@
       <Filter>AS Builder</Filter>
     </ClCompile>
     <ClCompile Include="Raytracing-Utils\DXCompileShader.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Raytracing Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
