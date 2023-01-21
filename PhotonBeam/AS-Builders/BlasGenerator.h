@@ -10,10 +10,10 @@ namespace ASBuilder
 {
 
     /// Helper class to generate bottom-level acceleration structures for raytracing
-    class BottomLevelASGenerator
+    class BlasGenerator
     {
     public:
-        BottomLevelASGenerator(
+        BlasGenerator(
             ID3D12Device5* pDevice
         );
         void AddAabbBuffer(
@@ -63,10 +63,10 @@ namespace ASBuilder
         );
 
     private:
-        std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> m_geometryDescs= {};
+        std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> m_geometryDescs;
 
-        UINT64 m_scratchSizeInBytes = 0;
-        UINT64 m_resultSizeInBytes = 0;
+        UINT64 m_scratchSizeInBytes;
+        UINT64 m_resultSizeInBytes;
         ID3D12Device5* m_pDevice;
 
         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS m_flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE;
