@@ -790,7 +790,6 @@ void PhotonBeamApp::UpdateMainPassCB(const GameTimer& gt)
     XMStoreFloat4x4(&mMainPassCB.InvProj, XMMatrixTranspose(invProj));
     XMStoreFloat4x4(&mMainPassCB.ViewProj, XMMatrixTranspose(viewProj));
     XMStoreFloat4x4(&mMainPassCB.InvViewProj, XMMatrixTranspose(invViewProj));
-    mMainPassCB.EyePosW = m_camera.GetPosition3f();
 
     auto totalTime = gt.TotalTime();
     if (m_isBeamMotionOn)
@@ -798,13 +797,7 @@ void PhotonBeamApp::UpdateMainPassCB(const GameTimer& gt)
     else
         mMainPassCB.LightPos = m_lightPosition;
 
-    mMainPassCB.lightIntensity = m_lightIntensity;
-    mMainPassCB.RenderTargetSize = XMFLOAT2((float)mClientWidth, (float)mClientHeight);
-    mMainPassCB.InvRenderTargetSize = XMFLOAT2(1.0f / mClientWidth, 1.0f / mClientHeight);
-    mMainPassCB.NearZ = m_camera.GetNearZ();
-    mMainPassCB.FarZ = m_camera.GetFarZ();
-    mMainPassCB.TotalTime = totalTime;
-    mMainPassCB.DeltaTime = gt.DeltaTime();
+    mMainPassCB.LightIntensity = m_lightIntensity;
 
     auto currPassCB = mCurrFrameResource->PassCB.get();
     currPassCB->CopyData(0, mMainPassCB);
