@@ -129,9 +129,6 @@
     <ClInclude Include="third-party-helper\tiny-gltf-helper\GltfScene.hpp">
       <Filter>Third Party Libraries Helper\tiny-gltf helper</Filter>
     </ClInclude>
-    <ClInclude Include="..\third-party\microsoft-directx-graphics-samples\raytraceHelper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Raytracing-Utils\DXCompileShader.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -140,6 +137,9 @@
     </ClInclude>
     <ClInclude Include="AS-Builders\TlasGenerator.hpp">
       <Filter>AS Builder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\third-party\microsoft-directx-graphics-samples\raytraceHelper.h">
+      <Filter>Third Party Libraries\Microsoft DirecX Samples</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
