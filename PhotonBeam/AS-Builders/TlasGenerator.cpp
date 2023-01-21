@@ -1,5 +1,5 @@
 
-#include "TlasGenerator.h"
+#include "TlasGenerator.hpp"
 #include <stdexcept>
 
 #ifndef ROUND_UP

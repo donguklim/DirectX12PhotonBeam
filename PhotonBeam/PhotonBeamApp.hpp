@@ -7,7 +7,7 @@
 #include "../Common/Camera.h"
 #include "../Common/MathHelper.h"
 #include "../Common/UploadBuffer.h"
-#include "AS-Builders/TlasGenerator.h"
+#include "AS-Builders/TlasGenerator.hpp"
 #include "FrameResource.h"
 #include "third-party-helper/tiny-gltf-helper/GltfScene.hpp"
 

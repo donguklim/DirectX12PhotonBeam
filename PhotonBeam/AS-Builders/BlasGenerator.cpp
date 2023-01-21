@@ -1,5 +1,5 @@
 
-#include "BlasGenerator.h"
+#include "BlasGenerator.hpp"
 
 // Helper to compute aligned buffer sizes
 #ifndef ROUND_UP

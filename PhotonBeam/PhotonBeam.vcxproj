@@ -169,13 +169,13 @@
     <ClInclude Include="..\third-party\imgui\imstb_textedit.h" />
     <ClInclude Include="..\third-party\imgui\imstb_truetype.h" />
     <ClInclude Include="..\third-party\microsoft-directx-graphics-samples\DirectXRaytracingHelper.h" />
-    <ClInclude Include="..\third-party\microsoft-directx-graphics-samples\raytraceHelper.hpp" />
+    <ClInclude Include="..\third-party\microsoft-directx-graphics-samples\raytraceHelper.h" />
     <ClInclude Include="..\third-party\tiny-gltf\json.hpp" />
     <ClInclude Include="..\third-party\tiny-gltf\stb_image.h" />
     <ClInclude Include="..\third-party\tiny-gltf\stb_image_write.h" />
     <ClInclude Include="..\third-party\tiny-gltf\tiny_gltf.h" />
-    <ClInclude Include="AS-Builders\BlasGenerator.h" />
-    <ClInclude Include="AS-Builders\TlasGenerator.h" />
+    <ClInclude Include="AS-Builders\BlasGenerator.hpp" />
+    <ClInclude Include="AS-Builders\TlasGenerator.hpp" />
     <ClInclude Include="FrameResource.h" />
     <ClInclude Include="PhotonBeamApp.hpp" />
     <ClInclude Include="Raytracing-Utils\DXCompileShader.hpp" />
