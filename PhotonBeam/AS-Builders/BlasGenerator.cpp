@@ -89,7 +89,6 @@ namespace ASBuilder {
     }
 
     void BottomLevelASGenerator::ComputeASBufferSizes(
-        ID3D12Device5 *device, 
         bool allowUpdate, 
         UINT64 *scratchSizeInBytes,
         UINT64 *resultSizeInBytes   
@@ -108,7 +107,7 @@ namespace ASBuilder {
 
         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO info = {};
 
-        device->GetRaytracingAccelerationStructurePrebuildInfo(&prebuildDesc, &info);
+        m_pDevice->GetRaytracingAccelerationStructurePrebuildInfo(&prebuildDesc, &info);
 
         // Buffer sizes need to be 256-byte-aligned
         *scratchSizeInBytes =

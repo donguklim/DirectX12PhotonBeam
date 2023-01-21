@@ -2220,7 +2220,7 @@ void PhotonBeamApp::CreateSurfaceBlas()
 
         UINT64 scratchSizeInBytes = 0;
         UINT64 resultSizeInBytes = 0;
-        generator.ComputeASBufferSizes(md3dDevice.Get(), false, &scratchSizeInBytes, &resultSizeInBytes);
+        generator.ComputeASBufferSizes(false, &scratchSizeInBytes, &resultSizeInBytes);
 
         m_surfaceBlasBuffers[i].pScratch = raytrace_helper::CreateBuffer(
             md3dDevice.Get(),
@@ -2327,7 +2327,7 @@ void PhotonBeamApp::CreateBeamBlases()
 
         UINT64 scratchSizeInBytes = 0;
         UINT64 resultSizeInBytes = 0;
-        beamBoxGenerator.ComputeASBufferSizes(md3dDevice.Get(), false, &scratchSizeInBytes, &resultSizeInBytes);
+        beamBoxGenerator.ComputeASBufferSizes(false, &scratchSizeInBytes, &resultSizeInBytes);
 
         m_beamBlasBuffers.pScratch = raytrace_helper::CreateBuffer(
             md3dDevice.Get(),
@@ -2360,7 +2360,7 @@ void PhotonBeamApp::CreateBeamBlases()
 
         UINT64 scratchSizeInBytes = 0;
         UINT64 resultSizeInBytes = 0;
-        photonBoxGenerator.ComputeASBufferSizes(md3dDevice.Get(), false, &scratchSizeInBytes, &resultSizeInBytes);
+        photonBoxGenerator.ComputeASBufferSizes(false, &scratchSizeInBytes, &resultSizeInBytes);
 
         m_photonBlasBuffers.pScratch = raytrace_helper::CreateBuffer(
             md3dDevice.Get(),

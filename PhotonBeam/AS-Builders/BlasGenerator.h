@@ -48,7 +48,6 @@ namespace ASBuilder
         );
 
         void ComputeASBufferSizes(
-          ID3D12Device5* device,
           bool allowUpdate,
           UINT64* scratchSizeInBytes, 
           UINT64* resultSizeInBytes                          
