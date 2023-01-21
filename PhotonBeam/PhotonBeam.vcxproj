@@ -203,7 +203,6 @@
     <ClCompile Include="FrameResource.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PhotonBeamApp.cpp" />
-    <ClCompile Include="raytraceHelper.cpp" />
     <ClCompile Include="Raytracing-Utils\DXCompileShader.cpp" />
     <ClCompile Include="third-party-helper\imgui-helper\imgui_helper.cpp" />
     <ClCompile Include="third-party-helper\tiny-gltf-helper\GltfScene.cpp" />

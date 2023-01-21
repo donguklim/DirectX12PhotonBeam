@@ -3,10 +3,6 @@
 #include <iomanip>
 #include <d3d12.h>
 #include <dxcapi.h>
-#include "../Common/d3dUtil.h"
-
-#pragma comment(lib,"dxcompiler.lib")
-
 
 #ifndef ThrowIfFalse
 #define ThrowIfFalse(x)                                              \
@@ -83,9 +79,6 @@ namespace raytrace_helper
     {
     }
 #endif
-    
-    Microsoft::WRL::ComPtr<IDxcBlob> CompileShaderLibrary(LPCWSTR fileName, LPCWSTR targetProfile, LPCWSTR entryPoint= L"");
-
 
     inline UINT Align(UINT size, UINT alignment)
     {
