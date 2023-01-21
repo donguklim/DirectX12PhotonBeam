@@ -11,7 +11,6 @@
 #include <microsoft-directx-graphics-samples/raytraceHelper.h>
 #include <microsoft-directx-graphics-samples/DirectXRaytracingHelper.h>
 
-
 #include "Shaders/RaytracingHlslCompat.h"
 #include "AS-Builders/BlasGenerator.hpp"
 #include "Raytracing-Utils/DXCompileShader.hpp"
