@@ -52,6 +52,9 @@
     <Filter Include="Third Party Libraries Helper\tiny-gltf helper">
       <UniqueIdentifier>{30c6484d-9ec7-46e3-bb55-8e59a10b5b78}</UniqueIdentifier>
     </Filter>
+    <Filter Include="AS Builder">
+      <UniqueIdentifier>{ae14d9e1-c2ee-4b82-9f16-c2843af5cc73}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PhotonBeamApp.hpp">
@@ -132,14 +135,14 @@
     <ClInclude Include="..\third-party\microsoft-directx-graphics-samples\DirectXRaytracingHelper.h">
       <Filter>Third Party Libraries\Microsoft DirecX Samples</Filter>
     </ClInclude>
-    <ClInclude Include="AS-Builders\BlasGenerator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="third-party-helper\imgui-helper\imgui_helper.h">
       <Filter>Third Party Libraries Helper\imgui helper</Filter>
     </ClInclude>
     <ClInclude Include="third-party-helper\tiny-gltf-helper\GltfScene.hpp">
       <Filter>Third Party Libraries Helper\tiny-gltf helper</Filter>
+    </ClInclude>
+    <ClInclude Include="AS-Builders\BlasGenerator.h">
+      <Filter>AS Builder</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -197,14 +200,14 @@
     <ClCompile Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\TopLevelASGenerator.cpp">
       <Filter>Third Party Libraries\Nvidia DXR Helpers</Filter>
     </ClCompile>
-    <ClCompile Include="AS-Builders\BlasGenerator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="third-party-helper\imgui-helper\imgui_helper.cpp">
       <Filter>Third Party Libraries Helper\imgui helper</Filter>
     </ClCompile>
     <ClCompile Include="third-party-helper\tiny-gltf-helper\GltfScene.cpp">
       <Filter>Third Party Libraries Helper\tiny-gltf helper</Filter>
+    </ClCompile>
+    <ClCompile Include="AS-Builders\BlasGenerator.cpp">
+      <Filter>AS Builder</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
