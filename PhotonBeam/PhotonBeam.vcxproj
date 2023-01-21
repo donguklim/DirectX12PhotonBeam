@@ -123,7 +123,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\imgui-helper;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>third-party-helper\imgui-helper;</AdditionalIncludeDirectories>
       <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <DisableAnalyzeExternal>true</DisableAnalyzeExternal>
@@ -142,7 +142,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\imgui-helper;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>third-party-helper\imgui-helper;</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -160,7 +160,6 @@
     <ClInclude Include="..\Common\GameTimer.h" />
     <ClInclude Include="..\Common\MathHelper.h" />
     <ClInclude Include="..\Common\UploadBuffer.h" />
-    <ClInclude Include="..\imgui-helper\imgui_helper.h" />
     <ClInclude Include="..\third-party\imgui\imconfig.h" />
     <ClInclude Include="..\third-party\imgui\imgui.h" />
     <ClInclude Include="..\third-party\imgui\imgui_impl_dx12.h" />
@@ -170,18 +169,20 @@
     <ClInclude Include="..\third-party\imgui\imstb_textedit.h" />
     <ClInclude Include="..\third-party\imgui\imstb_truetype.h" />
     <ClInclude Include="..\third-party\microsoft-directx-graphics-samples\DirectXRaytracingHelper.h" />
-    <ClInclude Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\TopLevelASGenerator.h" />
+    <ClInclude Include="..\third-party\microsoft-directx-graphics-samples\raytraceHelper.h" />
     <ClInclude Include="..\third-party\tiny-gltf\json.hpp" />
     <ClInclude Include="..\third-party\tiny-gltf\stb_image.h" />
     <ClInclude Include="..\third-party\tiny-gltf\stb_image_write.h" />
     <ClInclude Include="..\third-party\tiny-gltf\tiny_gltf.h" />
-    <ClInclude Include="AS-Builders\BlasGenerator.h" />
+    <ClInclude Include="AS-Builders\BlasGenerator.hpp" />
+    <ClInclude Include="AS-Builders\TlasGenerator.hpp" />
     <ClInclude Include="FrameResource.h" />
-    <ClInclude Include="GltfScene.hpp" />
     <ClInclude Include="PhotonBeamApp.hpp" />
-    <ClInclude Include="raytraceHelper.hpp" />
+    <ClInclude Include="Raytracing-Utils\DXCompileShader.hpp" />
     <ClInclude Include="Shaders\RaytracingHlslCompat.h" />
     <ClInclude Include="Shaders\util\HlslCompat.h" />
+    <ClInclude Include="third-party-helper\imgui-helper\imgui_helper.h" />
+    <ClInclude Include="third-party-helper\tiny-gltf-helper\GltfScene.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Common\Camera.cpp" />
@@ -190,7 +191,6 @@
     <ClCompile Include="..\Common\DDSTextureLoader.cpp" />
     <ClCompile Include="..\Common\GameTimer.cpp" />
     <ClCompile Include="..\Common\MathHelper.cpp" />
-    <ClCompile Include="..\imgui-helper\imgui_helper.cpp" />
     <ClCompile Include="..\third-party\imgui\imgui.cpp" />
     <ClCompile Include="..\third-party\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\third-party\imgui\imgui_draw.cpp" />
@@ -198,13 +198,14 @@
     <ClCompile Include="..\third-party\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="..\third-party\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\third-party\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\TopLevelASGenerator.cpp" />
     <ClCompile Include="AS-Builders\BlasGenerator.cpp" />
+    <ClCompile Include="AS-Builders\TlasGenerator.cpp" />
     <ClCompile Include="FrameResource.cpp" />
-    <ClCompile Include="GltfScene.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PhotonBeamApp.cpp" />
-    <ClCompile Include="raytraceHelper.cpp" />
+    <ClCompile Include="Raytracing-Utils\DXCompileShader.cpp" />
+    <ClCompile Include="third-party-helper\imgui-helper\imgui_helper.cpp" />
+    <ClCompile Include="third-party-helper\tiny-gltf-helper\GltfScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\BeamTracing\BeamClosestHit.hlsl">

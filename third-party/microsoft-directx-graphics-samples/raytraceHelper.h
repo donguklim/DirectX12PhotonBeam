@@ -1,12 +1,16 @@
+/*
+    This is not the original source file in the Microsoft DirectX sample, but most of the code here is copied from files in bellow links.
+
+    https://github.com/microsoft/DirectX-Graphics-Samples/blob/0aa79bad78992da0b6a8279ddb9002c1753cb849/Samples/Desktop/D3D12Raytracing/src/D3D12RaytracingProceduralGeometry/util/DXSampleHelper.h
+    https://github.com/microsoft/DirectX-Graphics-Samples/blob/0aa79bad78992da0b6a8279ddb9002c1753cb849/Samples/Desktop/D3D12Raytracing/src/D3D12RaytracingProceduralGeometry/DirectXRaytracingHelper.h
+
+*/
+
 #pragma once
 
 #include <iomanip>
 #include <d3d12.h>
 #include <dxcapi.h>
-#include "../Common/d3dUtil.h"
-
-#pragma comment(lib,"dxcompiler.lib")
-
 
 #ifndef ThrowIfFalse
 #define ThrowIfFalse(x)                                              \
@@ -83,9 +87,6 @@ namespace raytrace_helper
     {
     }
 #endif
-    
-    Microsoft::WRL::ComPtr<IDxcBlob> CompileShaderLibrary(LPCWSTR fileName, LPCWSTR targetProfile, LPCWSTR entryPoint= L"");
-
 
     inline UINT Align(UINT size, UINT alignment)
     {

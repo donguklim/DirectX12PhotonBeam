@@ -1,8 +1,9 @@
 
-#include "raytraceHelper.hpp"
+#include "DXCompileShader.hpp"
+#include <iomanip>
+#include "../Common/d3dUtil.h"
 
-
-Microsoft::WRL::ComPtr<IDxcBlob> raytrace_helper::CompileShaderLibrary(LPCWSTR fileName, LPCWSTR targetProfile, LPCWSTR entryPoint)
+Microsoft::WRL::ComPtr<IDxcBlob> DxCompileShaderLibrary(LPCWSTR fileName, LPCWSTR targetProfile, LPCWSTR entryPoint)
 {
     static  Microsoft::WRL::ComPtr<IDxcCompiler> pCompiler = nullptr;
     static  Microsoft::WRL::ComPtr<IDxcLibrary> pLibrary = nullptr;
@@ -15,19 +16,19 @@ Microsoft::WRL::ComPtr<IDxcBlob> raytrace_helper::CompileShaderLibrary(LPCWSTR f
     {
         ThrowIfFailed(
             DxcCreateInstance(
-                CLSID_DxcCompiler, 
+                CLSID_DxcCompiler,
                 IID_PPV_ARGS(pCompiler.GetAddressOf())
             )
         );
         ThrowIfFailed(
             DxcCreateInstance(
-                CLSID_DxcLibrary, 
+                CLSID_DxcLibrary,
                 IID_PPV_ARGS(pLibrary.GetAddressOf())
             )
         );
         ThrowIfFailed(
             pLibrary->CreateIncludeHandler(
-               dxcIncludeHandler.GetAddressOf()
+                dxcIncludeHandler.GetAddressOf()
             )
         );
     }
@@ -58,12 +59,12 @@ Microsoft::WRL::ComPtr<IDxcBlob> raytrace_helper::CompileShaderLibrary(LPCWSTR f
     ThrowIfFailed(
         pCompiler->Compile(
             pTextBlob.Get(),
-            fileName, 
+            fileName,
             entryPoint,
             targetProfile,
-            nullptr, 
-            0, 
-            nullptr, 
+            nullptr,
+            0,
+            nullptr,
             0,
             dxcIncludeHandler.Get(),
             pResult.GetAddressOf()

@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="imgui helper">
-      <UniqueIdentifier>{48d4b0a2-3dfb-4395-96f0-97866b29598d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Shaders">
       <UniqueIdentifier>{c07e8fca-13de-4b73-ba33-19ee2a73b677}</UniqueIdentifier>
     </Filter>
@@ -40,22 +37,25 @@
     <Filter Include="Third Party Libraries\tiny gltf">
       <UniqueIdentifier>{4b2dbd96-c3c3-469f-925e-14eed655b770}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Third Party Libraries\Nvidia DXR Helpers">
-      <UniqueIdentifier>{dc19a01d-7798-4f05-80a7-e71451f19d5d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Third Party Libraries\Microsoft DirecX Samples">
       <UniqueIdentifier>{8f0c46f0-7885-4ec7-af11-b72c2a085c59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third Party Libraries Helper">
+      <UniqueIdentifier>{d127290d-64d1-4d49-9f4b-ef28705bab4b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third Party Libraries Helper\imgui helper">
+      <UniqueIdentifier>{3f5b2fbd-1a9b-4868-9530-643c39fdcb1e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third Party Libraries Helper\tiny-gltf helper">
+      <UniqueIdentifier>{30c6484d-9ec7-46e3-bb55-8e59a10b5b78}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AS Builder">
+      <UniqueIdentifier>{ae14d9e1-c2ee-4b82-9f16-c2843af5cc73}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PhotonBeamApp.hpp">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GltfScene.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\imgui-helper\imgui_helper.h">
-      <Filter>imgui helper</Filter>
     </ClInclude>
     <ClInclude Include="raytraceHelper.hpp">
       <Filter>Header Files</Filter>
@@ -126,14 +126,20 @@
     <ClInclude Include="..\third-party\tiny-gltf\tiny_gltf.h">
       <Filter>Third Party Libraries\tiny gltf</Filter>
     </ClInclude>
-    <ClInclude Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\TopLevelASGenerator.h">
-      <Filter>Third Party Libraries\Nvidia DXR Helpers</Filter>
-    </ClInclude>
     <ClInclude Include="..\third-party\microsoft-directx-graphics-samples\DirectXRaytracingHelper.h">
       <Filter>Third Party Libraries\Microsoft DirecX Samples</Filter>
     </ClInclude>
+    <ClInclude Include="third-party-helper\imgui-helper\imgui_helper.h">
+      <Filter>Third Party Libraries Helper\imgui helper</Filter>
+    </ClInclude>
+    <ClInclude Include="third-party-helper\tiny-gltf-helper\GltfScene.hpp">
+      <Filter>Third Party Libraries Helper\tiny-gltf helper</Filter>
+    </ClInclude>
     <ClInclude Include="AS-Builders\BlasGenerator.h">
-      <Filter>Header Files</Filter>
+      <Filter>AS Builder</Filter>
+    </ClInclude>
+    <ClInclude Include="AS-Builders\TlasGenerator.h">
+      <Filter>AS Builder</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -142,12 +148,6 @@
     </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GltfScene.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\imgui-helper\imgui_helper.cpp">
-      <Filter>imgui helper</Filter>
     </ClCompile>
     <ClCompile Include="raytraceHelper.cpp">
       <Filter>Source Files</Filter>
@@ -194,11 +194,17 @@
     <ClCompile Include="..\third-party\imgui\imgui_widgets.cpp">
       <Filter>Third Party Libraries\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\TopLevelASGenerator.cpp">
-      <Filter>Third Party Libraries\Nvidia DXR Helpers</Filter>
+    <ClCompile Include="third-party-helper\imgui-helper\imgui_helper.cpp">
+      <Filter>Third Party Libraries Helper\imgui helper</Filter>
+    </ClCompile>
+    <ClCompile Include="third-party-helper\tiny-gltf-helper\GltfScene.cpp">
+      <Filter>Third Party Libraries Helper\tiny-gltf helper</Filter>
     </ClCompile>
     <ClCompile Include="AS-Builders\BlasGenerator.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>AS Builder</Filter>
+    </ClCompile>
+    <ClCompile Include="AS-Builders\TlasGenerator.cpp">
+      <Filter>AS Builder</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

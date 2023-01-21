@@ -7,9 +7,9 @@
 #include "../Common/Camera.h"
 #include "../Common/MathHelper.h"
 #include "../Common/UploadBuffer.h"
-#include "Nvidia-DXRHelpers/nv_helpers_dx12/TopLevelASGenerator.h"
+#include "AS-Builders/TlasGenerator.hpp"
 #include "FrameResource.h"
-#include "GltfScene.hpp"
+#include "third-party-helper/tiny-gltf-helper/GltfScene.hpp"
 
 
 
@@ -227,7 +227,7 @@ private:
 
     void BuildFrameResources();
     void BuildRenderItems();
-    void DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems);
+    void DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem>& ritems);
     void RenderUI();
     void SetDefaults();
 
@@ -237,7 +237,7 @@ private:
     void drawPost();
 
     void CreateSurfaceBlas();
-    void CreateSurfaceTlas();
+    void CreateSurfaceTlas(ASBuilder::TlasGenerator& tlasGenerator);
 
     void CreateBeamBlases();
 
@@ -245,17 +245,17 @@ private:
 
 private:
 
-    std::vector<std::unique_ptr<FrameResource>> mFrameResources;
-    FrameResource* mCurrFrameResource = nullptr;
-    int mCurrFrameResourceIndex = 0;
-    UINT mCbvSrvDescriptorSize = 0;
+    std::vector<std::unique_ptr<FrameResource>> m_frameResources;
+    FrameResource* m_currFrameResource = nullptr;
+    int m_currFrameResourceIndex = 0;
+    UINT m_cbvSrvDescriptorSize = 0;
 
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> mPostRootSignature = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_postRootSignature = nullptr;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> m_bufferResetRootSignature = nullptr;
-    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_srvDescriptorHeap = nullptr;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_postSrvDescriptorHeap = nullptr;
-    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mGuiDescriptorHeap = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_guiDescriptorHeap = nullptr;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_offScreenRtvHeap = nullptr;
 
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_beamTracingDescriptorHeap = nullptr;
@@ -275,9 +275,13 @@ private:
 
 
     std::vector<std::unique_ptr<Texture>> m_textures;
-    std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> mGeometries;
+    std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> m_geometries;
     std::unordered_map<std::string, Microsoft::WRL::ComPtr<IDxcBlob>> m_rasterizeShaders;
-    std::unordered_map<std::string, Microsoft::WRL::ComPtr<ID3D12PipelineState>> mPSOs;
+
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> m_rasterPso;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> m_postPso;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> m_beamBufferResetPso;
+
 
     Microsoft::WRL::ComPtr<ID3D12StateObject> m_beamStateObject = nullptr;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> m_beamRootSignatures[to_underlying(RootSignatueEnums::BeamTrace::ERootSignatures::Count)];
@@ -286,18 +290,19 @@ private:
 
     static const wchar_t* c_beamShadersExportNames[to_underlying(EBeamTracingShaders::Count)];
     static const wchar_t* c_rayHitGroupNames[to_underlying(ERayHitTypes::Count)];
+
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamGenShaderTable;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamMissShaderTable;
     uint32_t m_beamMissShaderTableStrideInBytes = 0;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamHitGroupShaderTable;
     uint32_t m_beamHitGroupShaderTableStrideInBytes = 0;
     
+    static const wchar_t* c_rayShadersExportNames[to_underlying(ERayTracingShaders::Count)];
+    static const wchar_t* c_beamHitGroupNames[to_underlying(EBeamHitTypes::Count)];
 
     Microsoft::WRL::ComPtr<ID3D12StateObject> m_rayStateObject = nullptr;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rayRootSignatures[to_underlying(RootSignatueEnums::RayTrace::ERootSignatures::Count)];
     Microsoft::WRL::ComPtr<IDxcBlob> m_rayShaders[to_underlying(ERayTracingShaders::Count)];
-    static const wchar_t* c_rayShadersExportNames[to_underlying(ERayTracingShaders::Count)];
-    static const wchar_t* c_beamHitGroupNames[to_underlying(EBeamHitTypes::Count)];
     Microsoft::WRL::ComPtr<ID3D12Resource> m_rayGenShaderTable;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_rayHitGroupShaderTable;
     uint32_t m_rayHitGroupShaderTableStrideInBytes = 0;
@@ -308,33 +313,24 @@ private:
     Microsoft::WRL::ComPtr<ID3D12Resource> m_offScreenOutput = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounter = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamCounterReset = nullptr;
-
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamData = nullptr;
     Microsoft::WRL::ComPtr<ID3D12Resource> m_beamAsInstanceDescData = nullptr;
 
-    std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
+    std::vector<D3D12_INPUT_ELEMENT_DESC> m_inputLayout;
 
     // List of all the render items.
-    std::vector<std::unique_ptr<RenderItem>> mAllRitems;
+    std::vector<RenderItem> m_renderItems;
 
-    // Render items divided by PSO.
-    std::vector<RenderItem*> mOpaqueRitems;
 
-    PassConstants mMainPassCB;
-
+    PassConstants m_mainPassCB;
     PushConstantRay m_pcRay;
     PushConstantBeam m_pcBeam;
 
     GltfScene m_gltfScene;
 
-    bool mIsWireframe = false;
-
-    DirectX::XMFLOAT3 mEyePos{};
     DirectX::XMVECTORF32 m_clearColor;
-
     POINT mLastMousePos;
-    Camera mCamera;
-
+    Camera m_camera;
     float    m_airAlbedo{ 0.1f };
     float m_beamRadius{ 0.5f };
     float    m_photonRadius{ 0.5f };
@@ -385,7 +381,6 @@ private:
     AccelerationStructureBuffers m_beamTlasBuffers{};
 
     Microsoft::WRL::ComPtr<ID3D12Resource> m_bottomLevelAS; // Storage for the bottom Level AS
-    nv_helpers_dx12::TopLevelASGenerator m_topLevelASGenerator;
 
 };
 

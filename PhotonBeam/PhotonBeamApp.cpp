@@ -8,11 +8,12 @@
 #include <imgui/imgui_impl_win32.h>
 #include <imgui/imgui_impl_dx12.h>
 #include <imgui_helper.h>
-#include "raytraceHelper.hpp"
+#include <microsoft-directx-graphics-samples/raytraceHelper.h>
+#include <microsoft-directx-graphics-samples/DirectXRaytracingHelper.h>
 
 #include "Shaders/RaytracingHlslCompat.h"
-#include "AS-Builders/BlasGenerator.h"
-#include <microsoft-directx-graphics-samples/DirectXRaytracingHelper.h>
+#include "AS-Builders/BlasGenerator.hpp"
+#include "Raytracing-Utils/DXCompileShader.hpp"
 
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
@@ -146,11 +147,11 @@ bool PhotonBeamApp::Initialize()
 
     // Reset the command list to prep for initialization commands.
     ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
-    mCbvSrvDescriptorSize = md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    m_cbvSrvDescriptorSize = md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-    mCamera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
-    mCamera.LookAt(XMFLOAT3{ 0.0f, 0.0f, 15.0f }, XMFLOAT3{ 0.0f, 0.0f, 0.0f }, XMFLOAT3{ 0.0f, 1.0f, 0.0f });
-    mCamera.UpdateViewMatrix();
+    m_camera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
+    m_camera.LookAt(XMFLOAT3{ 0.0f, 0.0f, 15.0f }, XMFLOAT3{ 0.0f, 0.0f, 0.0f }, XMFLOAT3{ 0.0f, 1.0f, 0.0f });
+    m_camera.UpdateViewMatrix();
 
     LoadScene();
     CreateTextures();
@@ -167,9 +168,12 @@ bool PhotonBeamApp::Initialize()
     BuildDescriptorHeaps();
 
     BuildPSOs();
-
+    
     CreateSurfaceBlas();
-    CreateSurfaceTlas();
+
+    auto tlasGenerator = ASBuilder::TlasGenerator(md3dDevice.Get());
+    CreateSurfaceTlas(tlasGenerator);
+
     CreateBeamBlases();
 
     CreateOffScreenOutputResource();
@@ -187,7 +191,7 @@ bool PhotonBeamApp::Initialize()
     // Wait until initialization is complete.
     FlushCommandQueue();
 
-    mGeometries["cornellBox"].get()->DisposeUploaders();
+    m_geometries["cornellBox"].get()->DisposeUploaders();
     m_gltfScene.destroy();
 
     // release scratch buffers for creating accelerated structures;
@@ -235,9 +239,9 @@ void PhotonBeamApp::InitGui()
         md3dDevice.Get(),
         gNumFrameResources,
         DXGI_FORMAT_R8G8B8A8_UNORM,
-        mGuiDescriptorHeap.Get(),
-        mGuiDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
-        mGuiDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
+        m_guiDescriptorHeap.Get(),
+        m_guiDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
+        m_guiDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
     );
 
 
@@ -289,7 +293,7 @@ void PhotonBeamApp::OnResize()
     if(m_offScreenOutputResourceUAVDescriptorHeapIndex < UINT32_MAX)
         CreateOffScreenOutputResource();
 
-    mCamera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
+    m_camera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
 
 }
 
@@ -298,15 +302,15 @@ void PhotonBeamApp::Update(const GameTimer& gt)
     OnKeyboardInput(gt);
 
     // Cycle through the circular frame resource array.
-    mCurrFrameResourceIndex = (mCurrFrameResourceIndex + 1) % gNumFrameResources;
-    mCurrFrameResource = mFrameResources[mCurrFrameResourceIndex].get();
+    m_currFrameResourceIndex = (m_currFrameResourceIndex + 1) % gNumFrameResources;
+    m_currFrameResource = m_frameResources[m_currFrameResourceIndex].get();
 
     // Has the GPU finished processing the commands of the current frame resource?
     // If not, wait until the GPU has completed commands up to this fence point.
-    if (mCurrFrameResource->Fence != 0 && mFence->GetCompletedValue() < mCurrFrameResource->Fence)
+    if (m_currFrameResource->Fence != 0 && mFence->GetCompletedValue() < m_currFrameResource->Fence)
     {
         HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
-        ThrowIfFailed(mFence->SetEventOnCompletion(mCurrFrameResource->Fence, eventHandle));
+        ThrowIfFailed(mFence->SetEventOnCompletion(m_currFrameResource->Fence, eventHandle));
 
         if (eventHandle != 0)
         {
@@ -322,7 +326,7 @@ void PhotonBeamApp::Update(const GameTimer& gt)
 
 void PhotonBeamApp::drawPost()
 {
-    mCommandList->SetPipelineState(mPSOs["post"].Get());
+    mCommandList->SetPipelineState(m_postPso.Get());
 
     auto renderTarget = CurrentBackBuffer();
 
@@ -357,7 +361,7 @@ void PhotonBeamApp::drawPost()
     ID3D12DescriptorHeap* descriptorHeaps[] = { m_postSrvDescriptorHeap.Get() };
     mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
-    mCommandList->SetGraphicsRootSignature(mPostRootSignature.Get());
+    mCommandList->SetGraphicsRootSignature(m_postRootSignature.Get());
     mCommandList->SetGraphicsRootDescriptorTable(0, m_postSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
     mCommandList->IASetVertexBuffers(0, 0, nullptr);
@@ -370,7 +374,7 @@ void PhotonBeamApp::drawPost()
 
 void PhotonBeamApp::Rasterize()
 {
-    mCommandList->SetPipelineState(mPSOs["raster"].Get());
+    mCommandList->SetPipelineState(m_rasterPso.Get());
 
     CD3DX12_CLEAR_VALUE clearValue{ DXGI_FORMAT_R32G32B32_FLOAT, m_clearColor };
 
@@ -408,20 +412,20 @@ void PhotonBeamApp::Rasterize()
     mCommandList->RSSetViewports(1, &mScreenViewport);
     mCommandList->RSSetScissorRects(1, &mScissorRect);
 
-    ID3D12DescriptorHeap* descriptorHeaps[] = { mSrvDescriptorHeap.Get() };
+    ID3D12DescriptorHeap* descriptorHeaps[] = { m_srvDescriptorHeap.Get() };
     mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
-    mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
+    mCommandList->SetGraphicsRootSignature(m_rootSignature.Get());
 
-    auto passCB = mCurrFrameResource->PassCB->Resource();
+    auto passCB = m_currFrameResource->PassCB->Resource();
 
     mCommandList->SetGraphicsRootConstantBufferView(1, passCB->GetGPUVirtualAddress());
 
-    auto& matBuffer = mGeometries["cornellBox"].get()->MaterialBufferGPU;
+    auto& matBuffer = m_geometries["cornellBox"].get()->MaterialBufferGPU;
 
     mCommandList->SetGraphicsRootShaderResourceView(2, matBuffer->GetGPUVirtualAddress());
-    mCommandList->SetGraphicsRootDescriptorTable(3, mSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-    DrawRenderItems(mCommandList.Get(), mOpaqueRitems);
+    mCommandList->SetGraphicsRootDescriptorTable(3, m_srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+    DrawRenderItems(mCommandList.Get(), m_renderItems);
     mCommandList->EndRenderPass();
 
 }
@@ -430,7 +434,7 @@ void PhotonBeamApp::BeamTrace()
 {
     // Reset Sub beam info buffer
     {
-        mCommandList->SetPipelineState(mPSOs["bufferReset"].Get());
+        mCommandList->SetPipelineState(m_beamBufferResetPso.Get());
         mCommandList->SetComputeRootSignature(m_bufferResetRootSignature.Get());
         mCommandList->SetComputeRootUnorderedAccessView(0, m_beamAsInstanceDescData->GetGPUVirtualAddress());
 
@@ -454,7 +458,7 @@ void PhotonBeamApp::BeamTrace()
     {
         using namespace RootSignatueEnums::BeamTrace;
 
-        auto pcBeam = mCurrFrameResource->PcBeam->Resource();
+        auto pcBeam = m_currFrameResource->PcBeam->Resource();
         auto& globalRootSignature = m_beamRootSignatures[to_underlying(ERootSignatures::Global)];
 
         mCommandList->SetComputeRootSignature(globalRootSignature.Get());
@@ -532,7 +536,7 @@ void PhotonBeamApp::RayTrace()
 {
     using namespace RootSignatueEnums::RayTrace;
 
-    auto pcRay = mCurrFrameResource->PcRay->Resource();
+    auto pcRay = m_currFrameResource->PcRay->Resource();
     auto& globalRootSignature = m_rayRootSignatures[to_underlying(ERootSignatures::Global)];
 
     mCommandList->SetComputeRootSignature(globalRootSignature.Get());
@@ -564,7 +568,7 @@ void PhotonBeamApp::RayTrace()
 
 void PhotonBeamApp::Draw(const GameTimer& gt)
 {
-    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc = mCurrFrameResource->CmdListAlloc;
+    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc = m_currFrameResource->CmdListAlloc;
 
     // Reuse the memory associated with command recording.
     // We can only reset when the associated command lists have finished execution on the GPU.
@@ -598,7 +602,7 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
 
     drawPost();
 
-    ID3D12DescriptorHeap* guiDescriptorHeaps[] = { mGuiDescriptorHeap.Get() };
+    ID3D12DescriptorHeap* guiDescriptorHeaps[] = { m_guiDescriptorHeap.Get() };
     mCommandList->SetDescriptorHeaps(_countof(guiDescriptorHeaps), guiDescriptorHeaps);
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList.Get());
     mCommandList->EndRenderPass();
@@ -623,7 +627,7 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
     mCurrBackBuffer = (mCurrBackBuffer + 1) % SwapChainBufferCount;
 
     // Advance the fence value to mark commands up to this fence point.
-    mCurrFrameResource->Fence = ++mCurrentFence;
+    m_currFrameResource->Fence = ++mCurrentFence;
 
     // Add an instruction to the command queue to set a new fence point. 
     // Because we are on the GPU timeline, the new fence point won't be 
@@ -658,8 +662,8 @@ void PhotonBeamApp::OnMouseMove(WPARAM btnState, int x, int y)
         float dx = XMConvertToRadians(0.1f * static_cast<float>(x - mLastMousePos.x));
         float dy = XMConvertToRadians(0.1f * static_cast<float>(y - mLastMousePos.y));
 
-        mCamera.Pitch(dy);
-        mCamera.RotateY(-dx);
+        m_camera.Pitch(dy);
+        m_camera.RotateY(-dx);
     }
     else if ((btnState & MK_RBUTTON) != 0)
     {
@@ -667,15 +671,15 @@ void PhotonBeamApp::OnMouseMove(WPARAM btnState, int x, int y)
         float dx = 0.05f * static_cast<float>(x - mLastMousePos.x);
         float dy = 0.05f * static_cast<float>(y - mLastMousePos.y);
 
-        mCamera.Walk(dx - dy);
+        m_camera.Walk(dx - dy);
     }
     else if ((btnState & MK_MBUTTON) != 0)
     {
         float dx = 0.02f * static_cast<float>(x - mLastMousePos.x);
         float dy = 0.02f * static_cast<float>(y - mLastMousePos.y);
 
-        mCamera.Strafe(dx);
-        mCamera.Pedestal(dy);
+        m_camera.Strafe(dx);
+        m_camera.Pedestal(dy);
     }
 
     mLastMousePos.x = x;
@@ -688,7 +692,7 @@ void PhotonBeamApp::OnMouseWheel(WPARAM btnState, int delta)
         return;
 
     if (delta != 0)
-        mCamera.Walk(0.01f * delta);
+        m_camera.Walk(0.01f * delta);
 }
 
 void PhotonBeamApp::OnKeyboardInput(const GameTimer& gt)
@@ -722,54 +726,54 @@ void PhotonBeamApp::OnKeyboardInput(const GameTimer& gt)
     else
     {
         if (GetAsyncKeyState('W') & 0x8000)
-            mCamera.Walk(10.0f * dt);
+            m_camera.Walk(10.0f * dt);
 
         if (GetAsyncKeyState('S') & 0x8000)
-            mCamera.Walk(-10.0f * dt);
+            m_camera.Walk(-10.0f * dt);
 
         if (GetAsyncKeyState('A') & 0x8000)
-            mCamera.Strafe(10.0f * dt);
+            m_camera.Strafe(10.0f * dt);
 
         if (GetAsyncKeyState('D') & 0x8000)
-            mCamera.Strafe(-10.0f * dt);
+            m_camera.Strafe(-10.0f * dt);
 
         if (GetAsyncKeyState('Q') & 0x8000)
-            mCamera.Pedestal(-10.0f * dt);
+            m_camera.Pedestal(-10.0f * dt);
 
         if (GetAsyncKeyState('E') & 0x8000)
-            mCamera.Pedestal(10.0f * dt);
+            m_camera.Pedestal(10.0f * dt);
     }
 
-    mCamera.UpdateViewMatrix();
+    m_camera.UpdateViewMatrix();
 }
 
 void PhotonBeamApp::UpdateObjectCBs(const GameTimer& gt)
 {
-    auto currObjectCB = mCurrFrameResource->ObjectCB.get();
-    for (auto& e : mAllRitems)
+    auto currObjectCB = m_currFrameResource->ObjectCB.get();
+    for (auto& item : m_renderItems)
     {
         // Only update the cbuffer data if the constants have changed.  
         // This needs to be tracked per frame resource.
-        if (e->NumFramesDirty > 0)
+        if (item.NumFramesDirty > 0)
         {
-            XMMATRIX world = XMLoadFloat4x4(&e->World);
+            XMMATRIX world = XMLoadFloat4x4(&item.World);
 
             ObjectConstants objConstants;
             XMStoreFloat4x4(&objConstants.World, XMMatrixTranspose(world));
-            objConstants.materialIndex = e->MaterialIndex;
+            objConstants.materialIndex = item.MaterialIndex;
 
-            currObjectCB->CopyData(e->ObjCBIndex, objConstants);
+            currObjectCB->CopyData(item.ObjCBIndex, objConstants);
 
             // Next FrameResource need to be updated too.
-            e->NumFramesDirty--;
+            item.NumFramesDirty--;
         }
     }
 }
 
 void PhotonBeamApp::UpdateMainPassCB(const GameTimer& gt)
 {
-    XMMATRIX view = mCamera.GetView();
-    XMMATRIX proj = mCamera.GetProj();
+    XMMATRIX view = m_camera.GetView();
+    XMMATRIX proj = m_camera.GetProj();
 
     XMMATRIX viewProj = XMMatrixMultiply(view, proj);
 
@@ -781,36 +785,29 @@ void PhotonBeamApp::UpdateMainPassCB(const GameTimer& gt)
     XMMATRIX invProj = XMMatrixInverse(&projDeterminant, proj);
     XMMATRIX invViewProj = XMMatrixInverse(&viewProjDeterminant, viewProj);
 
-    XMStoreFloat4x4(&mMainPassCB.View, XMMatrixTranspose(view));
-    XMStoreFloat4x4(&mMainPassCB.InvView, XMMatrixTranspose(invView));
-    XMStoreFloat4x4(&mMainPassCB.Proj, XMMatrixTranspose(proj));
-    XMStoreFloat4x4(&mMainPassCB.InvProj, XMMatrixTranspose(invProj));
-    XMStoreFloat4x4(&mMainPassCB.ViewProj, XMMatrixTranspose(viewProj));
-    XMStoreFloat4x4(&mMainPassCB.InvViewProj, XMMatrixTranspose(invViewProj));
-    mMainPassCB.EyePosW = mCamera.GetPosition3f();
+    XMStoreFloat4x4(&m_mainPassCB.View, XMMatrixTranspose(view));
+    XMStoreFloat4x4(&m_mainPassCB.InvView, XMMatrixTranspose(invView));
+    XMStoreFloat4x4(&m_mainPassCB.Proj, XMMatrixTranspose(proj));
+    XMStoreFloat4x4(&m_mainPassCB.InvProj, XMMatrixTranspose(invProj));
+    XMStoreFloat4x4(&m_mainPassCB.ViewProj, XMMatrixTranspose(viewProj));
+    XMStoreFloat4x4(&m_mainPassCB.InvViewProj, XMMatrixTranspose(invViewProj));
 
     auto totalTime = gt.TotalTime();
     if (m_isBeamMotionOn)
-        mMainPassCB.LightPos = getLightMotion(totalTime, m_lightPosition);
+        m_mainPassCB.LightPos = getLightMotion(totalTime, m_lightPosition);
     else
-        mMainPassCB.LightPos = m_lightPosition;
+        m_mainPassCB.LightPos = m_lightPosition;
 
-    mMainPassCB.lightIntensity = m_lightIntensity;
-    mMainPassCB.RenderTargetSize = XMFLOAT2((float)mClientWidth, (float)mClientHeight);
-    mMainPassCB.InvRenderTargetSize = XMFLOAT2(1.0f / mClientWidth, 1.0f / mClientHeight);
-    mMainPassCB.NearZ = mCamera.GetNearZ();
-    mMainPassCB.FarZ = mCamera.GetFarZ();
-    mMainPassCB.TotalTime = totalTime;
-    mMainPassCB.DeltaTime = gt.DeltaTime();
+    m_mainPassCB.LightIntensity = m_lightIntensity;
 
-    auto currPassCB = mCurrFrameResource->PassCB.get();
-    currPassCB->CopyData(0, mMainPassCB);
+    auto currPassCB = m_currFrameResource->PassCB.get();
+    currPassCB->CopyData(0, m_mainPassCB);
 }
 
 void PhotonBeamApp::UpdateRayTracingPushConstants(const GameTimer& gt)
 {
-    XMMATRIX view = mCamera.GetView();
-    XMMATRIX proj = mCamera.GetProj();
+    XMMATRIX view = m_camera.GetView();
+    XMMATRIX proj = m_camera.GetProj();
 
     XMMATRIX viewProj = XMMatrixMultiply(view, proj);
 
@@ -930,10 +927,10 @@ void PhotonBeamApp::UpdateRayTracingPushConstants(const GameTimer& gt)
     m_sourceLight = XMVECTORF32{ m_pcBeam.sourceLight.x, m_pcBeam.sourceLight.y, m_pcBeam.sourceLight.z };
 
 
-    auto currPcRay = mCurrFrameResource->PcRay.get();
+    auto currPcRay = m_currFrameResource->PcRay.get();
     currPcRay->CopyData(0, m_pcRay);
 
-    auto currPcBeam = mCurrFrameResource->PcBeam.get();
+    auto currPcBeam = m_currFrameResource->PcBeam.get();
     currPcBeam->CopyData(0, m_pcBeam);
 
 }
@@ -946,7 +943,7 @@ void PhotonBeamApp::BuildDescriptorHeaps()
         guiHeapDesc.NumDescriptors = 1;
         guiHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&guiHeapDesc,
-            IID_PPV_ARGS(&mGuiDescriptorHeap)));
+            IID_PPV_ARGS(&m_guiDescriptorHeap)));
     }
     
     {
@@ -969,9 +966,9 @@ void PhotonBeamApp::BuildDescriptorHeaps()
     ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_postSrvDescriptorHeap)));
 
     srvHeapDesc.NumDescriptors = static_cast<UINT>(m_textures.size());
-    ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSrvDescriptorHeap)));
+    ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvDescriptorHeap)));
 
-    CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+    CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(m_srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -985,7 +982,7 @@ void PhotonBeamApp::BuildDescriptorHeaps()
         srvDesc.Format = textureResource->Resource->GetDesc().Format;
         srvDesc.Texture2D.MipLevels = textureResource->Resource->GetDesc().MipLevels;
         md3dDevice->CreateShaderResourceView(textureResource->Resource.Get(), &srvDesc, hDescriptor);
-        hDescriptor.Offset(1, mCbvSrvDescriptorSize);
+        hDescriptor.Offset(1, m_cbvSrvDescriptorSize);
     }
 }
 
@@ -1008,7 +1005,7 @@ void PhotonBeamApp::BuildRayTracingDescriptorHeaps()
 
         // set geometry related data
         {
-            auto geo = mGeometries["cornellBox"].get();
+            auto geo = m_geometries["cornellBox"].get();
 
             D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
             srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -1121,7 +1118,7 @@ void PhotonBeamApp::BuildRayTracingDescriptorHeaps()
 
         // set geometry related data
         {
-            auto geo = mGeometries["cornellBox"].get();
+            auto geo = m_geometries["cornellBox"].get();
 
             D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
             srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -1238,7 +1235,7 @@ void PhotonBeamApp::BuildRasterizeRootSignature()
         D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
     );
 
-    SerializeAndCreateRootSignature(rootSigDesc, mRootSignature.GetAddressOf());
+    SerializeAndCreateRootSignature(rootSigDesc, m_rootSignature.GetAddressOf());
 }
 
 void PhotonBeamApp::BuildRayTracingRootSignatures()
@@ -1429,37 +1426,37 @@ void PhotonBeamApp::BuildPostRootSignature()
         0,
         serializedRootSig->GetBufferPointer(),
         serializedRootSig->GetBufferSize(),
-        IID_PPV_ARGS(mPostRootSignature.GetAddressOf())));
+        IID_PPV_ARGS(m_postRootSignature.GetAddressOf())));
 }
 
 void PhotonBeamApp::BuildShadersAndInputLayout()
 {
 
-    m_rasterizeShaders["standardVS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\Rasterization.hlsl", L"vs_6_6", L"VS");
-    m_rasterizeShaders["opaquePS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\Rasterization.hlsl", L"ps_6_6", L"PS");
+    m_rasterizeShaders["standardVS"] = DxCompileShaderLibrary(L"Shaders\\Rasterization.hlsl", L"vs_6_6", L"VS");
+    m_rasterizeShaders["opaquePS"] = DxCompileShaderLibrary(L"Shaders\\Rasterization.hlsl", L"ps_6_6", L"PS");
 
-    mInputLayout =
+    m_inputLayout =
     {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         { "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 2, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
     };
 
-    m_rasterizeShaders["postVS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"vs_6_6", L"VS");
-    m_rasterizeShaders["postPS"] = raytrace_helper::CompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"ps_6_6", L"PS");
+    m_rasterizeShaders["postVS"] = DxCompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"vs_6_6", L"VS");
+    m_rasterizeShaders["postPS"] = DxCompileShaderLibrary(L"Shaders\\PostColor.hlsl", L"ps_6_6", L"PS");
 
-    m_AsInstanceBufferResetShader = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\ResetSubBeamInfoBuffer.hlsl", L"cs_6_6", L"main");
+    m_AsInstanceBufferResetShader = DxCompileShaderLibrary(L"Shaders\\BeamTracing\\ResetSubBeamInfoBuffer.hlsl", L"cs_6_6", L"main");
 
-    m_beamShaders[to_underlying(EBeamTracingShaders::Miss)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamMiss.hlsl", L"lib_6_6");
-    m_beamShaders[to_underlying(EBeamTracingShaders::CloseHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamClosestHit.hlsl", L"lib_6_6");
-    m_beamShaders[to_underlying(EBeamTracingShaders::Gen)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\BeamTracing\\BeamGen.hlsl", L"lib_6_6");
+    m_beamShaders[to_underlying(EBeamTracingShaders::Miss)] = DxCompileShaderLibrary(L"Shaders\\BeamTracing\\BeamMiss.hlsl", L"lib_6_6");
+    m_beamShaders[to_underlying(EBeamTracingShaders::CloseHit)] = DxCompileShaderLibrary(L"Shaders\\BeamTracing\\BeamClosestHit.hlsl", L"lib_6_6");
+    m_beamShaders[to_underlying(EBeamTracingShaders::Gen)] = DxCompileShaderLibrary(L"Shaders\\BeamTracing\\BeamGen.hlsl", L"lib_6_6");
 
-    m_rayShaders[to_underlying(ERayTracingShaders::Miss)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RayMiss.hlsl", L"lib_6_6");
-    m_rayShaders[to_underlying(ERayTracingShaders::BeamAnyHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RayBeamAnyHit.hlsl", L"lib_6_6");
-    m_rayShaders[to_underlying(ERayTracingShaders::BeamInt)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RayBeamInt.hlsl", L"lib_6_6");
-    m_rayShaders[to_underlying(ERayTracingShaders::SurfaceAnyHit)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RaySurfaceAnyHit.hlsl", L"lib_6_6");
-    m_rayShaders[to_underlying(ERayTracingShaders::SurfaceInt)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RaySurfaceInt.hlsl", L"lib_6_6");
-    m_rayShaders[to_underlying(ERayTracingShaders::Gen)] = raytrace_helper::CompileShaderLibrary(L"Shaders\\RayTracing\\RayGen.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ERayTracingShaders::Miss)] = DxCompileShaderLibrary(L"Shaders\\RayTracing\\RayMiss.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ERayTracingShaders::BeamAnyHit)] = DxCompileShaderLibrary(L"Shaders\\RayTracing\\RayBeamAnyHit.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ERayTracingShaders::BeamInt)] = DxCompileShaderLibrary(L"Shaders\\RayTracing\\RayBeamInt.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ERayTracingShaders::SurfaceAnyHit)] = DxCompileShaderLibrary(L"Shaders\\RayTracing\\RaySurfaceAnyHit.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ERayTracingShaders::SurfaceInt)] = DxCompileShaderLibrary(L"Shaders\\RayTracing\\RaySurfaceInt.hlsl", L"lib_6_6");
+    m_rayShaders[to_underlying(ERayTracingShaders::Gen)] = DxCompileShaderLibrary(L"Shaders\\RayTracing\\RayGen.hlsl", L"lib_6_6");
 }
 
 void PhotonBeamApp::LoadScene()
@@ -1560,7 +1557,7 @@ void PhotonBeamApp::LoadScene()
     geo->MeshByteStride = sizeof(PrimMeshInfo);
     geo->MeshBufferByteSize = meshBufferByteSize;
 
-    mGeometries[geo->Name] = std::move(geo);
+    m_geometries[geo->Name] = std::move(geo);
 
 }
 
@@ -1683,29 +1680,23 @@ void PhotonBeamApp::BuildRenderItems()
 
     for (auto& node : m_gltfScene.GetNodes())
     {
-        auto rItem = std::make_unique<RenderItem>();
+        auto& rItem = m_renderItems.emplace_back();
         auto& primitive = primMeshes[node.primMesh];
 
-        rItem->ObjCBIndex = objCBIndex++;
-        rItem->World = node.worldMatrix;
-        rItem->MaterialIndex = primitive.materialIndex;
-        rItem->Geo = mGeometries["cornellBox"].get();
-        rItem->PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-        rItem->IndexCount = primitive.indexCount;
-        rItem->StartIndexLocation = primitive.firstIndex;
-        rItem->BaseVertexLocation = primitive.vertexOffset;
-        mAllRitems.push_back(std::move(rItem));
+        rItem.ObjCBIndex = objCBIndex++;
+        rItem.World = node.worldMatrix;
+        rItem.MaterialIndex = primitive.materialIndex;
+        rItem.Geo = m_geometries["cornellBox"].get();
+        rItem.PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+        rItem.IndexCount = primitive.indexCount;
+        rItem.StartIndexLocation = primitive.firstIndex;
+        rItem.BaseVertexLocation = primitive.vertexOffset;
     }
-
-    // All the render items are opaque.
-    for (auto& e : mAllRitems)
-        mOpaqueRitems.push_back(e.get());
 }
 
 void PhotonBeamApp::BuildBeamTracingPSOs()
 {
     CD3DX12_STATE_OBJECT_DESC beamTracingPipeline{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
-
 
     for (size_t i = 0; i < to_underlying(EBeamTracingShaders::Count); i++)
     {
@@ -1793,10 +1784,8 @@ void PhotonBeamApp::BuildRayTracingPSOs()
         };
         bufferResetPsoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
-        ThrowIfFailed(md3dDevice->CreateComputePipelineState(&bufferResetPsoDesc, IID_PPV_ARGS(mPSOs["bufferReset"].GetAddressOf())));
+        ThrowIfFailed(md3dDevice->CreateComputePipelineState(&bufferResetPsoDesc, IID_PPV_ARGS(m_beamBufferResetPso.GetAddressOf())));
     }
-
-
 
     CD3DX12_STATE_OBJECT_DESC rayTracingPipeline{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
 
@@ -1897,8 +1886,8 @@ void PhotonBeamApp::BuildPSOs()
 
     // PSO for opaque objects.
     ZeroMemory(&opaquePsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
-    opaquePsoDesc.InputLayout = { mInputLayout.data(), (UINT)mInputLayout.size() };
-    opaquePsoDesc.pRootSignature = mRootSignature.Get();
+    opaquePsoDesc.InputLayout = { m_inputLayout.data(), (UINT)m_inputLayout.size() };
+    opaquePsoDesc.pRootSignature = m_rootSignature.Get();
     opaquePsoDesc.VS = {
         reinterpret_cast<BYTE*>(m_rasterizeShaders["standardVS"]->GetBufferPointer()),
         m_rasterizeShaders["standardVS"]->GetBufferSize()
@@ -1917,12 +1906,12 @@ void PhotonBeamApp::BuildPSOs()
     opaquePsoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
     opaquePsoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
     opaquePsoDesc.DSVFormat = mDepthStencilFormat;
-    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(mPSOs["raster"].GetAddressOf())));
+    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&opaquePsoDesc, IID_PPV_ARGS(m_rasterPso.GetAddressOf())));
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC postPsoDesc;
     ZeroMemory(&postPsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
     postPsoDesc.InputLayout = { nullptr, 0 };
-    postPsoDesc.pRootSignature = mPostRootSignature.Get();
+    postPsoDesc.pRootSignature = m_postRootSignature.Get();
     postPsoDesc.VS = {
         reinterpret_cast<BYTE*>(m_rasterizeShaders["postVS"]->GetBufferPointer()),
         m_rasterizeShaders["postVS"]->GetBufferSize()
@@ -1942,47 +1931,47 @@ void PhotonBeamApp::BuildPSOs()
     postPsoDesc.RTVFormats[0] = mBackBufferFormat;
     postPsoDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
     postPsoDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
-    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&postPsoDesc, IID_PPV_ARGS(mPSOs["post"].GetAddressOf())));
+    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&postPsoDesc, IID_PPV_ARGS(m_postPso.GetAddressOf())));
 }
 
 void PhotonBeamApp::BuildFrameResources()
 {
     for (int i = 0; i < gNumFrameResources; ++i)
     {
-        mFrameResources.push_back(std::make_unique<FrameResource>(md3dDevice.Get(),
-            1, (UINT)mAllRitems.size()));
+        m_frameResources.push_back(std::make_unique<FrameResource>(md3dDevice.Get(),
+            1, (UINT)m_renderItems.size()));
     }
 }
 
-void PhotonBeamApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem*>& ritems)
+void PhotonBeamApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const std::vector<RenderItem>& ritems)
 {
     UINT objCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
 
-    auto objectCB = mCurrFrameResource->ObjectCB->Resource();
+    auto objectCB = m_currFrameResource->ObjectCB->Resource();
 
     // For each render item...
     for (size_t i = 0; i < ritems.size(); ++i)
     {
-        auto ri = ritems[i];
+        auto& ri = ritems[i];
 
-        auto vertexBufferView = ri->Geo->VertexBufferView();
-        auto indexBufferView = ri->Geo->IndexBufferView();
+        auto vertexBufferView = ri.Geo->VertexBufferView();
+        auto indexBufferView = ri.Geo->IndexBufferView();
 
         D3D12_VERTEX_BUFFER_VIEW vertexBufferViews[3] = {
-            ri->Geo->VertexBufferView(),
-            ri->Geo->NormalBufferView(),
-            ri->Geo->UvBufferView()
+            ri.Geo->VertexBufferView(),
+            ri.Geo->NormalBufferView(),
+            ri.Geo->UvBufferView()
         };
 
         cmdList->IASetVertexBuffers(0, 3, vertexBufferViews);
         cmdList->IASetIndexBuffer(&indexBufferView);
-        cmdList->IASetPrimitiveTopology(ri->PrimitiveType);
+        cmdList->IASetPrimitiveTopology(ri.PrimitiveType);
 
-        D3D12_GPU_VIRTUAL_ADDRESS objCBAddress = objectCB->GetGPUVirtualAddress() + static_cast<UINT64>(ri->ObjCBIndex) * objCBByteSize;
+        D3D12_GPU_VIRTUAL_ADDRESS objCBAddress = objectCB->GetGPUVirtualAddress() + static_cast<UINT64>(ri.ObjCBIndex) * objCBByteSize;
 
         cmdList->SetGraphicsRootConstantBufferView(0, objCBAddress);
 
-        cmdList->DrawIndexedInstanced(ri->IndexCount, 1, ri->StartIndexLocation, ri->BaseVertexLocation, 0);
+        cmdList->DrawIndexedInstanced(ri.IndexCount, 1, ri.StartIndexLocation, ri.BaseVertexLocation, 0);
 
     }
 }
@@ -1993,9 +1982,9 @@ void PhotonBeamApp::SetDefaults()
     //const XMVECTORF32 defaultBeamUnitDistantColor{ 0.895f, 0.966f, 0.966f, 1.0f };
     const XMVECTORF32 defaultBeamUnitDistantColor{ 0.99f, 0.99f, 0.99f, 1.0f };
 
-    mCamera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
-    mCamera.LookAt(XMFLOAT3{ 0.0f, 0.0f, 15.0f }, XMFLOAT3{ 0.0f, 0.0f, 0.0f }, XMFLOAT3{ 0.0f, 1.0f, 0.0f });
-    mCamera.UpdateViewMatrix();
+    m_camera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
+    m_camera.LookAt(XMFLOAT3{ 0.0f, 0.0f, 15.0f }, XMFLOAT3{ 0.0f, 0.0f, 0.0f }, XMFLOAT3{ 0.0f, 1.0f, 0.0f });
+    m_camera.UpdateViewMatrix();
 
     m_clearColor = {0.52f, 0.81f, 0.92f};
     m_beamNearColor = defaultBeamNearColor;
@@ -2037,13 +2026,13 @@ void PhotonBeamApp::RenderUI()
 
     ImGuiH::Panel::Begin();
 
-    auto cameraFloat = mCamera.GetPosition3f();
+    auto cameraFloat = m_camera.GetPosition3f();
     ImGui::InputFloat3("Camera Position", &cameraFloat.x, "%.5f", ImGuiItemFlags_Disabled);
     ImGui::SliderFloat("FOV", &m_camearaFOV, 1.0f, 179.f);
 
     if (m_camearaFOV != m_prevCameraFOV)
     {
-        mCamera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
+        m_camera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
         m_prevCameraFOV = m_camearaFOV;
     }
 
@@ -2193,7 +2182,7 @@ void PhotonBeamApp::CreateSurfaceBlas()
 {
     // Adding all vertex buffers and not transforming their position. 
 
-    auto geo = mGeometries["cornellBox"].get();
+    auto geo = m_geometries["cornellBox"].get();
     auto vertexBufferView = geo->VertexBufferView();
     auto indexbufferView = geo->IndexBufferView();
     const auto& primMeshes = m_gltfScene.GetPrimMeshes();
@@ -2204,7 +2193,7 @@ void PhotonBeamApp::CreateSurfaceBlas()
     {
         m_surfaceBlasBuffers.emplace_back(nullptr, nullptr, nullptr );
         const auto& mesh = primMeshes[i];
-        ASBuilder::BottomLevelASGenerator generator{};
+        ASBuilder::BlasGenerator generator{md3dDevice.Get()};
 
         generator.AddVertexBuffer(
             geo->VertexBufferGPU.Get(),
@@ -2220,7 +2209,7 @@ void PhotonBeamApp::CreateSurfaceBlas()
 
         UINT64 scratchSizeInBytes = 0;
         UINT64 resultSizeInBytes = 0;
-        generator.ComputeASBufferSizes(md3dDevice.Get(), false, &scratchSizeInBytes, &resultSizeInBytes);
+        generator.ComputeASBufferSizes(false, &scratchSizeInBytes, &resultSizeInBytes);
 
         m_surfaceBlasBuffers[i].pScratch = raytrace_helper::CreateBuffer(
             md3dDevice.Get(),
@@ -2247,16 +2236,17 @@ void PhotonBeamApp::CreateSurfaceBlas()
     }
 }
 
-void PhotonBeamApp::CreateSurfaceTlas()
+void PhotonBeamApp::CreateSurfaceTlas(ASBuilder::TlasGenerator& tlasGenerator)
 {
     auto identity = MathHelper::Identity4x4();
+
     for (auto& node : m_gltfScene.GetNodes())
     {
         XMFLOAT4X4 worldMat{};
         XMStoreFloat4x4(&worldMat, XMMatrixTranspose(XMLoadFloat4x4(&node.worldMatrix)));
 
         auto blasAddress = m_surfaceBlasBuffers[node.primMesh].pResult.Get();
-        m_topLevelASGenerator.AddInstance(
+        tlasGenerator.AddInstance(
             blasAddress,
             worldMat,
             node.primMesh,
@@ -2265,8 +2255,7 @@ void PhotonBeamApp::CreateSurfaceTlas()
     }
 
     UINT64 scratchSize, resultSize, instanceDescsSize;
-    m_topLevelASGenerator.ComputeASBufferSizes(
-        md3dDevice.Get(),
+    tlasGenerator.ComputeASBufferSizes(
         true,
         &scratchSize,
         &resultSize,
@@ -2298,7 +2287,7 @@ void PhotonBeamApp::CreateSurfaceTlas()
     );
 
 
-    m_topLevelASGenerator.Generate(
+    tlasGenerator.Generate(
         mCommandList.Get(),
         m_surfaceTlasBuffers.pScratch.Get(),
         m_surfaceTlasBuffers.pResult.Get(),
@@ -2321,13 +2310,13 @@ void PhotonBeamApp::CreateBeamBlases()
     );
 
     {
-        ASBuilder::BottomLevelASGenerator beamBoxGenerator{};
+        ASBuilder::BlasGenerator beamBoxGenerator{md3dDevice.Get()};
 
         beamBoxGenerator.AddAabbBuffer(boxBuffer.Get(), 0, 1);
 
         UINT64 scratchSizeInBytes = 0;
         UINT64 resultSizeInBytes = 0;
-        beamBoxGenerator.ComputeASBufferSizes(md3dDevice.Get(), false, &scratchSizeInBytes, &resultSizeInBytes);
+        beamBoxGenerator.ComputeASBufferSizes(false, &scratchSizeInBytes, &resultSizeInBytes);
 
         m_beamBlasBuffers.pScratch = raytrace_helper::CreateBuffer(
             md3dDevice.Get(),
@@ -2354,13 +2343,13 @@ void PhotonBeamApp::CreateBeamBlases()
     }
 
     {
-        ASBuilder::BottomLevelASGenerator photonBoxGenerator{};
+        ASBuilder::BlasGenerator photonBoxGenerator{md3dDevice.Get()};
 
         photonBoxGenerator.AddAabbBuffer(boxBuffer.Get(), sizeof(D3D12_RAYTRACING_AABB), 1);
 
         UINT64 scratchSizeInBytes = 0;
         UINT64 resultSizeInBytes = 0;
-        photonBoxGenerator.ComputeASBufferSizes(md3dDevice.Get(), false, &scratchSizeInBytes, &resultSizeInBytes);
+        photonBoxGenerator.ComputeASBufferSizes(false, &scratchSizeInBytes, &resultSizeInBytes);
 
         m_photonBlasBuffers.pScratch = raytrace_helper::CreateBuffer(
             md3dDevice.Get(),
@@ -2400,7 +2389,7 @@ uint32_t PhotonBeamApp::AllocateRayTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE
         );
         descriptorIndexToUse = m_rayTracingDescriptorsAllocated++;
     }
-    *cpuDescriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE(descriptorHeapCpuBase, descriptorIndexToUse, mCbvSrvDescriptorSize);
+    *cpuDescriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE(descriptorHeapCpuBase, descriptorIndexToUse, m_cbvSrvDescriptorSize);
     return descriptorIndexToUse;
 }
 
@@ -2414,7 +2403,7 @@ uint32_t PhotonBeamApp::AllocateBeamTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDL
         );
         descriptorIndexToUse = m_beamTracingDescriptorsAllocated++;
     }
-    *cpuDescriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE(descriptorHeapCpuBase, descriptorIndexToUse, mCbvSrvDescriptorSize);
+    *cpuDescriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE(descriptorHeapCpuBase, descriptorIndexToUse, m_cbvSrvDescriptorSize);
     return descriptorIndexToUse;
 }
 
@@ -2669,11 +2658,10 @@ void PhotonBeamApp::CreateBeamBuffers(Microsoft::WRL::ComPtr<ID3D12Resource>& re
 
     // Create scratch buffer for beam TLAS
     {
-        nv_helpers_dx12::TopLevelASGenerator generator;
+        ASBuilder::TlasGenerator generator{md3dDevice.Get()};
 
         UINT64 scratchSize, resultSize, instanceDescsSize;
         generator.ComputeASBufferSizes(
-            md3dDevice.Get(),
             true,
             &scratchSize,
             &resultSize,

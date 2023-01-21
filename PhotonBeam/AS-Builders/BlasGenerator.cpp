@@ -1,5 +1,5 @@
 
-#include "BlasGenerator.h"
+#include "BlasGenerator.hpp"
 
 // Helper to compute aligned buffer sizes
 #ifndef ROUND_UP
@@ -9,7 +9,16 @@
 
 namespace ASBuilder {
 
-    void BottomLevelASGenerator::AddAabbBuffer(
+    BlasGenerator::BlasGenerator(
+        ID3D12Device5* pDevice
+    ) :m_pDevice(pDevice), 
+        m_scratchSizeInBytes(0), 
+        m_resultSizeInBytes(0)
+    {
+        m_geometryDescs = std::vector<D3D12_RAYTRACING_GEOMETRY_DESC>();
+    }
+
+    void BlasGenerator::AddAabbBuffer(
         ID3D12Resource* aabbBuffer,
         UINT64 aabbOffsetInBytes,
         uint32_t aabbCount,
@@ -30,7 +39,7 @@ namespace ASBuilder {
         m_geometryDescs.push_back(descriptor);
     }
 
-    void BottomLevelASGenerator::AddVertexBuffer(
+    void BlasGenerator::AddVertexBuffer(
         ID3D12Resource *vertexBuffer, 
         UINT64 vertexOffsetInBytes,
         uint32_t vertexCount, 
@@ -54,7 +63,7 @@ namespace ASBuilder {
       );
     }
 
-    void BottomLevelASGenerator::AddVertexBuffer(
+    void BlasGenerator::AddVertexBuffer(
         ID3D12Resource *vertexBuffer,
         UINT64 vertexOffsetInBytes,
         uint32_t vertexCount,
@@ -81,8 +90,7 @@ namespace ASBuilder {
         m_geometryDescs.push_back(descriptor);
     }
 
-    void BottomLevelASGenerator::ComputeASBufferSizes(
-        ID3D12Device5 *device, 
+    void BlasGenerator::ComputeASBufferSizes(
         bool allowUpdate, 
         UINT64 *scratchSizeInBytes,
         UINT64 *resultSizeInBytes   
@@ -101,7 +109,7 @@ namespace ASBuilder {
 
         D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO info = {};
 
-        device->GetRaytracingAccelerationStructurePrebuildInfo(&prebuildDesc, &info);
+        m_pDevice->GetRaytracingAccelerationStructurePrebuildInfo(&prebuildDesc, &info);
 
         // Buffer sizes need to be 256-byte-aligned
         *scratchSizeInBytes =
@@ -115,7 +123,7 @@ namespace ASBuilder {
         m_resultSizeInBytes = *resultSizeInBytes;
     }
 
-    void BottomLevelASGenerator::Generate(
+    void BlasGenerator::Generate(
         ID3D12GraphicsCommandList4 *commandList,
         ID3D12Resource *scratchBuffer,
         ID3D12Resource *resultBuffer, 
