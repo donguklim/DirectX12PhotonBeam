@@ -49,12 +49,12 @@
     <Filter Include="Third Party Libraries Helper\imgui helper">
       <UniqueIdentifier>{3f5b2fbd-1a9b-4868-9530-643c39fdcb1e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Third Party Libraries Helper\tiny-gltf helper">
+      <UniqueIdentifier>{30c6484d-9ec7-46e3-bb55-8e59a10b5b78}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PhotonBeamApp.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GltfScene.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="raytraceHelper.hpp">
@@ -138,15 +138,15 @@
     <ClInclude Include="third-party-helper\imgui-helper\imgui_helper.h">
       <Filter>Third Party Libraries Helper\imgui helper</Filter>
     </ClInclude>
+    <ClInclude Include="third-party-helper\tiny-gltf-helper\GltfScene.hpp">
+      <Filter>Third Party Libraries Helper\tiny-gltf helper</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PhotonBeamApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GltfScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="raytraceHelper.cpp">
@@ -202,6 +202,9 @@
     </ClCompile>
     <ClCompile Include="third-party-helper\imgui-helper\imgui_helper.cpp">
       <Filter>Third Party Libraries Helper\imgui helper</Filter>
+    </ClCompile>
+    <ClCompile Include="third-party-helper\tiny-gltf-helper\GltfScene.cpp">
+      <Filter>Third Party Libraries Helper\tiny-gltf helper</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
