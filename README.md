@@ -56,5 +56,3 @@ The vulkna implementation is made with Nvidia raytracing sample code as base.
 	- [third-party/tiny-gltf](./third-party/directx-headers)
  - Microsoft DirectX Samples - [DirectXRaytracingHelper.h](https://github.com/microsoft/DirectX-Graphics-Samples/blob/0aa79bad78992da0b6a8279ddb9002c1753cb849/Samples/Desktop/D3D12Raytracing/src/D3D12RaytracingProceduralGeometry/DirectXRaytracingHelper.h)
 	- [third-party/microsoft-directx-graphics-samples](./third-party/microsoft-directx-graphics-samples)
- - [Nvidia DX12 Raytracing tutorial](https://developer.nvidia.com/rtx/raytracing/dxr/dx12-raytracing-tutorial-part-1) - DXR helper files ([Download Link](https://developer.nvidia.com/rtx/raytracing/dxr/tutorial/Files/DXRHelpers.zip))
-	- [third-party/Nvidia-DXRHelpers](./third-party/Nvidia-DXRHelpers)
