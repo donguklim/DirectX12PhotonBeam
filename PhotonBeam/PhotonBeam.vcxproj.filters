@@ -44,10 +44,10 @@
       <UniqueIdentifier>{8f0c46f0-7885-4ec7-af11-b72c2a085c59}</UniqueIdentifier>
     </Filter>
     <Filter Include="Third Party Libraries Helper">
-      <UniqueIdentifier>{ff010d16-33fd-4995-8f48-61130aa1439a}</UniqueIdentifier>
+      <UniqueIdentifier>{d127290d-64d1-4d49-9f4b-ef28705bab4b}</UniqueIdentifier>
     </Filter>
     <Filter Include="Third Party Libraries Helper\imgui helper">
-      <UniqueIdentifier>{7f16d946-3719-40e8-a188-9bba60fbce6f}</UniqueIdentifier>
+      <UniqueIdentifier>{3f5b2fbd-1a9b-4868-9530-643c39fdcb1e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -135,7 +135,7 @@
     <ClInclude Include="AS-Builders\BlasGenerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\third-party-helper\imgui-helper\imgui_helper.h">
+    <ClInclude Include="third-party-helper\imgui-helper\imgui_helper.h">
       <Filter>Third Party Libraries Helper\imgui helper</Filter>
     </ClInclude>
   </ItemGroup>
@@ -200,7 +200,7 @@
     <ClCompile Include="AS-Builders\BlasGenerator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\third-party-helper\imgui-helper\imgui_helper.cpp">
+    <ClCompile Include="third-party-helper\imgui-helper\imgui_helper.cpp">
       <Filter>Third Party Libraries Helper\imgui helper</Filter>
     </ClCompile>
   </ItemGroup>
