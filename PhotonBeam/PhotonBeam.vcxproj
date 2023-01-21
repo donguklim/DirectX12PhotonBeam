@@ -175,6 +175,7 @@
     <ClInclude Include="..\third-party\tiny-gltf\stb_image_write.h" />
     <ClInclude Include="..\third-party\tiny-gltf\tiny_gltf.h" />
     <ClInclude Include="AS-Builders\BlasGenerator.h" />
+    <ClInclude Include="AS-Builders\TlasGenerator.h" />
     <ClInclude Include="FrameResource.h" />
     <ClInclude Include="PhotonBeamApp.hpp" />
     <ClInclude Include="raytraceHelper.hpp" />
@@ -199,6 +200,7 @@
     <ClCompile Include="..\third-party\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\TopLevelASGenerator.cpp" />
     <ClCompile Include="AS-Builders\BlasGenerator.cpp" />
+    <ClCompile Include="AS-Builders\TlasGenerator.cpp" />
     <ClCompile Include="FrameResource.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PhotonBeamApp.cpp" />

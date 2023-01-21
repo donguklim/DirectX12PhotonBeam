@@ -144,6 +144,9 @@
     <ClInclude Include="AS-Builders\BlasGenerator.h">
       <Filter>AS Builder</Filter>
     </ClInclude>
+    <ClInclude Include="AS-Builders\TlasGenerator.h">
+      <Filter>AS Builder</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PhotonBeamApp.cpp">
@@ -207,6 +210,9 @@
       <Filter>Third Party Libraries Helper\tiny-gltf helper</Filter>
     </ClCompile>
     <ClCompile Include="AS-Builders\BlasGenerator.cpp">
+      <Filter>AS Builder</Filter>
+    </ClCompile>
+    <ClCompile Include="AS-Builders\TlasGenerator.cpp">
       <Filter>AS Builder</Filter>
     </ClCompile>
   </ItemGroup>
