@@ -146,7 +146,7 @@ bool PhotonBeamApp::Initialize()
 
     // Reset the command list to prep for initialization commands.
     ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
-    mCbvSrvDescriptorSize = md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    m_cbvSrvDescriptorSize = md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
     m_camera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
     m_camera.LookAt(XMFLOAT3{ 0.0f, 0.0f, 15.0f }, XMFLOAT3{ 0.0f, 0.0f, 0.0f }, XMFLOAT3{ 0.0f, 1.0f, 0.0f });
@@ -190,7 +190,7 @@ bool PhotonBeamApp::Initialize()
     // Wait until initialization is complete.
     FlushCommandQueue();
 
-    mGeometries["cornellBox"].get()->DisposeUploaders();
+    m_geometries["cornellBox"].get()->DisposeUploaders();
     m_gltfScene.destroy();
 
     // release scratch buffers for creating accelerated structures;
@@ -238,9 +238,9 @@ void PhotonBeamApp::InitGui()
         md3dDevice.Get(),
         gNumFrameResources,
         DXGI_FORMAT_R8G8B8A8_UNORM,
-        mGuiDescriptorHeap.Get(),
-        mGuiDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
-        mGuiDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
+        m_guiDescriptorHeap.Get(),
+        m_guiDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
+        m_guiDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
     );
 
 
@@ -301,15 +301,15 @@ void PhotonBeamApp::Update(const GameTimer& gt)
     OnKeyboardInput(gt);
 
     // Cycle through the circular frame resource array.
-    mCurrFrameResourceIndex = (mCurrFrameResourceIndex + 1) % gNumFrameResources;
-    mCurrFrameResource = mFrameResources[mCurrFrameResourceIndex].get();
+    m_currFrameResourceIndex = (m_currFrameResourceIndex + 1) % gNumFrameResources;
+    m_currFrameResource = m_frameResources[m_currFrameResourceIndex].get();
 
     // Has the GPU finished processing the commands of the current frame resource?
     // If not, wait until the GPU has completed commands up to this fence point.
-    if (mCurrFrameResource->Fence != 0 && mFence->GetCompletedValue() < mCurrFrameResource->Fence)
+    if (m_currFrameResource->Fence != 0 && mFence->GetCompletedValue() < m_currFrameResource->Fence)
     {
         HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
-        ThrowIfFailed(mFence->SetEventOnCompletion(mCurrFrameResource->Fence, eventHandle));
+        ThrowIfFailed(mFence->SetEventOnCompletion(m_currFrameResource->Fence, eventHandle));
 
         if (eventHandle != 0)
         {
@@ -360,7 +360,7 @@ void PhotonBeamApp::drawPost()
     ID3D12DescriptorHeap* descriptorHeaps[] = { m_postSrvDescriptorHeap.Get() };
     mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
-    mCommandList->SetGraphicsRootSignature(mPostRootSignature.Get());
+    mCommandList->SetGraphicsRootSignature(m_postRootSignature.Get());
     mCommandList->SetGraphicsRootDescriptorTable(0, m_postSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 
     mCommandList->IASetVertexBuffers(0, 0, nullptr);
@@ -411,19 +411,19 @@ void PhotonBeamApp::Rasterize()
     mCommandList->RSSetViewports(1, &mScreenViewport);
     mCommandList->RSSetScissorRects(1, &mScissorRect);
 
-    ID3D12DescriptorHeap* descriptorHeaps[] = { mSrvDescriptorHeap.Get() };
+    ID3D12DescriptorHeap* descriptorHeaps[] = { m_srvDescriptorHeap.Get() };
     mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
-    mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
+    mCommandList->SetGraphicsRootSignature(m_rootSignature.Get());
 
-    auto passCB = mCurrFrameResource->PassCB->Resource();
+    auto passCB = m_currFrameResource->PassCB->Resource();
 
     mCommandList->SetGraphicsRootConstantBufferView(1, passCB->GetGPUVirtualAddress());
 
-    auto& matBuffer = mGeometries["cornellBox"].get()->MaterialBufferGPU;
+    auto& matBuffer = m_geometries["cornellBox"].get()->MaterialBufferGPU;
 
     mCommandList->SetGraphicsRootShaderResourceView(2, matBuffer->GetGPUVirtualAddress());
-    mCommandList->SetGraphicsRootDescriptorTable(3, mSrvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+    mCommandList->SetGraphicsRootDescriptorTable(3, m_srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
     DrawRenderItems(mCommandList.Get(), m_renderItems);
     mCommandList->EndRenderPass();
 
@@ -457,7 +457,7 @@ void PhotonBeamApp::BeamTrace()
     {
         using namespace RootSignatueEnums::BeamTrace;
 
-        auto pcBeam = mCurrFrameResource->PcBeam->Resource();
+        auto pcBeam = m_currFrameResource->PcBeam->Resource();
         auto& globalRootSignature = m_beamRootSignatures[to_underlying(ERootSignatures::Global)];
 
         mCommandList->SetComputeRootSignature(globalRootSignature.Get());
@@ -535,7 +535,7 @@ void PhotonBeamApp::RayTrace()
 {
     using namespace RootSignatueEnums::RayTrace;
 
-    auto pcRay = mCurrFrameResource->PcRay->Resource();
+    auto pcRay = m_currFrameResource->PcRay->Resource();
     auto& globalRootSignature = m_rayRootSignatures[to_underlying(ERootSignatures::Global)];
 
     mCommandList->SetComputeRootSignature(globalRootSignature.Get());
@@ -567,7 +567,7 @@ void PhotonBeamApp::RayTrace()
 
 void PhotonBeamApp::Draw(const GameTimer& gt)
 {
-    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc = mCurrFrameResource->CmdListAlloc;
+    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> cmdListAlloc = m_currFrameResource->CmdListAlloc;
 
     // Reuse the memory associated with command recording.
     // We can only reset when the associated command lists have finished execution on the GPU.
@@ -601,7 +601,7 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
 
     drawPost();
 
-    ID3D12DescriptorHeap* guiDescriptorHeaps[] = { mGuiDescriptorHeap.Get() };
+    ID3D12DescriptorHeap* guiDescriptorHeaps[] = { m_guiDescriptorHeap.Get() };
     mCommandList->SetDescriptorHeaps(_countof(guiDescriptorHeaps), guiDescriptorHeaps);
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList.Get());
     mCommandList->EndRenderPass();
@@ -626,7 +626,7 @@ void PhotonBeamApp::Draw(const GameTimer& gt)
     mCurrBackBuffer = (mCurrBackBuffer + 1) % SwapChainBufferCount;
 
     // Advance the fence value to mark commands up to this fence point.
-    mCurrFrameResource->Fence = ++mCurrentFence;
+    m_currFrameResource->Fence = ++mCurrentFence;
 
     // Add an instruction to the command queue to set a new fence point. 
     // Because we are on the GPU timeline, the new fence point won't be 
@@ -748,7 +748,7 @@ void PhotonBeamApp::OnKeyboardInput(const GameTimer& gt)
 
 void PhotonBeamApp::UpdateObjectCBs(const GameTimer& gt)
 {
-    auto currObjectCB = mCurrFrameResource->ObjectCB.get();
+    auto currObjectCB = m_currFrameResource->ObjectCB.get();
     for (auto& item : m_renderItems)
     {
         // Only update the cbuffer data if the constants have changed.  
@@ -799,7 +799,7 @@ void PhotonBeamApp::UpdateMainPassCB(const GameTimer& gt)
 
     m_mainPassCB.LightIntensity = m_lightIntensity;
 
-    auto currPassCB = mCurrFrameResource->PassCB.get();
+    auto currPassCB = m_currFrameResource->PassCB.get();
     currPassCB->CopyData(0, m_mainPassCB);
 }
 
@@ -926,10 +926,10 @@ void PhotonBeamApp::UpdateRayTracingPushConstants(const GameTimer& gt)
     m_sourceLight = XMVECTORF32{ m_pcBeam.sourceLight.x, m_pcBeam.sourceLight.y, m_pcBeam.sourceLight.z };
 
 
-    auto currPcRay = mCurrFrameResource->PcRay.get();
+    auto currPcRay = m_currFrameResource->PcRay.get();
     currPcRay->CopyData(0, m_pcRay);
 
-    auto currPcBeam = mCurrFrameResource->PcBeam.get();
+    auto currPcBeam = m_currFrameResource->PcBeam.get();
     currPcBeam->CopyData(0, m_pcBeam);
 
 }
@@ -942,7 +942,7 @@ void PhotonBeamApp::BuildDescriptorHeaps()
         guiHeapDesc.NumDescriptors = 1;
         guiHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&guiHeapDesc,
-            IID_PPV_ARGS(&mGuiDescriptorHeap)));
+            IID_PPV_ARGS(&m_guiDescriptorHeap)));
     }
     
     {
@@ -965,9 +965,9 @@ void PhotonBeamApp::BuildDescriptorHeaps()
     ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_postSrvDescriptorHeap)));
 
     srvHeapDesc.NumDescriptors = static_cast<UINT>(m_textures.size());
-    ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSrvDescriptorHeap)));
+    ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvDescriptorHeap)));
 
-    CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(mSrvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+    CD3DX12_CPU_DESCRIPTOR_HANDLE hDescriptor(m_srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -981,7 +981,7 @@ void PhotonBeamApp::BuildDescriptorHeaps()
         srvDesc.Format = textureResource->Resource->GetDesc().Format;
         srvDesc.Texture2D.MipLevels = textureResource->Resource->GetDesc().MipLevels;
         md3dDevice->CreateShaderResourceView(textureResource->Resource.Get(), &srvDesc, hDescriptor);
-        hDescriptor.Offset(1, mCbvSrvDescriptorSize);
+        hDescriptor.Offset(1, m_cbvSrvDescriptorSize);
     }
 }
 
@@ -1004,7 +1004,7 @@ void PhotonBeamApp::BuildRayTracingDescriptorHeaps()
 
         // set geometry related data
         {
-            auto geo = mGeometries["cornellBox"].get();
+            auto geo = m_geometries["cornellBox"].get();
 
             D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
             srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -1117,7 +1117,7 @@ void PhotonBeamApp::BuildRayTracingDescriptorHeaps()
 
         // set geometry related data
         {
-            auto geo = mGeometries["cornellBox"].get();
+            auto geo = m_geometries["cornellBox"].get();
 
             D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
             srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -1234,7 +1234,7 @@ void PhotonBeamApp::BuildRasterizeRootSignature()
         D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
     );
 
-    SerializeAndCreateRootSignature(rootSigDesc, mRootSignature.GetAddressOf());
+    SerializeAndCreateRootSignature(rootSigDesc, m_rootSignature.GetAddressOf());
 }
 
 void PhotonBeamApp::BuildRayTracingRootSignatures()
@@ -1425,7 +1425,7 @@ void PhotonBeamApp::BuildPostRootSignature()
         0,
         serializedRootSig->GetBufferPointer(),
         serializedRootSig->GetBufferSize(),
-        IID_PPV_ARGS(mPostRootSignature.GetAddressOf())));
+        IID_PPV_ARGS(m_postRootSignature.GetAddressOf())));
 }
 
 void PhotonBeamApp::BuildShadersAndInputLayout()
@@ -1556,7 +1556,7 @@ void PhotonBeamApp::LoadScene()
     geo->MeshByteStride = sizeof(PrimMeshInfo);
     geo->MeshBufferByteSize = meshBufferByteSize;
 
-    mGeometries[geo->Name] = std::move(geo);
+    m_geometries[geo->Name] = std::move(geo);
 
 }
 
@@ -1685,7 +1685,7 @@ void PhotonBeamApp::BuildRenderItems()
         rItem.ObjCBIndex = objCBIndex++;
         rItem.World = node.worldMatrix;
         rItem.MaterialIndex = primitive.materialIndex;
-        rItem.Geo = mGeometries["cornellBox"].get();
+        rItem.Geo = m_geometries["cornellBox"].get();
         rItem.PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
         rItem.IndexCount = primitive.indexCount;
         rItem.StartIndexLocation = primitive.firstIndex;
@@ -1886,7 +1886,7 @@ void PhotonBeamApp::BuildPSOs()
     // PSO for opaque objects.
     ZeroMemory(&opaquePsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
     opaquePsoDesc.InputLayout = { m_inputLayout.data(), (UINT)m_inputLayout.size() };
-    opaquePsoDesc.pRootSignature = mRootSignature.Get();
+    opaquePsoDesc.pRootSignature = m_rootSignature.Get();
     opaquePsoDesc.VS = {
         reinterpret_cast<BYTE*>(m_rasterizeShaders["standardVS"]->GetBufferPointer()),
         m_rasterizeShaders["standardVS"]->GetBufferSize()
@@ -1910,7 +1910,7 @@ void PhotonBeamApp::BuildPSOs()
     D3D12_GRAPHICS_PIPELINE_STATE_DESC postPsoDesc;
     ZeroMemory(&postPsoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
     postPsoDesc.InputLayout = { nullptr, 0 };
-    postPsoDesc.pRootSignature = mPostRootSignature.Get();
+    postPsoDesc.pRootSignature = m_postRootSignature.Get();
     postPsoDesc.VS = {
         reinterpret_cast<BYTE*>(m_rasterizeShaders["postVS"]->GetBufferPointer()),
         m_rasterizeShaders["postVS"]->GetBufferSize()
@@ -1937,7 +1937,7 @@ void PhotonBeamApp::BuildFrameResources()
 {
     for (int i = 0; i < gNumFrameResources; ++i)
     {
-        mFrameResources.push_back(std::make_unique<FrameResource>(md3dDevice.Get(),
+        m_frameResources.push_back(std::make_unique<FrameResource>(md3dDevice.Get(),
             1, (UINT)m_renderItems.size()));
     }
 }
@@ -1946,7 +1946,7 @@ void PhotonBeamApp::DrawRenderItems(ID3D12GraphicsCommandList* cmdList, const st
 {
     UINT objCBByteSize = d3dUtil::CalcConstantBufferByteSize(sizeof(ObjectConstants));
 
-    auto objectCB = mCurrFrameResource->ObjectCB->Resource();
+    auto objectCB = m_currFrameResource->ObjectCB->Resource();
 
     // For each render item...
     for (size_t i = 0; i < ritems.size(); ++i)
@@ -2181,7 +2181,7 @@ void PhotonBeamApp::CreateSurfaceBlas()
 {
     // Adding all vertex buffers and not transforming their position. 
 
-    auto geo = mGeometries["cornellBox"].get();
+    auto geo = m_geometries["cornellBox"].get();
     auto vertexBufferView = geo->VertexBufferView();
     auto indexbufferView = geo->IndexBufferView();
     const auto& primMeshes = m_gltfScene.GetPrimMeshes();
@@ -2388,7 +2388,7 @@ uint32_t PhotonBeamApp::AllocateRayTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE
         );
         descriptorIndexToUse = m_rayTracingDescriptorsAllocated++;
     }
-    *cpuDescriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE(descriptorHeapCpuBase, descriptorIndexToUse, mCbvSrvDescriptorSize);
+    *cpuDescriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE(descriptorHeapCpuBase, descriptorIndexToUse, m_cbvSrvDescriptorSize);
     return descriptorIndexToUse;
 }
 
@@ -2402,7 +2402,7 @@ uint32_t PhotonBeamApp::AllocateBeamTracingDescriptor(D3D12_CPU_DESCRIPTOR_HANDL
         );
         descriptorIndexToUse = m_beamTracingDescriptorsAllocated++;
     }
-    *cpuDescriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE(descriptorHeapCpuBase, descriptorIndexToUse, mCbvSrvDescriptorSize);
+    *cpuDescriptor = CD3DX12_CPU_DESCRIPTOR_HANDLE(descriptorHeapCpuBase, descriptorIndexToUse, m_cbvSrvDescriptorSize);
     return descriptorIndexToUse;
 }
 

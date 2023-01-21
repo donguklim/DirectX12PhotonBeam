@@ -245,17 +245,17 @@ private:
 
 private:
 
-    std::vector<std::unique_ptr<FrameResource>> mFrameResources;
-    FrameResource* mCurrFrameResource = nullptr;
-    int mCurrFrameResourceIndex = 0;
-    UINT mCbvSrvDescriptorSize = 0;
+    std::vector<std::unique_ptr<FrameResource>> m_frameResources;
+    FrameResource* m_currFrameResource = nullptr;
+    int m_currFrameResourceIndex = 0;
+    UINT m_cbvSrvDescriptorSize = 0;
 
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> mPostRootSignature = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_postRootSignature = nullptr;
     Microsoft::WRL::ComPtr<ID3D12RootSignature> m_bufferResetRootSignature = nullptr;
-    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mSrvDescriptorHeap = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_srvDescriptorHeap = nullptr;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_postSrvDescriptorHeap = nullptr;
-    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> mGuiDescriptorHeap = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_guiDescriptorHeap = nullptr;
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_offScreenRtvHeap = nullptr;
 
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_beamTracingDescriptorHeap = nullptr;
@@ -275,7 +275,7 @@ private:
 
 
     std::vector<std::unique_ptr<Texture>> m_textures;
-    std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> mGeometries;
+    std::unordered_map<std::string, std::unique_ptr<MeshGeometry>> m_geometries;
     std::unordered_map<std::string, Microsoft::WRL::ComPtr<IDxcBlob>> m_rasterizeShaders;
 
     Microsoft::WRL::ComPtr<ID3D12PipelineState> m_rasterPso;
