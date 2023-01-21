@@ -518,7 +518,6 @@ void PhotonBeamApp::BeamTrace()
         buildDesc.Inputs.NumDescs = m_maxNumSubBeamInfo;
         buildDesc.DestAccelerationStructureData = m_beamTlasBuffers.pResult->GetGPUVirtualAddress();
         buildDesc.ScratchAccelerationStructureData = m_beamTlasBuffers.pScratch->GetGPUVirtualAddress();
-        buildDesc.SourceAccelerationStructureData = m_beamTlasBuffers.pResult->GetGPUVirtualAddress();
         buildDesc.Inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE;
 
         // Build the top-level AS
