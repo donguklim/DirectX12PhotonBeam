@@ -327,13 +327,10 @@ private:
 
     GltfScene m_gltfScene;
 
-    bool mIsWireframe = false;
-
-    DirectX::XMFLOAT3 mEyePos{};
     DirectX::XMVECTORF32 m_clearColor;
 
     POINT mLastMousePos;
-    Camera mCamera;
+    Camera m_camera;
 
     float    m_airAlbedo{ 0.1f };
     float m_beamRadius{ 0.5f };

@@ -148,9 +148,9 @@ bool PhotonBeamApp::Initialize()
     ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
     mCbvSrvDescriptorSize = md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-    mCamera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
-    mCamera.LookAt(XMFLOAT3{ 0.0f, 0.0f, 15.0f }, XMFLOAT3{ 0.0f, 0.0f, 0.0f }, XMFLOAT3{ 0.0f, 1.0f, 0.0f });
-    mCamera.UpdateViewMatrix();
+    m_camera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
+    m_camera.LookAt(XMFLOAT3{ 0.0f, 0.0f, 15.0f }, XMFLOAT3{ 0.0f, 0.0f, 0.0f }, XMFLOAT3{ 0.0f, 1.0f, 0.0f });
+    m_camera.UpdateViewMatrix();
 
     LoadScene();
     CreateTextures();
@@ -292,7 +292,7 @@ void PhotonBeamApp::OnResize()
     if(m_offScreenOutputResourceUAVDescriptorHeapIndex < UINT32_MAX)
         CreateOffScreenOutputResource();
 
-    mCamera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
+    m_camera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
 
 }
 
@@ -661,8 +661,8 @@ void PhotonBeamApp::OnMouseMove(WPARAM btnState, int x, int y)
         float dx = XMConvertToRadians(0.1f * static_cast<float>(x - mLastMousePos.x));
         float dy = XMConvertToRadians(0.1f * static_cast<float>(y - mLastMousePos.y));
 
-        mCamera.Pitch(dy);
-        mCamera.RotateY(-dx);
+        m_camera.Pitch(dy);
+        m_camera.RotateY(-dx);
     }
     else if ((btnState & MK_RBUTTON) != 0)
     {
@@ -670,15 +670,15 @@ void PhotonBeamApp::OnMouseMove(WPARAM btnState, int x, int y)
         float dx = 0.05f * static_cast<float>(x - mLastMousePos.x);
         float dy = 0.05f * static_cast<float>(y - mLastMousePos.y);
 
-        mCamera.Walk(dx - dy);
+        m_camera.Walk(dx - dy);
     }
     else if ((btnState & MK_MBUTTON) != 0)
     {
         float dx = 0.02f * static_cast<float>(x - mLastMousePos.x);
         float dy = 0.02f * static_cast<float>(y - mLastMousePos.y);
 
-        mCamera.Strafe(dx);
-        mCamera.Pedestal(dy);
+        m_camera.Strafe(dx);
+        m_camera.Pedestal(dy);
     }
 
     mLastMousePos.x = x;
@@ -691,7 +691,7 @@ void PhotonBeamApp::OnMouseWheel(WPARAM btnState, int delta)
         return;
 
     if (delta != 0)
-        mCamera.Walk(0.01f * delta);
+        m_camera.Walk(0.01f * delta);
 }
 
 void PhotonBeamApp::OnKeyboardInput(const GameTimer& gt)
@@ -725,25 +725,25 @@ void PhotonBeamApp::OnKeyboardInput(const GameTimer& gt)
     else
     {
         if (GetAsyncKeyState('W') & 0x8000)
-            mCamera.Walk(10.0f * dt);
+            m_camera.Walk(10.0f * dt);
 
         if (GetAsyncKeyState('S') & 0x8000)
-            mCamera.Walk(-10.0f * dt);
+            m_camera.Walk(-10.0f * dt);
 
         if (GetAsyncKeyState('A') & 0x8000)
-            mCamera.Strafe(10.0f * dt);
+            m_camera.Strafe(10.0f * dt);
 
         if (GetAsyncKeyState('D') & 0x8000)
-            mCamera.Strafe(-10.0f * dt);
+            m_camera.Strafe(-10.0f * dt);
 
         if (GetAsyncKeyState('Q') & 0x8000)
-            mCamera.Pedestal(-10.0f * dt);
+            m_camera.Pedestal(-10.0f * dt);
 
         if (GetAsyncKeyState('E') & 0x8000)
-            mCamera.Pedestal(10.0f * dt);
+            m_camera.Pedestal(10.0f * dt);
     }
 
-    mCamera.UpdateViewMatrix();
+    m_camera.UpdateViewMatrix();
 }
 
 void PhotonBeamApp::UpdateObjectCBs(const GameTimer& gt)
@@ -771,8 +771,8 @@ void PhotonBeamApp::UpdateObjectCBs(const GameTimer& gt)
 
 void PhotonBeamApp::UpdateMainPassCB(const GameTimer& gt)
 {
-    XMMATRIX view = mCamera.GetView();
-    XMMATRIX proj = mCamera.GetProj();
+    XMMATRIX view = m_camera.GetView();
+    XMMATRIX proj = m_camera.GetProj();
 
     XMMATRIX viewProj = XMMatrixMultiply(view, proj);
 
@@ -790,7 +790,7 @@ void PhotonBeamApp::UpdateMainPassCB(const GameTimer& gt)
     XMStoreFloat4x4(&mMainPassCB.InvProj, XMMatrixTranspose(invProj));
     XMStoreFloat4x4(&mMainPassCB.ViewProj, XMMatrixTranspose(viewProj));
     XMStoreFloat4x4(&mMainPassCB.InvViewProj, XMMatrixTranspose(invViewProj));
-    mMainPassCB.EyePosW = mCamera.GetPosition3f();
+    mMainPassCB.EyePosW = m_camera.GetPosition3f();
 
     auto totalTime = gt.TotalTime();
     if (m_isBeamMotionOn)
@@ -801,8 +801,8 @@ void PhotonBeamApp::UpdateMainPassCB(const GameTimer& gt)
     mMainPassCB.lightIntensity = m_lightIntensity;
     mMainPassCB.RenderTargetSize = XMFLOAT2((float)mClientWidth, (float)mClientHeight);
     mMainPassCB.InvRenderTargetSize = XMFLOAT2(1.0f / mClientWidth, 1.0f / mClientHeight);
-    mMainPassCB.NearZ = mCamera.GetNearZ();
-    mMainPassCB.FarZ = mCamera.GetFarZ();
+    mMainPassCB.NearZ = m_camera.GetNearZ();
+    mMainPassCB.FarZ = m_camera.GetFarZ();
     mMainPassCB.TotalTime = totalTime;
     mMainPassCB.DeltaTime = gt.DeltaTime();
 
@@ -812,8 +812,8 @@ void PhotonBeamApp::UpdateMainPassCB(const GameTimer& gt)
 
 void PhotonBeamApp::UpdateRayTracingPushConstants(const GameTimer& gt)
 {
-    XMMATRIX view = mCamera.GetView();
-    XMMATRIX proj = mCamera.GetProj();
+    XMMATRIX view = m_camera.GetView();
+    XMMATRIX proj = m_camera.GetProj();
 
     XMMATRIX viewProj = XMMatrixMultiply(view, proj);
 
@@ -1996,9 +1996,9 @@ void PhotonBeamApp::SetDefaults()
     //const XMVECTORF32 defaultBeamUnitDistantColor{ 0.895f, 0.966f, 0.966f, 1.0f };
     const XMVECTORF32 defaultBeamUnitDistantColor{ 0.99f, 0.99f, 0.99f, 1.0f };
 
-    mCamera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
-    mCamera.LookAt(XMFLOAT3{ 0.0f, 0.0f, 15.0f }, XMFLOAT3{ 0.0f, 0.0f, 0.0f }, XMFLOAT3{ 0.0f, 1.0f, 0.0f });
-    mCamera.UpdateViewMatrix();
+    m_camera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
+    m_camera.LookAt(XMFLOAT3{ 0.0f, 0.0f, 15.0f }, XMFLOAT3{ 0.0f, 0.0f, 0.0f }, XMFLOAT3{ 0.0f, 1.0f, 0.0f });
+    m_camera.UpdateViewMatrix();
 
     m_clearColor = {0.52f, 0.81f, 0.92f};
     m_beamNearColor = defaultBeamNearColor;
@@ -2040,13 +2040,13 @@ void PhotonBeamApp::RenderUI()
 
     ImGuiH::Panel::Begin();
 
-    auto cameraFloat = mCamera.GetPosition3f();
+    auto cameraFloat = m_camera.GetPosition3f();
     ImGui::InputFloat3("Camera Position", &cameraFloat.x, "%.5f", ImGuiItemFlags_Disabled);
     ImGui::SliderFloat("FOV", &m_camearaFOV, 1.0f, 179.f);
 
     if (m_camearaFOV != m_prevCameraFOV)
     {
-        mCamera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
+        m_camera.SetLens(m_camearaFOV / 180 * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
         m_prevCameraFOV = m_camearaFOV;
     }
 
