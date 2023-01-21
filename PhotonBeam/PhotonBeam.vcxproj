@@ -176,12 +176,12 @@
     <ClInclude Include="..\third-party\tiny-gltf\tiny_gltf.h" />
     <ClInclude Include="AS-Builders\BlasGenerator.h" />
     <ClInclude Include="FrameResource.h" />
-    <ClInclude Include="GltfScene.hpp" />
     <ClInclude Include="PhotonBeamApp.hpp" />
     <ClInclude Include="raytraceHelper.hpp" />
     <ClInclude Include="Shaders\RaytracingHlslCompat.h" />
     <ClInclude Include="Shaders\util\HlslCompat.h" />
     <ClInclude Include="third-party-helper\imgui-helper\imgui_helper.h" />
+    <ClInclude Include="third-party-helper\tiny-gltf-helper\GltfScene.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Common\Camera.cpp" />
@@ -200,11 +200,11 @@
     <ClCompile Include="..\third-party\Nvidia-DXRHelpers\nv_helpers_dx12\TopLevelASGenerator.cpp" />
     <ClCompile Include="AS-Builders\BlasGenerator.cpp" />
     <ClCompile Include="FrameResource.cpp" />
-    <ClCompile Include="GltfScene.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PhotonBeamApp.cpp" />
     <ClCompile Include="raytraceHelper.cpp" />
     <ClCompile Include="third-party-helper\imgui-helper\imgui_helper.cpp" />
+    <ClCompile Include="third-party-helper\tiny-gltf-helper\GltfScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\BeamTracing\BeamClosestHit.hlsl">

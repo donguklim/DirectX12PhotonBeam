@@ -9,7 +9,7 @@
 #include "../Common/UploadBuffer.h"
 #include "Nvidia-DXRHelpers/nv_helpers_dx12/TopLevelASGenerator.h"
 #include "FrameResource.h"
-#include "GltfScene.hpp"
+#include "third-party-helper/tiny-gltf-helper/GltfScene.hpp"
 
 
 
