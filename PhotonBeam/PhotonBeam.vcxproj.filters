@@ -57,9 +57,6 @@
     <ClInclude Include="PhotonBeamApp.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="raytraceHelper.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Shaders\util\HlslCompat.h">
       <Filter>Shaders\Util</Filter>
     </ClInclude>
@@ -126,19 +123,22 @@
     <ClInclude Include="..\third-party\tiny-gltf\tiny_gltf.h">
       <Filter>Third Party Libraries\tiny gltf</Filter>
     </ClInclude>
-    <ClInclude Include="..\third-party\microsoft-directx-graphics-samples\DirectXRaytracingHelper.h">
-      <Filter>Third Party Libraries\Microsoft DirecX Samples</Filter>
-    </ClInclude>
     <ClInclude Include="third-party-helper\imgui-helper\imgui_helper.h">
       <Filter>Third Party Libraries Helper\imgui helper</Filter>
     </ClInclude>
     <ClInclude Include="third-party-helper\tiny-gltf-helper\GltfScene.hpp">
       <Filter>Third Party Libraries Helper\tiny-gltf helper</Filter>
     </ClInclude>
-    <ClInclude Include="AS-Builders\BlasGenerator.h">
+    <ClInclude Include="..\third-party\microsoft-directx-graphics-samples\raytraceHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Raytracing-Utils\DXCompileShader.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AS-Builders\BlasGenerator.hpp">
       <Filter>AS Builder</Filter>
     </ClInclude>
-    <ClInclude Include="AS-Builders\TlasGenerator.h">
+    <ClInclude Include="AS-Builders\TlasGenerator.hpp">
       <Filter>AS Builder</Filter>
     </ClInclude>
   </ItemGroup>
@@ -147,9 +147,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="raytraceHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Common\Camera.cpp">
@@ -205,6 +202,9 @@
     </ClCompile>
     <ClCompile Include="AS-Builders\TlasGenerator.cpp">
       <Filter>AS Builder</Filter>
+    </ClCompile>
+    <ClCompile Include="Raytracing-Utils\DXCompileShader.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
