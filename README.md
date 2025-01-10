@@ -28,8 +28,13 @@ For more detailed background of the techinques used, you may check the reference
 ## Requirement
 
 1. You need to install Windows SDK, which can be installed from Visual Studio Installer.
-2. In the SDK folder (typically located at Program files/Windows Kits/10/), 
+2. In the Windows SDK folder (typically located at Program files/Windows Kits/10/), 
 search for `dxil.dll` file and `dxcompiler.dll` file for your machine(arm64, x64 or x86), and copy those files to `PhotonBeam` folder
+
+## Note
+
+- If lauching the applicatio fails, turn off raytracing mode by default and check if the rasterization works well
+- If only raytracing mode fails, try to lower `m_maxNumBeamSamples` and `m_numBeamSamples` variables of `PhotonBeamApp` class 
 
 
 ## Vulkan Implementation
