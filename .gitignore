@@ -1,3 +1,9 @@
 .vs/
 PhotonBeam/Debug
+PhotonBeam/PhotonBeam/Debug
 PhotonBeam/x64
+PhotonBeam/PhotonBeam/x64
+PhotonBeam/Release
+PhotonBeam/PhotonBeam/Release
+PhotonBeam/dxil.dll
+PhotonBeam/dxcompiler.dll
