@@ -112,21 +112,8 @@ void BeamGen()
         g_photonBeams[beamIndex] = newBeam;
 
         InterlockedAdd(g_photonBeamCounters[0].subBeamCount, num_split + numSurfacePhoton, subBeamIndex);
-
-        // Not using min function with subtraction operator to simplify the if statement
-        // because subtraction between unsinged integer values can cause overflow.
-        if (subBeamIndex >= pc_beam.maxNumSubBeams)
-        {
+        if (num_split + subBeamIndex + numSurfacePhoton >= pc_beam.maxNumSubBeams)
             return;
-        }
-        else if (subBeamIndex + numSurfacePhoton >= pc_beam.maxNumSubBeams)
-        {
-            num_split = 0;
-        }
-        else if (num_split + subBeamIndex + numSurfacePhoton >= pc_beam.maxNumSubBeams)
-        {
-            num_split = (pc_beam.maxNumSubBeams - subBeamIndex - numSurfacePhoton);
-        }
 
         float3 tangent, bitangent;
         createCoordinateSystem(rayDirection, tangent, bitangent);
@@ -178,9 +165,6 @@ void BeamGen()
 
             g_photonBeamsTopAsInstanceDescs[subBeamIndex + num_split] = asInfo;
         }
-
-        if (subBeamIndex + num_split + numSurfacePhoton >= pc_beam.maxNumSubBeams)
-            return;
 
         beamColor *= prd.weight;
         rayOrigin = prd.rayOrigin;
