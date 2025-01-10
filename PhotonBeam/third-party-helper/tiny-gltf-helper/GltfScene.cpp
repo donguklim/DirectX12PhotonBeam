@@ -870,11 +870,6 @@ void GltfScene::findUsedMeshes(std::set<uint32_t>& usedMeshes, int nodeIdx)
         findUsedMeshes(usedMeshes, c);
 }
 
-template <typename T>
-float& accessVecAttr(T& vec, size_t index)
-{
-    return T[index];
-}
 
 float& accessVecAttr(DirectX::XMFLOAT2& vec, size_t index)
 {

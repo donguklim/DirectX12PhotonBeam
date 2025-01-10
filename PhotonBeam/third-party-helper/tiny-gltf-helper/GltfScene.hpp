@@ -485,8 +485,6 @@ void copyAccessorData(std::vector<T>& outData,
     copyAccessorData<T>(outData.data(), outData.size(), outFirstElement, tmodel, accessor, accessorFirstElement, numElementsToCopy);
 }
 
-template <typename T>
-float& accessVecAttr(T& vec, size_t index);
 
 float& accessVecAttr(DirectX::XMFLOAT2& vec, size_t index);
 
