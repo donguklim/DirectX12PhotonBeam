@@ -25,6 +25,12 @@ Watch above video for checking how the implementation works.
 
 For more detailed background of the techinques used, you may check the references.
 
+## Requirement
+
+1. You need to install Windows SDK, which can be installed from Visual Studio Installer.
+2. In the SDK folder (typically located at Program files/Windows Kits/10/), 
+search for `dxil.dll` file and `dxcompiler.dll` file for your machine(arm64, x64 or x86), and copy those files to `PhotonBeam` folder
+
 
 ## Vulkan Implementation
 
