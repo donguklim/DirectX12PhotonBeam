@@ -27,37 +27,54 @@ SamplerState gsamLinearWrap  : register(s0);
 
 bool randomScatterOccured(inout BeamHitPayload prd, const in float rayLength)
 {
-    float min_extinct = min(min(pc_beam.airExtinctCoff.x, pc_beam.airExtinctCoff.y), pc_beam.airExtinctCoff.z);
+    float3 absortion = pc_beam.airExtinctCoff - pc_beam.airScatterCoff;
+    uint color_index = 0;
+    
+    if (absortion.z <= absortion.y && absortion.z <= absortion.x)
+    {
+        color_index = 2;
+    }
+    else if (absortion.y <= absortion.x && absortion.y <= absortion.z)
+    {
+        color_index = 1;
+    }
+    
+    float color_extinct_coff = pc_beam.airExtinctCoff[color_index];
+    float color_scatter_coff = pc_beam.airScatterCoff[color_index];
 
-    if (min_extinct <= 0.001)
-        return false;
-
-    float max_extinct = max(max(pc_beam.airExtinctCoff.x, pc_beam.airExtinctCoff.y), pc_beam.airExtinctCoff.z);
+    if (color_extinct_coff <= 0.00001)
+    {
+        color_extinct_coff = 0.00001;
+        color_scatter_coff = 0.0;
+    }
+        
 
     float curSeedRatio = 1.0f - prd.nextSeedRatio;
 
     // random walk within participating media(air) scattering
     float airScatterAt = curSeedRatio * (-log(1.0 - rnd(prd.seed))) - prd.nextSeedRatio * log(1.0f - rnd(prd.nextSeed));
-    airScatterAt /= max_extinct;
+    airScatterAt /= color_extinct_coff;
+    
+    prd.weight = exp((color_extinct_coff - pc_beam.airExtinctCoff) * airScatterAt);
+    // prd.weight[color_index] = 1;
 
     if (rayLength < airScatterAt) {
         return false;
     }
-
+    
     prd.rayOrigin = prd.rayOrigin + prd.rayDirection * airScatterAt;
     prd.isHit = 0;
-
-    float3 albedo = pc_beam.airScatterCoff / pc_beam.airExtinctCoff;
-    float absorptionProb = 1.0 - max(max(albedo.x, albedo.y), albedo.z);
-
+    
     // use russian roulett to decide whether scatter or absortion occurs
-    if (rnd(prd.seed) * curSeedRatio + rnd(prd.nextSeed) * prd.nextSeedRatio <= absorptionProb)
+    if (rnd(prd.seed) * curSeedRatio + rnd(prd.nextSeed) * prd.nextSeedRatio > color_scatter_coff / color_extinct_coff)
     {
         prd.weight = float3(0.0, 0.0, 0.0);
         return true;
     }
 
-    
+    prd.weight *= pc_beam.airScatterCoff / color_extinct_coff;
+    prd.weight[color_index] = 1.0;
+
     float3 rayDirectionFirst = heneyGreenPhaseFuncSampling(prd.seed, prd.rayDirection, pc_beam.airHGAssymFactor);
     float3 rayDirectionSecond = heneyGreenPhaseFuncSampling(prd.nextSeed, prd.rayDirection, pc_beam.airHGAssymFactor);
     float3 sumDirection = rayDirectionFirst + rayDirectionSecond;
@@ -70,8 +87,6 @@ bool randomScatterOccured(inout BeamHitPayload prd, const in float rayLength)
 
     float3 rayDirection = normalize(curSeedRatio * rayDirectionFirst + prd.nextSeedRatio * rayDirectionSecond);
 
-
-    prd.weight = albedo;
     prd.rayDirection = normalize(rayDirection);
 
     return true;
@@ -196,7 +211,7 @@ void ClosestHit(inout BeamHitPayload prd, BuiltInTriangleIntersectionAttributes 
 
     prd.rayOrigin = rayOrigin;
     prd.rayDirection = rayDirection;
-    prd.weight = material_f * cos_theta;
+    prd.weight *= material_f * cos_theta;
 
     return;
 }
