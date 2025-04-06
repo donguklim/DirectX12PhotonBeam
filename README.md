@@ -1,51 +1,72 @@
-﻿# DirectX12PhotonBeam
-Photon beam rendering algorithm implemented with DirectX12 and RTX
+﻿# Disney Photon Beam & Photon Mapping Rendering (DirectX12 with RTX)
 
-### Link to video
-[![Link to video](https://img.youtube.com/vi/Tia85zQ_XLM/0.jpg)](https://youtu.be/Tia85zQ_XLM)
+This project implements **volumetric participating media rendering** using Disney's **Photon Beam** algorithm and traditional **Photon Mapping**, fully utilizing **DirectX12** and **NVIDIA RTX** features. It forms part of my graphics programming portfolio, showcasing advanced global illumination techniques in real-time rendering.
 
-## Background
-This is a portfolio project made with intention to implement Photon Beam rendering algorithm using DXR and DirectX 12. 
+<p align="center">
+  <img src="https://github.com/donguklim/DirectX12PhotonBeam/raw/main/preview.gif" alt="Photon Beam Preview" width="600"/>
+</p>
 
-Photon Beam is a rendering algorithm developed by Disney for descriging radiance 
-due to [volumetric participating media](## "Volumetric objects where light scatters or gets absorbed. EX: water, fog, fire, smoke, cloud, dusty wind, murky air").
+## 📽️ Demo Video and Images
+🔗 [YouTube Showcase (DirectX12)](https://youtu.be/Tia85zQ_XLM)
 
+![Sample 01](./resources/beam_and_photon.gif "Sample 01")
 
-This application loads a GLTF 3D model file. 
-BRDF equation used for surface refelections on the 3D model follows [BRDF in GLTF specification](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#appendix-b-brdf-implementation) for surface reflection.
+**Beam and Sruface Photon**
 
+![Sample 02](./resources/photon_only.gif "Sample 02")
 
-For rendering, this application uses 
+**Surface Photon Only**
 
-- Photon beam method for volumetric participating media radiance estimation
-- Photon mapping method for surface radiance
-- Simple raytracing for specular reflection on 3D model objects with zero roughness.
+![Sample 03](./resources/beam_only.gif "Sample 03")  
 
-Watch above video for checking how the implementation works.
+**Beam Only**
 
-For more detailed background of the techinques used, you may check the references.
+![Sample 04](./resources/low_sampled_beam_photon_visualization.gif "Sample 04")
 
-## Requirement
+**Beam and Photon Sampling Visualization**
 
-1. You need to install Windows SDK, which can be installed from Visual Studio Installer.
-2. In the Windows SDK folder (typically located at Program files/Windows Kits/10/), 
-search for `dxil.dll` file and `dxcompiler.dll` file for your machine(arm64, x64 or x86), and copy those files to `PhotonBeam` folder
+![Sample 05](./resources/different_parameters.gif "Sample 05")
 
-## Note
+**Different Parameter Effects** - Adjusting scattering coefficient, extinct coefficient and HG symmetric factor
 
-- If lauching the applicatio fails, turn off raytracing mode by default and check if the rasterization works well
-- If only raytracing mode fails, try to lower `m_maxNumBeamSamples` and `m_numBeamSamples` variables of `PhotonBeamApp` class 
+## 🔗 Project Links
+- **DirectX12 Implementation (This Repository)**  
+  https://github.com/donguklim/DirectX12PhotonBeam
 
+- **Vulkan Implementation (Based on NVIDIA Ray-Tracing Tutorial)**  
+  https://github.com/donguklim/vk_raytracing_tutorial_KHR/tree/master/photon_beam
 
-## Vulkan Implementation
+---
 
-https://github.com/donguklim/vk_raytracing_tutorial_KHR/tree/master/photon_beam
+## ✨ Features
 
-The vulkna implementation is made with Nvidia raytracing sample code as base. 
+### 🌌 Photon Mapping
+- Simulates photon interactions on surfaces via ray tracing.
+- Stores radiance sampled from photon hits on surfaces.
 
+### 💫 Photon Beam
+- Simulates photon **beams** through participating media like air.
+- Samples scattering and extinction based on beam paths and density.
+- Produces realistic volumetric lighting effects.
 
-## References
+### 🔁 Scattering Modes
+| Mode | Scattering Direction |
+|------|----------------------|
+| Uniform | Evenly scattered in all directions |
+| Forward | Scattered near beam’s previous direction |
+| Backward | Scattered opposite to the beam’s direction |
 
+### 🌈 Dynamic Light Simulation
+- Light reflection is controlled by random seed updates.
+- To avoid flickering, linear interpolation blends two seed-based frames.
+- Adjusting seed interval simulates underwater wave-like effects.
+
+🎞️ Example of dynamic lighting:  
+[Jump to 20:00 in demo video](https://youtu.be/Tia85zQ_XLM?t=1200)
+
+---
+
+## 📚 References
  - ### Photon Mapping
     - Jensen, Henrik. (2001). A Practical Guide to Global Illumination using Photon Maps.
  - ### Photon Beam
@@ -69,3 +90,15 @@ The vulkna implementation is made with Nvidia raytracing sample code as base.
   [DXSampleHelper.h](https://github.com/microsoft/DirectX-Graphics-Samples/blob/0aa79bad78992da0b6a8279ddb9002c1753cb849/Samples/Desktop/D3D12Raytracing/src/D3D12RaytracingProceduralGeometry/util/DXSampleHelper.h)
 
 	- [third-party/microsoft-directx-graphics-samples](./third-party/microsoft-directx-graphics-samples)
+
+## 📌 Notes
+- **Specular surfaces** are handled using plain ray tracing, as photon techniques are insufficient in those cases.
+- Parameters such as **light hue, intensity**, and **air murkiness** control the scattering visuals and beam density.
+
+---
+
+## 📁 Related Portfolio
+For more rendering and simulation projects, check out my main portfolio repository:  
+🔗 [Graphics Portfolio](https://github.com/donguklim/GraphicsPortfolio)
+
+---
